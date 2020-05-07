@@ -1,0 +1,29 @@
+{
+  "name": "search-transport",
+  "version": "0.1.0",
+  "description": "a tiny search engine",
+  "main": "src/index.js",
+  "files": [
+    "src/index.js"
+  ],
+  "scripts": {
+    "tsc": "tsc"
+  },
+  "author": "Andrew Aldridge <andrew.aldridge@mongodb.com>",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "aws-sdk": "^2.667.0",
+    "basic-logger": "^0.4.4",
+    "dictionary-en": "^3.0.0",
+    "dive": "^0.5.0",
+    "mongodb": "^3.5.6",
+    "nspell": "^2.1.2"
+  },
+  "devDependencies": {
+    "@types/mongodb": "^3.5.14",
+    "@types/node": "^13.13.4",
+    "eslint": "^6.8.0",
+    "mocha": "^7.1.2",
+    "typescript": "^3.8.3"
+  }
+}
