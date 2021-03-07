@@ -103,7 +103,7 @@ class Index {
     currentlyIndexing?: boolean
     manifestSource: string
     manifests: Manifest[]
-    errors: any[]
+    errors: Error[]
     lastSyncDate: Date | null
 
     constructor(manifestSource: string) {
@@ -126,10 +126,12 @@ class Index {
 
     async getManifestsFromS3(bucketName: string, prefix: string): Promise<Manifest[]> {
         const s3 = new S3({apiVersion: '2006-03-01'})
-        const result = await util.promisify(s3.makeUnauthenticatedRequest.bind(s3))('listObjectsV2', {
+        const result: S3.Types.ListObjectsV2Output = await util.promisify(s3.makeUnauthenticatedRequest.bind(s3, 'listObjectsV2', {
             Bucket: bucketName,
             Prefix: prefix
-        })
+        }))()
+
+        console.log(result)
 
         if (result.IsTruncated) {
             // This would indicate something awry, since we shouldn't
@@ -139,22 +141,27 @@ class Index {
         }
 
         const manifests = []
-        for (const bucketEntry of result.Contents) {
+        for (const bucketEntry of (result.Contents || [])) {
             if (bucketEntry.Size === 0) {
                 continue
             }
 
+            assert.ok(bucketEntry.Key)
+
             const matches = bucketEntry.Key.match(/([^/]+).json$/)
             if (matches === null) {
-                this.errors.push(`Got weird filename in manifest listing: "${bucketEntry.Key}"`)
+                this.errors.push(new Error(`Got weird filename in manifest listing: "${bucketEntry.Key}"`))
                 continue
             }
 
             const searchProperty = matches[1]
-            const data = await util.promisify(s3.makeUnauthenticatedRequest.bind(s3))('getObject', {
+            const data: S3.Types.GetObjectOutput = await util.promisify(s3.makeUnauthenticatedRequest.bind(s3, 'getObject', {
                 Bucket: bucketName,
                 Key: bucketEntry.Key
-            })
+            }))()
+
+            assert.ok(data.Body)
+            assert.ok(data.LastModified)
 
             const body = data.Body.toString('utf-8')
             const hash = await generateHash(body)
@@ -258,7 +265,7 @@ class Marian {
     }
 
     start(port: number) {
-        const server = http.createServer(async (req, res) => {
+        const server = http.createServer(async (req: http.IncomingMessage, res: http.ServerResponse) => {
             try {
                 await this.handle(req, res)
             } catch(err) {
@@ -328,9 +335,9 @@ class Marian {
             await this.db.createCollection("documents")
 
             for (const manifest of this.index.manifests) {
-                assert.equal(typeof manifest.searchProperty, "string")
+                assert.strictEqual(typeof manifest.searchProperty, "string")
                 assert.ok(manifest.searchProperty)
-                assert.equal(typeof manifest.manifestRevisionId, "string")
+                assert.strictEqual(typeof manifest.manifestRevisionId, "string")
                 assert.ok(manifest.manifestRevisionId)
 
                 log.debug(`Starting transaction: ${manifest.searchProperty}`)
@@ -348,7 +355,7 @@ class Marian {
                     // }, {session})
 
                     const operations: BulkWriteOperation<DatabaseDocument>[] = manifest.manifest.documents.map((document) => {
-                        assert.equal(typeof document.slug, "string")
+                        assert.strictEqual(typeof document.slug, "string")
                         assert.ok(document.slug)
 
                         const newDocument: DatabaseDocument = {
@@ -383,7 +390,7 @@ class Marian {
                 {session, w: "majority"})
             status.deleted = (deleteResult.deletedCount === undefined) ? null : deleteResult.deletedCount
         } catch(err) {
-            log.error()
+            log.error(err)
             status.errors.push(err)
         } finally {
             session.endSession()
@@ -477,7 +484,8 @@ class Marian {
         const headers = {
             'Content-Type': 'application/json',
             'Vary': 'Accept-Encoding',
-            'Pragma': 'no-cache'
+            'Pragma': 'no-cache',
+            'Access-Control-Allow-Origin': '*'
         }
         Object.assign(headers, STANDARD_HEADERS)
 
@@ -494,9 +502,9 @@ async function main() {
         process.exit(1)
     }
 
-    const client = new MongoClient(process.argv[3])
+    const client = new MongoClient(process.argv[3], {useUnifiedTopology: true})
     client.connect((err) => {
-        assert.equal(null, err)
+        assert.ok(!err)
         log.info('Connected correctly to MongoDB')
 
         const server = new Marian(process.argv[2], client)
