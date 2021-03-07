@@ -30,7 +30,7 @@ const log = new Logger({
 })
 
 interface RefreshInfo {
-    deleted: number | null
+    deleted: number
     updated: string[]
     skipped: string[]
     errors: Error[]
@@ -130,8 +130,6 @@ class Index {
             Bucket: bucketName,
             Prefix: prefix
         }))()
-
-        console.log(result)
 
         if (result.IsTruncated) {
             // This would indicate something awry, since we shouldn't
@@ -309,6 +307,12 @@ class Marian {
     }
 
     async refresh(): Promise<RefreshInfo> {
+        // Syncing the database has a few discrete stages:
+        // 1) Fetch all manifests from S3
+        // 2) Upsert all documents
+        // 2.5) Remove documents that should not be part of each manifest
+        // 3) Remove any documents attached to manifests that we don't know about
+
         const session = this.client.startSession()
         const transactionOptions: TransactionOptions = {
             readPreference: 'primary',
@@ -332,28 +336,14 @@ class Marian {
             await this.index.load()
             log.info(`Finished fetch: ${this.index.manifests.length} entries`)
 
-            await this.db.createCollection("documents")
-
             for (const manifest of this.index.manifests) {
+                log.info(`Starting transaction: ${manifest.searchProperty}`)
                 assert.strictEqual(typeof manifest.searchProperty, "string")
                 assert.ok(manifest.searchProperty)
                 assert.strictEqual(typeof manifest.manifestRevisionId, "string")
                 assert.ok(manifest.manifestRevisionId)
 
-                log.debug(`Starting transaction: ${manifest.searchProperty}`)
                 await session.withTransaction(async () => {
-                    // const countResult = await this.collection.estimatedDocumentCount({
-                    //     manifestRevisionId: manifest.manifestRevisionId
-                    // })
-                    // if (countResult > 0) {
-                    //     status.skipped.push(manifest.searchProperty)
-                    //     return
-                    // }
-
-                    // await this.collection.deleteMany({
-                    //     searchProperty: manifest.searchProperty,
-                    // }, {session})
-
                     const operations: BulkWriteOperation<DatabaseDocument>[] = manifest.manifest.documents.map((document) => {
                         assert.strictEqual(typeof document.slug, "string")
                         assert.ok(document.slug)
@@ -377,6 +367,14 @@ class Marian {
                     await this.collection.bulkWrite(operations, {session, ordered: false})
                 }, transactionOptions)
 
+                log.info(`Removing old documents for ${manifest.searchProperty}`)
+                const deleteResult = await this.collection.deleteMany({
+                    searchProperty: manifest.searchProperty,
+                    manifestRevisionId: {"$ne": manifest.manifestRevisionId}
+                }, {session})
+                status.deleted += (deleteResult.deletedCount === undefined) ? 0 : deleteResult.deletedCount
+                log.debug(`Removed ${deleteResult.deletedCount} documents`)
+
                 status.updated.push(manifest.searchProperty)
             }
 
@@ -388,7 +386,7 @@ class Marian {
                     }
                 },
                 {session, w: "majority"})
-            status.deleted = (deleteResult.deletedCount === undefined) ? null : deleteResult.deletedCount
+            status.deleted += (deleteResult.deletedCount === undefined) ? 0 : deleteResult.deletedCount
         } catch(err) {
             log.error(err)
             status.errors.push(err)
