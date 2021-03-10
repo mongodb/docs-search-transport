@@ -69,6 +69,11 @@ interface DatabaseDocument extends Document {
     includeInGlobalSearch: boolean
 }
 
+interface StatusResponse {
+    manifests: string[]
+    lastSync?: RefreshInfo | null
+}
+
 function generateHash(data: string): Promise<string> {
     const hash = crypto.createHash('sha256')
 
@@ -245,14 +250,18 @@ class Marian {
     index: Index
     client: MongoClient
     db: Db
-    collection: Collection
+    lastRefresh: RefreshInfo | null
+    documents: Collection
+    manifests: Collection
 
     constructor(bucket: string, client: MongoClient) {
         this.index = new Index(bucket)
         this.client = client
+        this.lastRefresh = null
 
         this.db = client.db('search')
-        this.collection = this.db.collection('documents')
+        this.documents = this.db.collection('documents')
+        this.manifests = this.db.collection('manifests')
 
         // Fire-and-forget loading
         this.refresh().then(result => {
@@ -298,7 +307,7 @@ class Marian {
             }
         } else if (pathname === '/status') {
             if (checkMethod(req, res, 'GET')) {
-                this.handleStatus(req, res)
+                this.handleStatus(parsedUrl, req, res)
             }
         } else {
             res.writeHead(400, {})
@@ -344,6 +353,11 @@ class Marian {
                 assert.ok(manifest.manifestRevisionId)
 
                 await session.withTransaction(async () => {
+                    await this.manifests.updateOne(
+                        {name: manifest.searchProperty},
+                        {"$set": {name: manifest.searchProperty}},
+                        {upsert: true})
+
                     const operations: BulkWriteOperation<DatabaseDocument>[] = manifest.manifest.documents.map((document) => {
                         assert.strictEqual(typeof document.slug, "string")
                         assert.ok(document.slug)
@@ -364,22 +378,23 @@ class Marian {
                         }
                     })
 
-                    await this.collection.bulkWrite(operations, {session, ordered: false})
+                    const bulkWriteStatus = await this.documents.bulkWrite(operations, {session, ordered: false})
+                    if (bulkWriteStatus.upsertedCount) {
+                        status.updated.push(manifest.searchProperty)
+                    }
                 }, transactionOptions)
 
-                log.info(`Removing old documents for ${manifest.searchProperty}`)
-                const deleteResult = await this.collection.deleteMany({
+                log.debug(`Removing old documents for ${manifest.searchProperty}`)
+                const deleteResult = await this.documents.deleteMany({
                     searchProperty: manifest.searchProperty,
                     manifestRevisionId: {"$ne": manifest.manifestRevisionId}
                 }, {session})
                 status.deleted += (deleteResult.deletedCount === undefined) ? 0 : deleteResult.deletedCount
                 log.debug(`Removed ${deleteResult.deletedCount} documents`)
-
-                status.updated.push(manifest.searchProperty)
             }
 
-            log.info("Deleting old properties")
-            const deleteResult = await this.collection.deleteMany(
+            log.debug("Deleting old properties")
+            const deleteResult = await this.documents.deleteMany(
                 {
                     searchProperty: {
                         $nin: this.index.manifests.map(manifest => manifest.searchProperty)
@@ -387,6 +402,8 @@ class Marian {
                 },
                 {session, w: "majority"})
             status.deleted += (deleteResult.deletedCount === undefined) ? 0 : deleteResult.deletedCount
+
+            this.lastRefresh = status
         } catch(err) {
             log.error(err)
             status.errors.push(err)
@@ -433,7 +450,7 @@ class Marian {
             "title": 1,
             "preview": 1
         }})
-        const cursor = await this.collection.aggregate(aggregationQuery)
+        const cursor = await this.documents.aggregate(aggregationQuery)
 
         const results = await cursor.toArray()
         let responseBody = JSON.stringify(results)
@@ -478,7 +495,7 @@ class Marian {
         res.end('')
     }
 
-    async handleStatus(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    async handleStatus(parsedUrl: UrlWithParsedQuery, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
         const headers = {
             'Content-Type': 'application/json',
             'Vary': 'Accept-Encoding',
@@ -487,8 +504,16 @@ class Marian {
         }
         Object.assign(headers, STANDARD_HEADERS)
 
+        const response: StatusResponse = {
+            "manifests": this.index.manifests.map(manifest => manifest.searchProperty),
+        }
+
+        if (parsedUrl.query.verbose) {
+            response.lastSync = this.lastRefresh
+        }
+
         res.writeHead(200, headers)
-        res.end()
+        res.end(JSON.stringify(response))
     }
 }
 
