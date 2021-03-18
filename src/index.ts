@@ -3,19 +3,14 @@
 
 import { MongoClient, Collection, TransactionOptions, BulkWriteOperation, Db } from "mongodb"
 import assert from 'assert'
-import crypto from 'crypto'
-import fs from 'fs'
 import http from 'http'
 import {parse as parseUrl, UrlWithParsedQuery} from 'url'
-import util from 'util'
 
-// @ts-ignore
-import dive from 'dive'
 // @ts-ignore
 import Logger from 'basic-logger'
 
-import S3 from 'aws-sdk/clients/s3'
 import {Query} from "./Query"
+import {SearchIndex, RefreshInfo} from "./SearchIndex"
 
 process.title = 'search-transport'
 
@@ -29,65 +24,9 @@ const log = new Logger({
     showTimestamp: true,
 })
 
-interface RefreshInfo {
-    deleted: number
-    updated: string[]
-    skipped: string[]
-    errors: Error[]
-    dateStarted: Date
-    dateFinished: Date | null
-    elapsedMS: number | null
-}
-
-interface Document {
-    slug: string
-    title: string
-    headings: string[]
-    text: string
-    preview: string
-    tags: string
-    links: string[]
-}
-
-interface ManifestData {
-    documents: Document[]
-    includeInGlobalSearch: boolean
-    url: string
-    aliases: string[]
-}
-
-interface Manifest {
-    manifest: ManifestData
-    lastModified: Date
-    manifestRevisionId: string
-    searchProperty: string
-}
-
-interface DatabaseDocument extends Document {
-    manifestRevisionId: string
-    searchProperty: string
-    includeInGlobalSearch: boolean
-}
-
 interface StatusResponse {
     manifests: string[]
     lastSync?: RefreshInfo | null
-}
-
-function generateHash(data: string): Promise<string> {
-    const hash = crypto.createHash('sha256')
-
-    return new Promise((resolve, reject) => {
-        hash.on('readable', () => {
-            const data = hash.read();
-            if (data) {
-                resolve(data.toString('hex'))
-            }
-        });
-
-        hash.write(data);
-        hash.end();
-    })
 }
 
 /**
@@ -104,167 +43,14 @@ function checkMethod(req: http.IncomingMessage, res: http.ServerResponse, method
     return true
 }
 
-class Index {
-    currentlyIndexing?: boolean
-    manifestSource: string
-    manifests: Manifest[]
-    errors: Error[]
-    lastSyncDate: Date | null
-
-    constructor(manifestSource: string) {
-        this.manifestSource = manifestSource
-        this.manifests = []
-        this.errors = []
-
-        this.lastSyncDate = null
-    }
-
-    getStatus() {
-        return {
-            manifests: this.manifests,
-            lastSync: {
-                errors: this.errors,
-                finished: this.lastSyncDate ? this.lastSyncDate.toISOString() : null
-            }
-        }
-    }
-
-    async getManifestsFromS3(bucketName: string, prefix: string): Promise<Manifest[]> {
-        const s3 = new S3({apiVersion: '2006-03-01'})
-        const result: S3.Types.ListObjectsV2Output = await util.promisify(s3.makeUnauthenticatedRequest.bind(s3, 'listObjectsV2', {
-            Bucket: bucketName,
-            Prefix: prefix
-        }))()
-
-        if (result.IsTruncated) {
-            // This would indicate something awry, since we shouldn't
-            // ever have more than 1000 properties. And if we ever did,
-            // everything would need to be rearchitected.
-            throw new Error('Got truncated response from S3')
-        }
-
-        const manifests = []
-        for (const bucketEntry of (result.Contents || [])) {
-            if (bucketEntry.Size === 0) {
-                continue
-            }
-
-            assert.ok(bucketEntry.Key)
-
-            const matches = bucketEntry.Key.match(/([^/]+).json$/)
-            if (matches === null) {
-                this.errors.push(new Error(`Got weird filename in manifest listing: "${bucketEntry.Key}"`))
-                continue
-            }
-
-            const searchProperty = matches[1]
-            const data: S3.Types.GetObjectOutput = await util.promisify(s3.makeUnauthenticatedRequest.bind(s3, 'getObject', {
-                Bucket: bucketName,
-                Key: bucketEntry.Key
-            }))()
-
-            assert.ok(data.Body)
-            assert.ok(data.LastModified)
-
-            const body = data.Body.toString('utf-8')
-            const hash = await generateHash(body)
-            const parsed = JSON.parse(body)
-            manifests.push({
-                manifest: parsed,
-                lastModified: data.LastModified,
-                manifestRevisionId: hash,
-                searchProperty: searchProperty
-            })
-        }
-
-        return manifests
-    }
-
-    getManifestsFromDirectory(prefix: string): Promise<Manifest[]> {
-        return new Promise((resolve, reject) => {
-            const manifests: Manifest[] = []
-
-            dive(prefix, async (err: Error | null, path: string, stats: fs.Stats) => {
-                if (err) { reject(err) }
-                const matches = path.match(/([^/]+).json$/)
-                if (!matches) { return }
-                const searchProperty = matches[1]
-                const data = fs.readFileSync(path, {encoding: 'utf-8'})
-                const parsed = JSON.parse(data)
-                const hash = await generateHash(data)
-
-                manifests.push({
-                    manifest: parsed,
-                    lastModified: stats.mtime,
-                    manifestRevisionId: hash,
-                    searchProperty: searchProperty
-                })
-            }, () => {
-                resolve(manifests)
-            })})
-    }
-
-    async getManifests() {
-        const parsedSource = this.manifestSource.match(/((?:bucket)|(?:dir)):(.+)/)
-        if (!parsedSource) {
-            throw new Error('Bad manifest source')
-        }
-
-        let manifests
-        if (parsedSource[1] === 'bucket') {
-            const parts = parsedSource[2].split('/', 2)
-            const bucketName = parts[0].trim()
-            const prefix = parts[1].trim()
-            if (!bucketName.length || !prefix.length) {
-                throw new Error('Bad bucket manifest source')
-            }
-            manifests = await this.getManifestsFromS3(bucketName, prefix)
-        } else if (parsedSource[1] === 'dir') {
-            manifests = await this.getManifestsFromDirectory(parsedSource[2])
-        } else {
-            throw new Error('Unknown manifest source protocol')
-        }
-
-        return manifests
-    }
-
-    async load() {
-        if (this.currentlyIndexing) {
-            throw new Error('already-indexing')
-        }
-        this.currentlyIndexing = true
-
-        try {
-            this.manifests = await this.getManifests()
-        } catch (err) {
-            throw err
-        } finally {
-            this.currentlyIndexing = false
-        }
-
-        this.errors = []
-    }
-}
-
 class Marian {
-    index: Index
-    client: MongoClient
-    db: Db
-    lastRefresh: RefreshInfo | null
-    documents: Collection
-    manifests: Collection
+    index: SearchIndex
 
-    constructor(bucket: string, client: MongoClient) {
-        this.index = new Index(bucket)
-        this.client = client
-        this.lastRefresh = null
-
-        this.db = client.db('search')
-        this.documents = this.db.collection('documents')
-        this.manifests = this.db.collection('manifests')
+    constructor(index: SearchIndex) {
+        this.index = index
 
         // Fire-and-forget loading
-        this.refresh().then(result => {
+        this.index.load().then(result => {
             log.info(JSON.stringify(result))
         }).catch((err) => {
             log.error(err)
@@ -315,108 +101,6 @@ class Marian {
         }
     }
 
-    async refresh(): Promise<RefreshInfo> {
-        // Syncing the database has a few discrete stages:
-        // 1) Fetch all manifests from S3
-        // 2) Upsert all documents
-        // 2.5) Remove documents that should not be part of each manifest
-        // 3) Remove any documents attached to manifests that we don't know about
-
-        const session = this.client.startSession()
-        const transactionOptions: TransactionOptions = {
-            readPreference: 'primary',
-            readConcern: { level: 'local' },
-            writeConcern: { w: 'majority' }
-        };
-
-        const startTime = process.hrtime.bigint()
-        const status: RefreshInfo = {
-            deleted: 0,
-            updated: [],
-            skipped: [],
-            errors: [],
-            dateStarted: new Date(),
-            dateFinished: null,
-            elapsedMS: null
-        }
-
-        try {
-            log.info("Starting fetch")
-            await this.index.load()
-            log.info(`Finished fetch: ${this.index.manifests.length} entries`)
-
-            for (const manifest of this.index.manifests) {
-                log.info(`Starting transaction: ${manifest.searchProperty}`)
-                assert.strictEqual(typeof manifest.searchProperty, "string")
-                assert.ok(manifest.searchProperty)
-                assert.strictEqual(typeof manifest.manifestRevisionId, "string")
-                assert.ok(manifest.manifestRevisionId)
-
-                await session.withTransaction(async () => {
-                    await this.manifests.updateOne(
-                        {name: manifest.searchProperty},
-                        {"$set": {name: manifest.searchProperty}},
-                        {upsert: true})
-
-                    const operations: BulkWriteOperation<DatabaseDocument>[] = manifest.manifest.documents.map((document) => {
-                        assert.strictEqual(typeof document.slug, "string")
-                        assert.ok(document.slug)
-
-                        const newDocument: DatabaseDocument = {
-                            ...document,
-                            manifestRevisionId: manifest.manifestRevisionId,
-                            searchProperty: manifest.searchProperty,
-                            includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
-                        }
-
-                        return {
-                            updateOne: {
-                                filter: {searchProperty: newDocument.searchProperty, slug: newDocument.slug},
-                                update: {$set: newDocument},
-                                upsert: true
-                            }
-                        }
-                    })
-
-                    const bulkWriteStatus = await this.documents.bulkWrite(operations, {session, ordered: false})
-                    if (bulkWriteStatus.upsertedCount) {
-                        status.updated.push(manifest.searchProperty)
-                    }
-                }, transactionOptions)
-
-                log.debug(`Removing old documents for ${manifest.searchProperty}`)
-                const deleteResult = await this.documents.deleteMany({
-                    searchProperty: manifest.searchProperty,
-                    manifestRevisionId: {"$ne": manifest.manifestRevisionId}
-                }, {session})
-                status.deleted += (deleteResult.deletedCount === undefined) ? 0 : deleteResult.deletedCount
-                log.debug(`Removed ${deleteResult.deletedCount} documents`)
-            }
-
-            log.debug("Deleting old properties")
-            const deleteResult = await this.documents.deleteMany(
-                {
-                    searchProperty: {
-                        $nin: this.index.manifests.map(manifest => manifest.searchProperty)
-                    }
-                },
-                {session, w: "majority"})
-            status.deleted += (deleteResult.deletedCount === undefined) ? 0 : deleteResult.deletedCount
-
-            this.lastRefresh = status
-        } catch(err) {
-            log.error(err)
-            status.errors.push(err)
-        } finally {
-            session.endSession()
-            log.info("Done!")
-        }
-
-        status.dateFinished = new Date()
-        status.elapsedMS = Number(process.hrtime.bigint() - startTime) / 1000000
-        return status
-    }
-
     async handleSearch(parsedUrl: UrlWithParsedQuery, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
         const start = process.hrtime.bigint()
         const headers = {
@@ -442,17 +126,11 @@ class Marian {
 
         const query = new Query(rawQuery)
 
-        const aggregationQuery = query.getAggregationQuery((parsedUrl.query.searchProperty || "").toString())
-        log.info(JSON.stringify(aggregationQuery, null, 4))
-        aggregationQuery.push({$limit: 50})
-        aggregationQuery.push({$project: {
-            "_id": 0,
-            "title": 1,
-            "preview": 1
-        }})
-        const cursor = await this.documents.aggregate(aggregationQuery)
-
-        const results = await cursor.toArray()
+        let searchProperty = parsedUrl.query.searchProperty || null
+        if (Array.isArray(searchProperty)) {
+            searchProperty = searchProperty[0]
+        }
+        const results = await this.index.search(query, searchProperty)
         let responseBody = JSON.stringify(results)
         res.writeHead(200, headers)
         res.end(responseBody)
@@ -468,7 +146,7 @@ class Marian {
         Object.assign(headers, STANDARD_HEADERS)
 
         try {
-            log.info(JSON.stringify(await this.refresh()))
+            await this.index.load()
         } catch(err) {
             log.error(err)
             headers['Content-Type'] = 'application/json'
@@ -509,7 +187,7 @@ class Marian {
         }
 
         if (parsedUrl.query.verbose) {
-            response.lastSync = this.lastRefresh
+            response.lastSync = this.index.lastRefresh
         }
 
         res.writeHead(200, headers)
@@ -526,11 +204,12 @@ async function main() {
     }
 
     const client = new MongoClient(process.argv[3], {useUnifiedTopology: true})
+    const searchIndex = new SearchIndex(process.argv[2], client)
     client.connect((err) => {
         assert.ok(!err)
         log.info('Connected correctly to MongoDB')
 
-        const server = new Marian(process.argv[2], client)
+        const server = new Marian(searchIndex)
         server.start(8080)
     })
 }
