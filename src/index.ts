@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict'
 
-import { MongoClient, Collection, TransactionOptions, BulkWriteOperation, Db } from "mongodb"
+import { MongoClient } from "mongodb"
 import assert from 'assert'
 import http from 'http'
 import {parse as parseUrl, UrlWithParsedQuery} from 'url'
@@ -161,9 +161,9 @@ class Marian {
             return
         }
 
-        if (this.index.errors.length > 0) {
+        if (this.index.lastRefresh && this.index.lastRefresh.errors.length > 0) {
             headers['Content-Type'] = 'application/json'
-            const body = JSON.stringify({'errors': this.index.errors})
+            const body = JSON.stringify({'errors': this.index.lastRefresh.errors})
             res.writeHead(200, headers)
             res.end(body)
             return
