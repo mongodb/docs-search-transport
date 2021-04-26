@@ -1,0 +1,16 @@
+{
+    "url": "https://docs.mongodb.com/bi-connector/v2.0",
+    "includeInGlobalSearch": false,
+    "aliases": ["bi-connector-master"],
+    "documents": [
+        {
+            "slug": "index.html",
+            "title": "MongoDB BI Connector v2.0",
+            "headings": [],
+            "text": "BI Connector v2.0",
+            "preview": "",
+            "tags": "",
+            "links": []
+        }
+    ]
+}
