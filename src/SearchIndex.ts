@@ -71,10 +71,9 @@ function generateHash(data: string): Promise<string> {
 }
 
 export class SearchIndex {
-    currentlyIndexing?: boolean
+    currentlyIndexing: boolean
     manifestSource: string
     manifests: Manifest[]
-    errors: Error[]
 
     client: MongoClient
     db: Db
@@ -82,9 +81,9 @@ export class SearchIndex {
     documents: Collection
 
     constructor(manifestSource: string, client: MongoClient) {
+        this.currentlyIndexing = false
         this.manifestSource = manifestSource
         this.manifests = []
-        this.errors = []
 
         this.client = client
         this.db = client.db('search')
@@ -123,6 +122,7 @@ export class SearchIndex {
         const manifests = []
         for (const bucketEntry of (result.Contents || [])) {
             if (bucketEntry.Size === 0) {
+                log.error(new Error(`Got empty file: "${bucketEntry.Key}"`))
                 continue
             }
 
@@ -130,7 +130,7 @@ export class SearchIndex {
 
             const matches = bucketEntry.Key.match(/([^/]+).json$/)
             if (matches === null) {
-                this.errors.push(new Error(`Got weird filename in manifest listing: "${bucketEntry.Key}"`))
+                log.error(new Error(`Got weird filename in manifest listing: "${bucketEntry.Key}"`))
                 continue
             }
 
@@ -215,6 +215,8 @@ export class SearchIndex {
         let result: RefreshInfo
         try {
             const manifests = await this.getManifests()
+            log.info(`Finished fetch: ${manifests.length} entries`)
+            this.manifests = manifests
             result = await this.sync(manifests)
         } catch (err) {
             throw err
@@ -222,8 +224,6 @@ export class SearchIndex {
             this.currentlyIndexing = false
         }
 
-        this.errors = []
-        log.info(`Finished fetch: ${this.manifests.length} entries`)
         return result
     }
 
@@ -253,7 +253,7 @@ export class SearchIndex {
         }
 
         try {
-            for (const manifest of this.manifests) {
+            for (const manifest of manifests) {
                 log.info(`Starting transaction: ${manifest.searchProperty}`)
                 assert.strictEqual(typeof manifest.searchProperty, "string")
                 assert.ok(manifest.searchProperty)
@@ -300,7 +300,7 @@ export class SearchIndex {
             const deleteResult = await this.documents.deleteMany(
                 {
                     searchProperty: {
-                        $nin: this.manifests.map(manifest => manifest.searchProperty)
+                        $nin: manifests.map(manifest => manifest.searchProperty)
                     }
                 },
                 {session, w: "majority"})
