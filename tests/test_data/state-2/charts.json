@@ -1,0 +1,16 @@
+{
+    "url": "https://docs.mongodb.com/charts",
+    "includeInGlobalSearch": false,
+    "aliases": [],
+    "documents": [
+        {
+            "slug": "index.html",
+            "title": "MongoDB Charts",
+            "headings": [],
+            "text": "Charts",
+            "preview": "",
+            "tags": "",
+            "links": []
+        }
+    ]
+}

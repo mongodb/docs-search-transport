@@ -38,7 +38,7 @@ interface Manifest {
     searchProperty: string
 }
 
-interface DatabaseDocument extends Document {
+export interface DatabaseDocument extends Document {
     manifestRevisionId: string
     searchProperty: string
     includeInGlobalSearch: boolean
@@ -70,6 +70,110 @@ function generateHash(data: string): Promise<string> {
     })
 }
 
+async function getManifestsFromS3(bucketName: string, prefix: string): Promise<Manifest[]> {
+    const s3 = new S3({apiVersion: '2006-03-01'})
+    const result: S3.Types.ListObjectsV2Output = await util.promisify(s3.makeUnauthenticatedRequest.bind(s3, 'listObjectsV2', {
+        Bucket: bucketName,
+        Prefix: prefix
+    }))()
+
+    if (result.IsTruncated) {
+        // This would indicate something awry, since we shouldn't
+        // ever have more than 1000 properties. And if we ever did,
+        // everything would need to be rearchitected.
+        throw new Error('Got truncated response from S3')
+    }
+
+    const manifests = []
+    for (const bucketEntry of (result.Contents || [])) {
+        if (bucketEntry.Size === 0) {
+            log.error(new Error(`Got empty file: "${bucketEntry.Key}"`))
+            continue
+        }
+
+        assert.ok(bucketEntry.Key)
+
+        const matches = bucketEntry.Key.match(/([^/]+).json$/)
+        if (matches === null) {
+            log.error(new Error(`Got weird filename in manifest listing: "${bucketEntry.Key}"`))
+            continue
+        }
+
+        const searchProperty = matches[1]
+        const data: S3.Types.GetObjectOutput = await util.promisify(s3.makeUnauthenticatedRequest.bind(s3, 'getObject', {
+            Bucket: bucketName,
+            Key: bucketEntry.Key
+        }))()
+
+        assert.ok(data.Body)
+        assert.ok(data.LastModified)
+
+        const body = data.Body.toString('utf-8')
+        const hash = await generateHash(body)
+        const parsed = JSON.parse(body)
+        manifests.push({
+            manifest: parsed,
+            lastModified: data.LastModified,
+            manifestRevisionId: hash,
+            searchProperty: searchProperty
+        })
+    }
+
+    return manifests
+}
+
+function getManifestsFromDirectory(prefix: string): Promise<Manifest[]> {
+    return new Promise((resolve, reject) => {
+        const manifests: Manifest[] = []
+
+        dive(prefix, async (err: Error | null, path: string, stats: fs.Stats) => {
+            if (err) { reject(err) }
+            const matches = path.match(/([^/]+).json$/)
+            if (!matches) { return }
+            const searchProperty = matches[1]
+            const data = fs.readFileSync(path, {encoding: 'utf-8'})
+            const parsed = JSON.parse(data)
+            const hash = await generateHash(data)
+
+            manifests.push({
+                manifest: parsed,
+                lastModified: stats.mtime,
+                manifestRevisionId: hash,
+                searchProperty: searchProperty
+            })
+        }, () => {
+            resolve(manifests)
+        })})
+}
+
+/// Fetch manifests from a given path. It can (for historic cruft reasons)
+/// take one of two formats:
+/// dir:<path> to load manifests from a local directory.
+/// bucket:<bucketName>/<prefix> to load manifests from an S3 location.
+async function getManifests(manifestSource: string): Promise<Manifest[]> {
+    const parsedSource = manifestSource.match(/((?:bucket)|(?:dir)):(.+)/)
+    if (!parsedSource) {
+        throw new Error('Bad manifest source')
+    }
+
+    let manifests
+    if (parsedSource[1] === 'bucket') {
+        const parts = parsedSource[2].split('/', 2)
+        const bucketName = parts[0].trim()
+        const prefix = parts[1].trim()
+        if (!bucketName.length || !prefix.length) {
+            throw new Error('Bad bucket manifest source')
+        }
+        manifests = await getManifestsFromS3(bucketName, prefix)
+    } else if (parsedSource[1] === 'dir') {
+        manifests = await getManifestsFromDirectory(parsedSource[2])
+    } else {
+        throw new Error('Unknown manifest source protocol')
+    }
+
+    return manifests
+}
+
 export class SearchIndex {
     currentlyIndexing: boolean
     manifestSource: string
@@ -80,13 +184,13 @@ export class SearchIndex {
     lastRefresh: RefreshInfo | null
     documents: Collection
 
-    constructor(manifestSource: string, client: MongoClient) {
+    constructor(manifestSource: string, client: MongoClient, databaseName: string = "search") {
         this.currentlyIndexing = false
         this.manifestSource = manifestSource
         this.manifests = []
 
         this.client = client
-        this.db = client.db('search')
+        this.db = client.db(databaseName)
         this.documents = this.db.collection('documents')
         this.lastRefresh = null
     }
@@ -105,116 +209,22 @@ export class SearchIndex {
         return await cursor.toArray()
     }
 
-    async getManifestsFromS3(bucketName: string, prefix: string): Promise<Manifest[]> {
-        const s3 = new S3({apiVersion: '2006-03-01'})
-        const result: S3.Types.ListObjectsV2Output = await util.promisify(s3.makeUnauthenticatedRequest.bind(s3, 'listObjectsV2', {
-            Bucket: bucketName,
-            Prefix: prefix
-        }))()
-
-        if (result.IsTruncated) {
-            // This would indicate something awry, since we shouldn't
-            // ever have more than 1000 properties. And if we ever did,
-            // everything would need to be rearchitected.
-            throw new Error('Got truncated response from S3')
-        }
-
-        const manifests = []
-        for (const bucketEntry of (result.Contents || [])) {
-            if (bucketEntry.Size === 0) {
-                log.error(new Error(`Got empty file: "${bucketEntry.Key}"`))
-                continue
-            }
-
-            assert.ok(bucketEntry.Key)
-
-            const matches = bucketEntry.Key.match(/([^/]+).json$/)
-            if (matches === null) {
-                log.error(new Error(`Got weird filename in manifest listing: "${bucketEntry.Key}"`))
-                continue
-            }
-
-            const searchProperty = matches[1]
-            const data: S3.Types.GetObjectOutput = await util.promisify(s3.makeUnauthenticatedRequest.bind(s3, 'getObject', {
-                Bucket: bucketName,
-                Key: bucketEntry.Key
-            }))()
-
-            assert.ok(data.Body)
-            assert.ok(data.LastModified)
-
-            const body = data.Body.toString('utf-8')
-            const hash = await generateHash(body)
-            const parsed = JSON.parse(body)
-            manifests.push({
-                manifest: parsed,
-                lastModified: data.LastModified,
-                manifestRevisionId: hash,
-                searchProperty: searchProperty
-            })
-        }
-
-        return manifests
-    }
-
-    getManifestsFromDirectory(prefix: string): Promise<Manifest[]> {
-        return new Promise((resolve, reject) => {
-            const manifests: Manifest[] = []
-
-            dive(prefix, async (err: Error | null, path: string, stats: fs.Stats) => {
-                if (err) { reject(err) }
-                const matches = path.match(/([^/]+).json$/)
-                if (!matches) { return }
-                const searchProperty = matches[1]
-                const data = fs.readFileSync(path, {encoding: 'utf-8'})
-                const parsed = JSON.parse(data)
-                const hash = await generateHash(data)
-
-                manifests.push({
-                    manifest: parsed,
-                    lastModified: stats.mtime,
-                    manifestRevisionId: hash,
-                    searchProperty: searchProperty
-                })
-            }, () => {
-                resolve(manifests)
-            })})
-    }
-
-    async getManifests(): Promise<Manifest[]> {
-        const parsedSource = this.manifestSource.match(/((?:bucket)|(?:dir)):(.+)/)
-        if (!parsedSource) {
-            throw new Error('Bad manifest source')
-        }
-
-        let manifests
-        if (parsedSource[1] === 'bucket') {
-            const parts = parsedSource[2].split('/', 2)
-            const bucketName = parts[0].trim()
-            const prefix = parts[1].trim()
-            if (!bucketName.length || !prefix.length) {
-                throw new Error('Bad bucket manifest source')
-            }
-            manifests = await this.getManifestsFromS3(bucketName, prefix)
-        } else if (parsedSource[1] === 'dir') {
-            manifests = await this.getManifestsFromDirectory(parsedSource[2])
-        } else {
-            throw new Error('Unknown manifest source protocol')
-        }
-
-        return manifests
-    }
-
-    async load(): Promise<RefreshInfo> {
+    async load(manifestSource?: string): Promise<RefreshInfo> {
         log.info("Starting fetch")
         if (this.currentlyIndexing) {
             throw new Error('already-indexing')
         }
         this.currentlyIndexing = true
 
+        if (manifestSource) {
+            this.manifestSource = manifestSource
+        } else {
+            manifestSource = this.manifestSource
+        }
+
         let result: RefreshInfo
         try {
-            const manifests = await this.getManifests()
+            const manifests = await getManifests(manifestSource)
             log.info(`Finished fetch: ${manifests.length} entries`)
             this.manifests = manifests
             result = await this.sync(manifests)

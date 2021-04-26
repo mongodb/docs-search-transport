@@ -1,0 +1,38 @@
+{
+    "url": "https://docs.mongodb.com/manual",
+    "includeInGlobalSearch": true,
+    "aliases": [],
+    "documents": [
+        {
+            "slug": "index.html",
+            "title": "MongoDB Realm ",
+            "headings": [
+                "MongoDB Realm ",
+                "Get Started ",
+                "Billing & Reference ",
+                "Stitch Documentation (Legacy) ",
+                "Realm Database Documentation (Legacy) "
+            ],
+            "text": "MongoDB Realm \u00b6 Welcome to the MongoDB Realm documentation!",
+            "preview": "Welcome to the MongoDB Realm documentation!",
+            "tags": "",
+            "links": [
+                "https://docs.mongodb.com/realm/get-started/introduction-web/"
+            ]
+        },
+        {
+            "slug": "tutorial/index.html",
+            "title": "Create a Task Tracker Ap",
+            "headings": [
+                "Create a Task Tracker Ap "
+            ],
+            "text": "Create a Task Tracker App, version 1",
+            "preview": "In this tutorial, you will build a collaborative task tracker app with MongoDB Realm.",
+            "tags": "",
+            "links": [
+                "https://docs.mongodb.com/realm/tutorial/dotnet/",
+                "https://docs.mongodb.com/realm/tutorial/web-graphql/"
+            ]
+        }
+    ]
+}
