@@ -41,7 +41,7 @@ describe("Synchronization", function() {
 
         // Ensure that the correct slugs exist for state #1
         deepStrictEqual(documents.map((doc) => {
-            return `${doc.searchProperty}/${doc.slug}`
+            return `${doc.searchProperty[0]}/${doc.slug}`
         }), [
             "bi-connector-v1/index.html",
             "bi-connector-v2/index.html",
@@ -65,7 +65,7 @@ describe("Synchronization", function() {
 
         // Ensure that the correct slugs exist for state #2
         deepStrictEqual(documents.map((doc) => {
-            return `${doc.searchProperty}/${doc.slug}`
+            return `${doc.searchProperty[0]}/${doc.slug}`
         }), [
             "bi-connector-v2/index.html",
             "charts/index.html",
