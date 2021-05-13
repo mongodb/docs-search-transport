@@ -29,6 +29,15 @@ interface StatusResponse {
     lastSync?: RefreshInfo | null
 }
 
+function escapeHTML(unsafe: string): string {
+    return unsafe
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+}
+
 /**
  * If the request method does not match the method parameter, return false
  * and write a 405 status code. Otherwise return true.
@@ -42,6 +51,8 @@ function checkMethod(req: http.IncomingMessage, res: http.ServerResponse, method
 
     return true
 }
+
+class InvalidQuery extends Error {}
 
 class Marian {
     index: SearchIndex
@@ -81,7 +92,6 @@ class Marian {
         const parsedUrl = parseUrl(url, true)
 
         const pathname = (parsedUrl.pathname || "").replace(/\/+$/, '')
-        assert.ok(pathname)
 
         if (pathname === '/search') {
             if (checkMethod(req, res, 'GET')) {
@@ -95,10 +105,33 @@ class Marian {
             if (checkMethod(req, res, 'GET')) {
                 this.handleStatus(parsedUrl, req, res)
             }
+        } else if (pathname === '') {
+            if (checkMethod(req, res, 'GET')) {
+                this.handleUI(parsedUrl, req, res)
+            }
         } else {
             res.writeHead(400, {})
             res.end('')
         }
+    }
+
+    private async fetchResults(parsedUrl: UrlWithParsedQuery): Promise<any[]> {
+        const rawQuery = (parsedUrl.query.q || "").toString()
+        if (!rawQuery) {
+            throw new InvalidQuery()
+        }
+
+        if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
+            throw new InvalidQuery()
+        }
+
+        const query = new Query(rawQuery)
+
+        let searchProperty = parsedUrl.query.searchProperty || null
+        if (Array.isArray(searchProperty)) {
+            searchProperty = searchProperty[0]
+        }
+        return await this.index.search(query, searchProperty)
     }
 
     async handleSearch(parsedUrl: UrlWithParsedQuery, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
@@ -111,26 +144,18 @@ class Marian {
         }
         Object.assign(headers, STANDARD_HEADERS)
 
-        const rawQuery = (parsedUrl.query.q || "").toString()
-        if (!rawQuery) {
-            res.writeHead(400, headers)
-            res.end('[]')
-            return
-        }
+        let results
+        try {
+            results = await this.fetchResults(parsedUrl)
+        } catch(err) {
+            if (err instanceof InvalidQuery) {
+                res.writeHead(400, headers)
+                res.end('[]')
+                return
+            }
 
-        if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
-            res.writeHead(400, headers)
-            res.end('[]')
-            return
+            throw err
         }
-
-        const query = new Query(rawQuery)
-
-        let searchProperty = parsedUrl.query.searchProperty || null
-        if (Array.isArray(searchProperty)) {
-            searchProperty = searchProperty[0]
-        }
-        const results = await this.index.search(query, searchProperty)
         let responseBody = JSON.stringify(results)
         res.writeHead(200, headers)
         res.end(responseBody)
@@ -192,6 +217,79 @@ class Marian {
 
         res.writeHead(200, headers)
         res.end(JSON.stringify(response))
+    }
+
+    async handleUI(parsedUrl: UrlWithParsedQuery, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+        const headers = {
+            'Content-Type': 'text/html',
+            'Vary': 'Accept-Encoding',
+            'Cache-Control': 'public,max-age=120,must-revalidate',
+        }
+        Object.assign(headers, STANDARD_HEADERS)
+
+        const dataList = this.index.manifests.map((manifest) => encodeURIComponent(manifest.searchProperty))
+        if (dataList.length > 0) {
+            dataList.unshift('')
+        }
+
+        let query = parsedUrl.query.q || ''
+        if (Array.isArray(query)) {
+            query = query[0]
+        }
+
+        let searchProperty = parsedUrl.query.searchProperty || ''
+        if (Array.isArray(searchProperty)) {
+            searchProperty = searchProperty[0]
+        }
+
+        let results = []
+        let resultError = false
+        try {
+            results = await this.fetchResults(parsedUrl)
+        } catch(err) {
+            resultError = true
+        }
+
+        const resultTextParts = results.map(result => {
+            return `<li class="result">
+                <div class="result-title"><a href="${encodeURI(result.url)}">${escapeHTML(result.title)}</a></div>
+                <div class="result-preview">${escapeHTML(result.preview)}</div>
+            </li>`
+        })
+
+        let responseBody = `<!doctype html><html lang="en">
+        <head><title>Marian</title><meta charset="utf-8">
+        <style>
+        .results{list-style:none}
+        .result{padding:10px 0;max-width:50em}
+        </style>
+        </head>
+        <body>
+        <form>
+        <input placeholder="Search query" maxLength=100 id="input-search" autofocus value="${escapeHTML(query)}">
+        <input placeholder="Property to search" maxLength=50 list="properties" id="input-properties" value="${escapeHTML(searchProperty)}">
+        <input type="submit" value="search" formaction="javascript:search()">
+        </form>
+        <datalist id=properties>
+        ${dataList.join('<option>')}
+        </datalist>
+        ${resultError ? '<p>Error fetching results</p>' : ''}
+        <ul class="results">
+        ${resultTextParts.join('\n')}
+        </ul>
+        <script>
+        function search() {
+            const rawQuery = document.getElementById("input-search").value
+            const rawProperties = document.getElementById("input-properties").value.trim()
+            const propertiesComponent = rawProperties.length > 0 ? "&searchProperty=" + encodeURIComponent(rawProperties) : ""
+            document.location.search = "q=" + encodeURIComponent(rawQuery) + propertiesComponent
+        }
+        </script>
+        </body>
+        </html>`
+
+        res.writeHead(200, headers)
+        res.end(responseBody)
     }
 }
 
