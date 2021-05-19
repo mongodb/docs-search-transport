@@ -1,41 +1,41 @@
 #!/usr/bin/env node
-'use strict'
+'use strict';
 
-import { MongoClient } from "mongodb"
-import assert from 'assert'
-import http from 'http'
-import {parse as parseUrl, UrlWithParsedQuery} from 'url'
+import { MongoClient } from 'mongodb';
+import assert from 'assert';
+import http from 'http';
+import { parse as parseUrl, UrlWithParsedQuery } from 'url';
 
 // @ts-ignore
-import Logger from 'basic-logger'
+import Logger from 'basic-logger';
 
-import {Query} from "./Query"
-import {SearchIndex, RefreshInfo} from "./SearchIndex"
+import { Query } from './Query';
+import { SearchIndex, RefreshInfo } from './SearchIndex';
 
-process.title = 'search-transport'
+process.title = 'search-transport';
 
-const MAXIMUM_QUERY_LENGTH = 100
+const MAXIMUM_QUERY_LENGTH = 100;
 
 const STANDARD_HEADERS = {
-    'X-Content-Type-Options': 'nosniff'
-}
+  'X-Content-Type-Options': 'nosniff',
+};
 
 const log = new Logger({
-    showTimestamp: true,
-})
+  showTimestamp: true,
+});
 
 interface StatusResponse {
-    manifests: string[]
-    lastSync?: RefreshInfo | null
+  manifests: string[];
+  lastSync?: RefreshInfo | null;
 }
 
 function escapeHTML(unsafe: string): string {
-    return unsafe
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 /**
@@ -43,229 +43,241 @@ function escapeHTML(unsafe: string): string {
  * and write a 405 status code. Otherwise return true.
  */
 function checkMethod(req: http.IncomingMessage, res: http.ServerResponse, method: string): boolean {
-    if (req.method !== method) {
-        res.writeHead(405, {})
-        res.end('')
-        return false
-    }
+  if (req.method !== method) {
+    res.writeHead(405, {});
+    res.end('');
+    return false;
+  }
 
-    return true
+  return true;
 }
 
 class InvalidQuery extends Error {}
 
 class Marian {
-    index: SearchIndex
+  index: SearchIndex;
 
-    constructor(index: SearchIndex) {
-        this.index = index
+  constructor(index: SearchIndex) {
+    this.index = index;
 
-        // Fire-and-forget loading
-        this.index.isEmpty().then((empty) => {
-            if (!empty) {
-                return
-            }
+    // Fire-and-forget loading
+    this.index
+      .isEmpty()
+      .then((empty) => {
+        if (!empty) {
+          return;
+        }
 
-            return this.index.load()
-        }).then((result) => {
-            if (result) {
-                log.info(JSON.stringify(result))
-            }
-        }).catch((err) => {
-            log.error(err)
-        })
+        return this.index.load();
+      })
+      .then((result) => {
+        if (result) {
+          log.info(JSON.stringify(result));
+        }
+      })
+      .catch((err) => {
+        log.error(err);
+      });
+  }
+
+  start(port: number) {
+    const server = http.createServer(async (req: http.IncomingMessage, res: http.ServerResponse) => {
+      try {
+        await this.handle(req, res);
+      } catch (err) {
+        log.error(err);
+        res.writeHead(500, {});
+        res.end('');
+      }
+    });
+
+    server.listen(port, () => {
+      log.info(`Listening on port ${port}`);
+    });
+  }
+
+  handle(req: http.IncomingMessage, res: http.ServerResponse): void {
+    const url = req.url;
+    if (!url) {
+      assert.fail('Assertion: Missing url');
+    }
+    const parsedUrl = parseUrl(url, true);
+
+    const pathname = (parsedUrl.pathname || '').replace(/\/+$/, '');
+
+    if (pathname === '/search') {
+      if (checkMethod(req, res, 'GET')) {
+        this.handleSearch(parsedUrl, req, res);
+      }
+    } else if (pathname === '/refresh') {
+      if (checkMethod(req, res, 'POST')) {
+        this.handleRefresh(req, res);
+      }
+    } else if (pathname === '/status') {
+      if (checkMethod(req, res, 'GET')) {
+        this.handleStatus(parsedUrl, req, res);
+      }
+    } else if (pathname === '') {
+      if (checkMethod(req, res, 'GET')) {
+        this.handleUI(parsedUrl, req, res);
+      }
+    } else {
+      res.writeHead(400, {});
+      res.end('');
+    }
+  }
+
+  private async fetchResults(parsedUrl: UrlWithParsedQuery): Promise<any[]> {
+    const rawQuery = (parsedUrl.query.q || '').toString();
+    if (!rawQuery) {
+      throw new InvalidQuery();
     }
 
-    start(port: number) {
-        const server = http.createServer(async (req: http.IncomingMessage, res: http.ServerResponse) => {
-            try {
-                await this.handle(req, res)
-            } catch(err) {
-                log.error(err)
-                res.writeHead(500, {})
-                res.end('')
-            }
-        })
-
-        server.listen(port, () => {
-            log.info(`Listening on port ${port}`)
-        })
+    if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
+      throw new InvalidQuery();
     }
 
-    handle(req: http.IncomingMessage, res: http.ServerResponse): void {
-        const url = req.url
-        if (!url) {
-            assert.fail("Assertion: Missing url")
-        }
-        const parsedUrl = parseUrl(url, true)
+    const query = new Query(rawQuery);
 
-        const pathname = (parsedUrl.pathname || "").replace(/\/+$/, '')
+    let searchProperty = parsedUrl.query.searchProperty || null;
+    if (typeof searchProperty === 'string') {
+      searchProperty = [searchProperty];
+    }
+    return await this.index.search(query, searchProperty);
+  }
 
-        if (pathname === '/search') {
-            if (checkMethod(req, res, 'GET')) {
-                this.handleSearch(parsedUrl, req, res)
-            }
-        } else if (pathname === '/refresh') {
-            if (checkMethod(req, res, 'POST')) {
-                this.handleRefresh(req, res)
-            }
-        } else if (pathname === '/status') {
-            if (checkMethod(req, res, 'GET')) {
-                this.handleStatus(parsedUrl, req, res)
-            }
-        } else if (pathname === '') {
-            if (checkMethod(req, res, 'GET')) {
-                this.handleUI(parsedUrl, req, res)
-            }
-        } else {
-            res.writeHead(400, {})
-            res.end('')
-        }
+  async handleSearch(
+    parsedUrl: UrlWithParsedQuery,
+    req: http.IncomingMessage,
+    res: http.ServerResponse
+  ): Promise<void> {
+    const start = process.hrtime.bigint();
+    const headers = {
+      'Content-Type': 'application/json',
+      Vary: 'Accept-Encoding',
+      'Cache-Control': 'public,max-age=120,must-revalidate',
+      'Access-Control-Allow-Origin': '*',
+    };
+    Object.assign(headers, STANDARD_HEADERS);
+
+    let results;
+    try {
+      results = await this.fetchResults(parsedUrl);
+    } catch (err) {
+      if (err instanceof InvalidQuery) {
+        res.writeHead(400, headers);
+        res.end('[]');
+        return;
+      }
+
+      throw err;
+    }
+    let responseBody = JSON.stringify(results);
+    res.writeHead(200, headers);
+    res.end(responseBody);
+
+    const end = process.hrtime.bigint();
+    log.info(Number(end - start) / 1000000);
+  }
+
+  async handleRefresh(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    const headers: Record<string, string> = {
+      Vary: 'Accept-Encoding',
+    };
+    Object.assign(headers, STANDARD_HEADERS);
+
+    try {
+      await this.index.load();
+    } catch (err) {
+      log.error(err);
+      headers['Content-Type'] = 'application/json';
+      const body = JSON.stringify({ errors: [err] });
+
+      if (err.message === 'already-indexing') {
+        res.writeHead(503, headers);
+      } else {
+        res.writeHead(500, headers);
+      }
+      res.end(body);
+      return;
     }
 
-    private async fetchResults(parsedUrl: UrlWithParsedQuery): Promise<any[]> {
-        const rawQuery = (parsedUrl.query.q || "").toString()
-        if (!rawQuery) {
-            throw new InvalidQuery()
-        }
-
-        if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
-            throw new InvalidQuery()
-        }
-
-        const query = new Query(rawQuery)
-
-        let searchProperty = parsedUrl.query.searchProperty || null
-        if (typeof searchProperty === "string") {
-            searchProperty = [searchProperty]
-        }
-        return await this.index.search(query, searchProperty)
+    if (this.index.lastRefresh && this.index.lastRefresh.errors.length > 0) {
+      headers['Content-Type'] = 'application/json';
+      const body = JSON.stringify({ errors: this.index.lastRefresh.errors });
+      res.writeHead(200, headers);
+      res.end(body);
+      return;
     }
 
-    async handleSearch(parsedUrl: UrlWithParsedQuery, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-        const start = process.hrtime.bigint()
-        const headers = {
-            'Content-Type': 'application/json',
-            'Vary': 'Accept-Encoding',
-            'Cache-Control': 'public,max-age=120,must-revalidate',
-            'Access-Control-Allow-Origin': '*',
-        }
-        Object.assign(headers, STANDARD_HEADERS)
+    res.writeHead(200, headers);
+    res.end('');
+  }
 
-        let results
-        try {
-            results = await this.fetchResults(parsedUrl)
-        } catch(err) {
-            if (err instanceof InvalidQuery) {
-                res.writeHead(400, headers)
-                res.end('[]')
-                return
-            }
+  async handleStatus(
+    parsedUrl: UrlWithParsedQuery,
+    req: http.IncomingMessage,
+    res: http.ServerResponse
+  ): Promise<void> {
+    const headers = {
+      'Content-Type': 'application/json',
+      Vary: 'Accept-Encoding',
+      Pragma: 'no-cache',
+      'Access-Control-Allow-Origin': '*',
+    };
+    Object.assign(headers, STANDARD_HEADERS);
 
-            throw err
-        }
-        let responseBody = JSON.stringify(results)
-        res.writeHead(200, headers)
-        res.end(responseBody)
+    const response: StatusResponse = {
+      manifests: this.index.manifests.map((manifest) => manifest.searchProperty),
+    };
 
-        const end = process.hrtime.bigint()
-        log.info(Number(end - start) / 1000000)
+    if (parsedUrl.query.verbose) {
+      response.lastSync = this.index.lastRefresh;
     }
 
-    async handleRefresh(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-        const headers: Record<string, string> = {
-            'Vary': 'Accept-Encoding'
-        }
-        Object.assign(headers, STANDARD_HEADERS)
+    res.writeHead(200, headers);
+    res.end(JSON.stringify(response));
+  }
 
-        try {
-            await this.index.load()
-        } catch(err) {
-            log.error(err)
-            headers['Content-Type'] = 'application/json'
-            const body = JSON.stringify({'errors': [err]})
+  async handleUI(parsedUrl: UrlWithParsedQuery, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    const headers = {
+      'Content-Type': 'text/html',
+      Vary: 'Accept-Encoding',
+      'Cache-Control': 'public,max-age=120,must-revalidate',
+    };
+    Object.assign(headers, STANDARD_HEADERS);
 
-            if (err.message === 'already-indexing') {
-                res.writeHead(503, headers)
-            } else {
-                res.writeHead(500, headers)
-            }
-            res.end(body)
-            return
-        }
-
-        if (this.index.lastRefresh && this.index.lastRefresh.errors.length > 0) {
-            headers['Content-Type'] = 'application/json'
-            const body = JSON.stringify({'errors': this.index.lastRefresh.errors})
-            res.writeHead(200, headers)
-            res.end(body)
-            return
-        }
-
-        res.writeHead(200, headers)
-        res.end('')
+    const dataList = this.index.manifests.map((manifest) => encodeURIComponent(manifest.searchProperty));
+    if (dataList.length > 0) {
+      dataList.unshift('');
     }
 
-    async handleStatus(parsedUrl: UrlWithParsedQuery, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-        const headers = {
-            'Content-Type': 'application/json',
-            'Vary': 'Accept-Encoding',
-            'Pragma': 'no-cache',
-            'Access-Control-Allow-Origin': '*'
-        }
-        Object.assign(headers, STANDARD_HEADERS)
-
-        const response: StatusResponse = {
-            "manifests": this.index.manifests.map(manifest => manifest.searchProperty),
-        }
-
-        if (parsedUrl.query.verbose) {
-            response.lastSync = this.index.lastRefresh
-        }
-
-        res.writeHead(200, headers)
-        res.end(JSON.stringify(response))
+    let query = parsedUrl.query.q || '';
+    if (Array.isArray(query)) {
+      query = query[0];
     }
 
-    async handleUI(parsedUrl: UrlWithParsedQuery, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-        const headers = {
-            'Content-Type': 'text/html',
-            'Vary': 'Accept-Encoding',
-            'Cache-Control': 'public,max-age=120,must-revalidate',
-        }
-        Object.assign(headers, STANDARD_HEADERS)
+    let searchProperty = parsedUrl.query.searchProperty || '';
+    if (Array.isArray(searchProperty)) {
+      searchProperty = searchProperty[0];
+    }
 
-        const dataList = this.index.manifests.map((manifest) => encodeURIComponent(manifest.searchProperty))
-        if (dataList.length > 0) {
-            dataList.unshift('')
-        }
+    let results = [];
+    let resultError = false;
+    try {
+      results = await this.fetchResults(parsedUrl);
+    } catch (err) {
+      resultError = true;
+    }
 
-        let query = parsedUrl.query.q || ''
-        if (Array.isArray(query)) {
-            query = query[0]
-        }
-
-        let searchProperty = parsedUrl.query.searchProperty || ''
-        if (Array.isArray(searchProperty)) {
-            searchProperty = searchProperty[0]
-        }
-
-        let results = []
-        let resultError = false
-        try {
-            results = await this.fetchResults(parsedUrl)
-        } catch(err) {
-            resultError = true
-        }
-
-        const resultTextParts = results.map(result => {
-            return `<li class="result">
+    const resultTextParts = results.map((result) => {
+      return `<li class="result">
                 <div class="result-title"><a href="${encodeURI(result.url)}">${escapeHTML(result.title)}</a></div>
                 <div class="result-preview">${escapeHTML(result.preview)}</div>
-            </li>`
-        })
+            </li>`;
+    });
 
-        let responseBody = `<!doctype html><html lang="en">
+    let responseBody = `<!doctype html><html lang="en">
         <head><title>Marian</title><meta charset="utf-8">
         <style>
         .results{list-style:none}
@@ -275,7 +287,9 @@ class Marian {
         <body>
         <form>
         <input placeholder="Search query" maxLength=100 id="input-search" autofocus value="${escapeHTML(query)}">
-        <input placeholder="Property to search" maxLength=50 list="properties" id="input-properties" value="${escapeHTML(searchProperty)}">
+        <input placeholder="Property to search" maxLength=50 list="properties" id="input-properties" value="${escapeHTML(
+          searchProperty
+        )}">
         <input type="submit" value="search" formaction="javascript:search()">
         </form>
         <datalist id=properties>
@@ -294,32 +308,32 @@ class Marian {
         }
         </script>
         </body>
-        </html>`
+        </html>`;
 
-        res.writeHead(200, headers)
-        res.end(responseBody)
-    }
+    res.writeHead(200, headers);
+    res.end(responseBody);
+  }
 }
 
 async function main() {
-    Logger.setLevel('info', true)
+  Logger.setLevel('info', true);
 
-    if (process.argv.length != 4 && process.argv.length != 5) {
-        console.error("Usage: search-transport <manifest-uri> <mongodb-uri> [--create-indexes]")
-        process.exit(1)
-    }
+  if (process.argv.length != 4 && process.argv.length != 5) {
+    console.error('Usage: search-transport <manifest-uri> <mongodb-uri> [--create-indexes]');
+    process.exit(1);
+  }
 
-    const client = await MongoClient.connect(process.argv[3], {useUnifiedTopology: true}, )
-    const searchIndex = new SearchIndex(process.argv[2], client)
-    if (process.argv.indexOf("--create-indexes") > -1) {
-        await searchIndex.createRecommendedIndexes()
-    }
-    const server = new Marian(searchIndex)
-    server.start(8080)
+  const client = await MongoClient.connect(process.argv[3], { useUnifiedTopology: true });
+  const searchIndex = new SearchIndex(process.argv[2], client);
+  if (process.argv.indexOf('--create-indexes') > -1) {
+    await searchIndex.createRecommendedIndexes();
+  }
+  const server = new Marian(searchIndex);
+  server.start(8080);
 }
 
 try {
-    main()
+  main();
 } catch (err) {
-    console.error(err)
+  console.error(err);
 }
