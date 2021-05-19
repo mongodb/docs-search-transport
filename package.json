@@ -9,7 +9,13 @@
   "scripts": {
     "build": "tsc",
     "test": "mocha",
-    "search-transport": "ts-node src/index.ts"
+    "lint": "npx prettier --check . && tsc --noEmit",
+    "format": "npx prettier --write .",
+    "search-transport": "ts-node src/index.ts",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   },
   "author": "Andrew Aldridge <andrew.aldridge@mongodb.com>",
   "license": "AGPL-3.0",
@@ -24,7 +30,10 @@
     "@types/mongodb": "^3.6.9",
     "@types/node": "^13.13.4",
     "eslint": "^6.8.0",
+    "husky": "^6.0.0",
+    "lint-staged": "^11.0.0",
     "mocha": "^7.1.2",
+    "prettier": "2.3.0",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.3"
   }
