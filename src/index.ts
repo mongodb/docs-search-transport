@@ -50,8 +50,16 @@ class Marian {
         this.index = index
 
         // Fire-and-forget loading
-        this.index.load().then(result => {
-            log.info(JSON.stringify(result))
+        this.index.isEmpty().then((empty) => {
+            if (!empty) {
+                return
+            }
+
+            return this.index.load()
+        }).then((result) => {
+            if (result) {
+                log.info(JSON.stringify(result))
+            }
         }).catch((err) => {
             log.error(err)
         })
@@ -127,8 +135,8 @@ class Marian {
         const query = new Query(rawQuery)
 
         let searchProperty = parsedUrl.query.searchProperty || null
-        if (Array.isArray(searchProperty)) {
-            searchProperty = searchProperty[0]
+        if (typeof searchProperty === "string") {
+            searchProperty = [searchProperty]
         }
         const results = await this.index.search(query, searchProperty)
         let responseBody = JSON.stringify(results)
@@ -198,20 +206,18 @@ class Marian {
 async function main() {
     Logger.setLevel('info', true)
 
-    if (process.argv.length != 4) {
-        console.error("Usage: search-transport <manifest-uri> <mongodb-uri>")
+    if (process.argv.length != 4 && process.argv.length != 5) {
+        console.error("Usage: search-transport <manifest-uri> <mongodb-uri> [--create-indexes]")
         process.exit(1)
     }
 
-    const client = new MongoClient(process.argv[3], {useUnifiedTopology: true})
+    const client = await MongoClient.connect(process.argv[3], {useUnifiedTopology: true}, )
     const searchIndex = new SearchIndex(process.argv[2], client)
-    client.connect((err) => {
-        assert.ok(!err)
-        log.info('Connected correctly to MongoDB')
-
-        const server = new Marian(searchIndex)
-        server.start(8080)
-    })
+    if (process.argv.indexOf("--create-indexes") > -1) {
+        await searchIndex.createRecommendedIndexes()
+    }
+    const server = new Marian(searchIndex)
+    server.start(8080)
 }
 
 try {

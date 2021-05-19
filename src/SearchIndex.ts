@@ -28,7 +28,7 @@ interface ManifestData {
     documents: Document[]
     includeInGlobalSearch: boolean
     url: string
-    aliases: string[]
+    aliases?: string[]
 }
 
 interface Manifest {
@@ -39,8 +39,9 @@ interface Manifest {
 }
 
 export interface DatabaseDocument extends Document {
+    url: string
     manifestRevisionId: string
-    searchProperty: string
+    searchProperty: string[]
     includeInGlobalSearch: boolean
 }
 
@@ -52,6 +53,10 @@ export interface RefreshInfo {
     dateStarted: Date
     dateFinished: Date | null
     elapsedMS: number | null
+}
+
+export function joinUrl(base: string, path: string): string {
+    return base.replace(/\/*$/, '/') + path.replace(/^\/*/, '')
 }
 
 function generateHash(data: string): Promise<string> {
@@ -195,17 +200,17 @@ export class SearchIndex {
         this.lastRefresh = null
     }
 
-    async search(query: Query, searchProperty: string | null) {
+    async search(query: Query, searchProperty: string[] | null) {
         const aggregationQuery = query.getAggregationQuery(searchProperty)
         log.info(JSON.stringify(aggregationQuery, null, 4))
         aggregationQuery.push({$limit: 50})
         aggregationQuery.push({$project: {
             "_id": 0,
             "title": 1,
-            "preview": 1
+            "preview": 1,
+            "url": 1
         }})
         const cursor = await this.documents.aggregate(aggregationQuery)
-
         return await cursor.toArray()
     }
 
@@ -235,6 +240,17 @@ export class SearchIndex {
         }
 
         return result
+    }
+
+    async createRecommendedIndexes(): Promise<void> {
+        await this.documents.createIndexes([
+            {key: {searchProperty: 1, manifestRevisionId: 1}},
+            {key: {searchProperty: 1, slug: 1}}
+        ])
+    }
+
+    async isEmpty(): Promise<boolean> {
+        return (await this.documents.estimatedDocumentCount()) === 0
     }
 
     private async sync(manifests: Manifest[]): Promise<RefreshInfo> {
@@ -277,8 +293,9 @@ export class SearchIndex {
 
                         const newDocument: DatabaseDocument = {
                             ...document,
+                            url: joinUrl(manifest.manifest.url, document.slug),
                             manifestRevisionId: manifest.manifestRevisionId,
-                            searchProperty: manifest.searchProperty,
+                            searchProperty: [manifest.searchProperty, ...manifest.manifest.aliases || []],
                             includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
                         }
 

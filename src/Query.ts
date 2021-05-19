@@ -233,7 +233,7 @@ export class Query {
         }
     }
 
-    getAggregationQuery(searchProperty: string | null): any[] {
+    getAggregationQuery(searchProperty: string[] | null): any[] {
         const parts: any[] = []
         const terms = Array.from(this.terms)
 
@@ -260,14 +260,26 @@ export class Query {
             score: { boost: { value: 10 } }
         }})
 
-        const filter = (searchProperty !== null) ? {searchProperty: searchProperty} : {includeInGlobalSearch: true}
+        const filter = (searchProperty !== null && searchProperty.length !== 0) ? {searchProperty: searchProperty} : {includeInGlobalSearch: true}
+
+        const compound: {should: any[], must?: any[], minimumShouldMatch: number} = {
+            should: parts,
+            minimumShouldMatch: 1
+        }
+
+        if (this.phrases.length > 0) {
+            compound.must = this.phrases.map((phrase) => {
+                return {phrase: {
+                    query: phrase,
+                    path: ["text", "headings", "title"]
+                }}
+            })
+        }
 
         return [{
-            $searchBeta: {
-                compound: {
-                    should: parts
-                }
+            $search: {
+                compound
             }
-        }, {$match: filter}]
+        }, {$match: {$expr: filter}}]
     }
 }
