@@ -32,7 +32,6 @@ describe("Searching", function() {
 
     it("should return proper results for a normal query", async () => {
         const result = await index.search(new Query('"connect dialog" compass'), null)
-        console.log(JSON.stringify((new Query('"connect dialog" compass')).getAggregationQuery(null), null, 4))
         deepStrictEqual(result, [
             {'title':'Connect via Compass — MongoDB Atlas','preview':'The Connect dialog for a cluster provides the details to connect to a cluster via Compass.','url':'https://docs.atlas.mongodb.com/compass-connection/index.html'},
             {"title":"Connect to a Cluster — MongoDB Atlas","preview": "Atlas provides instructions on connecting to a cluster via the mongo shell, a MongoDB driver, or MongoDB Compass via the Atlas UI.","url": "https://docs.atlas.mongodb.com/connect-to-cluster/index.html"},

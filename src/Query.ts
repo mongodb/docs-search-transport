@@ -261,7 +261,6 @@ export class Query {
         }})
 
         const filter = (searchProperty !== null && searchProperty.length !== 0) ? {searchProperty: searchProperty} : {includeInGlobalSearch: true}
-        console.log(filter)
 
         const compound: {should: any[], must?: any[], minimumShouldMatch: number} = {
             should: parts,
