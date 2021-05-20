@@ -1,0 +1,24 @@
+ingress:
+  enabled: true
+  hosts:
+    - docs-search-transport.docs.staging.corp.mongodb.com
+
+envSecrets:
+  ATLAS_URI: docs-search-transport
+
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+
+probes:
+  enabled: true
+  path: /status
+  headers: {}
+  liveness:
+    httpGet: true
+    initialDelaySeconds: 10
+    periodSeconds: 60
+    timeoutSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
