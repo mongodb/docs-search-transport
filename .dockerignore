@@ -1,0 +1,7 @@
+# Treat this as an allow-list: only include files we specifically ask for
+*
+
+!package.json
+!package-lock.json
+!build/**/*.js
+!tsconfig.json

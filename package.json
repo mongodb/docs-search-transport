@@ -7,7 +7,7 @@
     "src/index.js"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "rm -r build; tsc",
     "test": "mocha",
     "lint": "npx prettier --check . && tsc --noEmit",
     "format": "npx prettier --write .",

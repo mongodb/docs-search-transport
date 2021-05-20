@@ -323,9 +323,11 @@ export class SearchIndex {
             };
           });
 
-          const bulkWriteStatus = await this.documents.bulkWrite(operations, { session, ordered: false });
-          if (bulkWriteStatus.upsertedCount) {
-            status.updated.push(manifest.searchProperty);
+          if (operations.length > 0) {
+            const bulkWriteStatus = await this.documents.bulkWrite(operations, { session, ordered: false });
+            if (bulkWriteStatus.upsertedCount) {
+              status.updated.push(manifest.searchProperty);
+            }
           }
         }, transactionOptions);
 
