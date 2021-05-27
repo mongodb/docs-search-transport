@@ -323,6 +323,7 @@ export class SearchIndex {
             };
           });
 
+          // If there are any documents in the manifest, upsert them
           if (operations.length > 0) {
             const bulkWriteStatus = await this.documents.bulkWrite(operations, { session, ordered: false });
             if (bulkWriteStatus.upsertedCount) {
