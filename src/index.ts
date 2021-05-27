@@ -315,19 +315,47 @@ class Marian {
   }
 }
 
+const MANIFEST_URI_KEY = 'MANIFEST_URI';
+const ATLAS_URI_KEY = 'ATLAS_URI';
+
+function help(): void {
+  console.error(`Usage: search-transport <manifest-uri> <mongodb-uri>
+If a value is "ENV", consult the appropriate environment variable:
+* ${MANIFEST_URI_KEY}
+* ${ATLAS_URI_KEY}`);
+}
+
 async function main() {
   Logger.setLevel('info', true);
 
-  if (process.argv.length != 4 && process.argv.length != 5) {
-    console.error('Usage: search-transport <manifest-uri> <mongodb-uri> [--create-indexes]');
+  if (
+    process.argv.length < 2 ||
+    process.argv.length > 4 ||
+    process.argv.includes('--help') ||
+    process.argv.includes('-h')
+  ) {
+    help();
     process.exit(1);
   }
 
-  const client = await MongoClient.connect(process.argv[3], { useUnifiedTopology: true });
-  const searchIndex = new SearchIndex(process.argv[2], client);
-  if (process.argv.indexOf('--create-indexes') > -1) {
-    await searchIndex.createRecommendedIndexes();
+  let manifestUri: string | undefined = process.argv[2];
+  if (!manifestUri || manifestUri === 'ENV') {
+    manifestUri = process.env[MANIFEST_URI_KEY];
   }
+
+  let atlasUri: string | undefined = process.argv[3];
+  if (!atlasUri || atlasUri === 'ENV') {
+    atlasUri = process.env[ATLAS_URI_KEY];
+  }
+
+  if (!manifestUri || !atlasUri) {
+    help();
+    process.exit(1);
+  }
+
+  const client = await MongoClient.connect(atlasUri, { useUnifiedTopology: true });
+  const searchIndex = new SearchIndex(manifestUri, client);
+  await searchIndex.createRecommendedIndexes();
   const server = new Marian(searchIndex);
   server.start(8080);
 }
