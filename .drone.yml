@@ -1,42 +1,33 @@
 ---
-kind: pipeline
-type: kubernetes
-name: default
-
-trigger:
-  branch:
-    - main
-
-steps:
-  - name: publish
+pipeline:
+  publish-staging:
     image: plugins/ecr
-    settings:
-      create_repository: true
-      registry: 795250896452.dkr.ecr.us-east-1.amazonaws.com
-      repo: 795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME}
-      tags:
-        - git-${DRONE_COMMIT_SHA:0:7}
-        - latest
-      access_key:
-        from_secret: ecr_access_key
-      secret_key:
-        from_secret: ecr_secret_key
+    secrets: [ecr_access_key, ecr_secret_key]
+    registry: 795250896452.dkr.ecr.us-east-1.amazonaws.com
+    repo: 795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME}
+    create_repository: true
+    tags:
+      - git-${DRONE_COMMIT_SHA:0:7}
+      - latest
     when:
-      event:
-        - push
+      branch: main
+      event: push
 
-  - name: deploy-staging
+  deploy-staging:
     image: quay.io/mongodb/drone-helm:v3
-    settings:
-      chart: mongodb/web-app
-      chart_version: 4.7.3
-      add_repos: [mongodb=https://10gen.github.io/helm-charts]
-      namespace: docs
-      release: docs-search-transport
-      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=docs-search-transport.docs.staging.corp.mongodb.com
-      api_server: https://api.staging.corp.mongodb.com
-      kubernetes_token:
-        from_secret: staging_kubernetes_token
+    release: docs-worker-pool
+    namespace: docs
+    environment:
+      - API_SERVER=https://api.staging.corp.mongodb.com
+    prefix: STAGING
+    secrets: [staging_kubernetes_token]
+    values_files: ['environments/staging.yml']
+    helm_repos: mongodb=https://10gen.github.io/helm-charts
+    chart: mongodb/web-app
+    chart_version: 4.7.3
+    tiller_ns: docs
+    client_only: true
+    values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=docs-search-transport.docs.staging.corp.mongodb.com
     when:
-      event:
-        - push
+      branch: master
+      event: push
