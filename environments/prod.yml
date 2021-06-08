@@ -10,9 +10,7 @@ env:
   MANIFEST_URI: 's3://docs-mongodb-org-prod/search-indexes/'
 
 service:
-  type: ClusterIP
-  port: 3000
-  targetPort: 3000
+  targetPort: 8080
 
 probes:
   enabled: true
