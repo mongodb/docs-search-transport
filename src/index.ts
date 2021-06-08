@@ -349,6 +349,12 @@ async function main() {
   }
 
   if (!manifestUri || !atlasUri) {
+    if (!manifestUri) {
+      console.error(`Missing ${MANIFEST_URI_KEY}`);
+    }
+    if (!atlasUri) {
+      console.error(`Missing ${ATLAS_URI_KEY}`);
+    }
     help();
     process.exit(1);
   }
