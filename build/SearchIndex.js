@@ -141,7 +141,7 @@ class SearchIndex {
   constructor(manifestSource, client, databaseName = 'search') {
     this.currentlyIndexing = false;
     this.manifestSource = manifestSource;
-    this.manifests = [];
+    this.manifests = null;
     this.client = client;
     this.db = client.db(databaseName);
     this.documents = this.db.collection('documents');
@@ -191,9 +191,6 @@ class SearchIndex {
       { key: { searchProperty: 1, manifestRevisionId: 1 } },
       { key: { searchProperty: 1, slug: 1 } },
     ]);
-  }
-  async isEmpty() {
-    return (await this.documents.estimatedDocumentCount()) === 0;
   }
   async sync(manifests) {
     // Syncing the database has a few discrete stages:

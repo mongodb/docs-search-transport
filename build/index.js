@@ -48,13 +48,7 @@ class Marian {
     this.index = index;
     // Fire-and-forget loading
     this.index
-      .isEmpty()
-      .then((empty) => {
-        if (!empty) {
-          return;
-        }
-        return this.index.load();
-      })
+      .load()
       .then((result) => {
         if (result) {
           log.info(JSON.stringify(result));
@@ -184,6 +178,11 @@ class Marian {
       'Access-Control-Allow-Origin': '*',
     };
     Object.assign(headers, STANDARD_HEADERS);
+    if (this.index.manifests === null) {
+      res.writeHead(503, headers);
+      res.end('');
+      return;
+    }
     const response = {
       manifests: this.index.manifests.map((manifest) => manifest.searchProperty),
     };
@@ -200,7 +199,7 @@ class Marian {
       'Cache-Control': 'public,max-age=120,must-revalidate',
     };
     Object.assign(headers, STANDARD_HEADERS);
-    const dataList = this.index.manifests.map((manifest) => encodeURIComponent(manifest.searchProperty));
+    const dataList = (this.index.manifests || []).map((manifest) => encodeURIComponent(manifest.searchProperty));
     if (dataList.length > 0) {
       dataList.unshift('');
     }

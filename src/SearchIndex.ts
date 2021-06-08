@@ -195,7 +195,7 @@ async function getManifests(manifestSource: string): Promise<Manifest[]> {
 export class SearchIndex {
   currentlyIndexing: boolean;
   manifestSource: string;
-  manifests: Manifest[];
+  manifests: Manifest[] | null;
 
   client: MongoClient;
   db: Db;
@@ -205,7 +205,7 @@ export class SearchIndex {
   constructor(manifestSource: string, client: MongoClient, databaseName: string = 'search') {
     this.currentlyIndexing = false;
     this.manifestSource = manifestSource;
-    this.manifests = [];
+    this.manifests = null;
 
     this.client = client;
     this.db = client.db(databaseName);
@@ -262,10 +262,6 @@ export class SearchIndex {
       { key: { searchProperty: 1, manifestRevisionId: 1 } },
       { key: { searchProperty: 1, slug: 1 } },
     ]);
-  }
-
-  async isEmpty(): Promise<boolean> {
-    return (await this.documents.estimatedDocumentCount()) === 0;
   }
 
   private async sync(manifests: Manifest[]): Promise<RefreshInfo> {

@@ -62,14 +62,7 @@ class Marian {
 
     // Fire-and-forget loading
     this.index
-      .isEmpty()
-      .then((empty) => {
-        if (!empty) {
-          return;
-        }
-
-        return this.index.load();
-      })
+      .load()
       .then((result) => {
         if (result) {
           log.info(JSON.stringify(result));
@@ -227,6 +220,12 @@ class Marian {
     };
     Object.assign(headers, STANDARD_HEADERS);
 
+    if (this.index.manifests === null) {
+      res.writeHead(503, headers);
+      res.end('');
+      return;
+    }
+
     const response: StatusResponse = {
       manifests: this.index.manifests.map((manifest) => manifest.searchProperty),
     };
@@ -247,7 +246,7 @@ class Marian {
     };
     Object.assign(headers, STANDARD_HEADERS);
 
-    const dataList = this.index.manifests.map((manifest) => encodeURIComponent(manifest.searchProperty));
+    const dataList = (this.index.manifests || []).map((manifest) => encodeURIComponent(manifest.searchProperty));
     if (dataList.length > 0) {
       dataList.unshift('');
     }
