@@ -40,7 +40,7 @@ async function getManifestsFromS3(bucketName, prefix) {
   const result = await util_1.default.promisify(
     s3.makeUnauthenticatedRequest.bind(s3, 'listObjectsV2', {
       Bucket: bucketName,
-      Prefix: prefix,
+      Prefix: prefix.replace(/^\//, ''),
     })
   )();
   if (result.IsTruncated) {
@@ -115,23 +115,19 @@ function getManifestsFromDirectory(prefix) {
 /// Fetch manifests from a given path. It can (for historic cruft reasons)
 /// take one of two formats:
 /// dir:<path> to load manifests from a local directory.
-/// bucket:<bucketName>/<prefix> to load manifests from an S3 location.
+/// s3://<bucketName>/<prefix> to load manifests from an S3 location.
 async function getManifests(manifestSource) {
-  const parsedSource = manifestSource.match(/((?:bucket)|(?:dir)):(.+)/);
-  if (!parsedSource) {
-    throw new Error('Bad manifest source');
-  }
+  const parsed = new URL(manifestSource);
   let manifests;
-  if (parsedSource[1] === 'bucket') {
-    const parts = parsedSource[2].split('/', 2);
-    const bucketName = parts[0].trim();
-    const prefix = parts[1].trim();
+  if (parsed.protocol === 's3:') {
+    const bucketName = parsed.host.trim();
+    const prefix = parsed.pathname.trim();
     if (!bucketName.length || !prefix.length) {
       throw new Error('Bad bucket manifest source');
     }
     manifests = await getManifestsFromS3(bucketName, prefix);
-  } else if (parsedSource[1] === 'dir') {
-    manifests = await getManifestsFromDirectory(parsedSource[2]);
+  } else if (parsed.protocol === 'dir:') {
+    manifests = await getManifestsFromDirectory(parsed.pathname);
   } else {
     throw new Error('Unknown manifest source protocol');
   }
