@@ -245,7 +245,7 @@ class Query {
     });
     const filter =
       searchProperty !== null && searchProperty.length !== 0
-        ? { searchProperty: searchProperty }
+        ? { searchProperty: { $elemMatch: { $in: searchProperty } } }
         : { includeInGlobalSearch: true };
     const compound = {
       should: parts,
@@ -267,7 +267,7 @@ class Query {
           compound,
         },
       },
-      { $match: { $expr: filter } },
+      { $match: filter },
     ];
   }
 }

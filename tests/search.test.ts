@@ -145,12 +145,6 @@ describe('Searching', function () {
         url: 'https://docs.mongodb.com/bi-connector/current/schema-configuration/index.html',
       },
       {
-        title: 'MongoDB Reference — MongoDB Atlas',
-        preview:
-          'For a comprehensive documentation of MongoDB, refer to the MongoDB Manual. The following sections in the manual provide some starting points for developing with MongoDB.',
-        url: 'https://docs.atlas.mongodb.com/mongodb-reference/index.html',
-      },
-      {
         title: 'Release Notes for MongoDB Connector for BI — MongoDB Connector for BI 2.2',
         preview:
           'Supports authenticating directly against MongoDB using the new C and JDBC authentication plugins. These plugins support SCRAM-SHA-1 and PLAIN mechanisms and remove the SSL requirement for authentication. The authentication plugins can be found on GitHub:',
@@ -168,20 +162,9 @@ describe('Searching', function () {
         url: 'https://docs.mongodb.com/bi-connector/current/reference/mongodrdl/index.html',
       },
       {
-        title: 'Query a Backup Snapshot — MongoDB Atlas',
-        preview:
-          'Atlas provides queryable backups. This functionality allows you to query specific backup snapshot. You can use the queryable backups to:',
-        url: 'https://docs.atlas.mongodb.com/query-backup/index.html',
-      },
-      {
         title: 'mongosqld — MongoDB Connector for BI 2.2',
         preview: 'The mongosqld command man page.',
         url: 'https://docs.mongodb.com/bi-connector/current/reference/mongosqld/index.html',
-      },
-      {
-        title: 'Create a Cluster — MongoDB Atlas',
-        preview: 'Atlas-managed MongoDB deployments, or “clusters”, can be either a replica set or a sharded cluster.',
-        url: 'https://docs.atlas.mongodb.com/create-new-cluster/index.html',
       },
     ]);
 
