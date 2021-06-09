@@ -8,6 +8,7 @@ envSecrets:
 
 env:
   MANIFEST_URI: 's3://docs-mongodb-org-prod/search-indexes/'
+  ATLAS_DATABASE: 'search-staging'
 
 service:
   targetPort: 8080

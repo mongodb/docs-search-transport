@@ -262,11 +262,16 @@ class Marian {
 }
 const MANIFEST_URI_KEY = 'MANIFEST_URI';
 const ATLAS_URI_KEY = 'ATLAS_URI';
+const DATABASE_NAME_KEY = 'ATLAS_DATABASE';
+const DEFAULT_DATABASE_NAME = 'search';
 function help() {
   console.error(`Usage: search-transport <manifest-uri> <mongodb-uri>
-If a value is "ENV", consult the appropriate environment variable:
+If a value is "ENV", consult the environment.
+
+The following environment variables are used:
 * ${MANIFEST_URI_KEY}
-* ${ATLAS_URI_KEY}`);
+* ${ATLAS_URI_KEY}
+* ${DATABASE_NAME_KEY}`);
 }
 async function main() {
   basic_logger_1.default.setLevel('info', true);
@@ -287,6 +292,11 @@ async function main() {
   if (!atlasUri || atlasUri === 'ENV') {
     atlasUri = process.env[ATLAS_URI_KEY];
   }
+  let databaseName = DEFAULT_DATABASE_NAME;
+  const envDBName = process.env[DATABASE_NAME_KEY];
+  if (envDBName) {
+    databaseName = envDBName;
+  }
   if (!manifestUri || !atlasUri) {
     if (!manifestUri) {
       console.error(`Missing ${MANIFEST_URI_KEY}`);
@@ -298,7 +308,7 @@ async function main() {
     process.exit(1);
   }
   const client = await mongodb_1.MongoClient.connect(atlasUri, { useUnifiedTopology: true });
-  const searchIndex = new SearchIndex_1.SearchIndex(manifestUri, client);
+  const searchIndex = new SearchIndex_1.SearchIndex(manifestUri, client, databaseName);
   await searchIndex.createRecommendedIndexes();
   const server = new Marian(searchIndex);
   server.start(8080);

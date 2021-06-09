@@ -134,7 +134,7 @@ async function getManifests(manifestSource) {
   return manifests;
 }
 class SearchIndex {
-  constructor(manifestSource, client, databaseName = 'search') {
+  constructor(manifestSource, client, databaseName) {
     this.currentlyIndexing = false;
     this.manifestSource = manifestSource;
     this.manifests = null;

@@ -198,7 +198,7 @@ export class SearchIndex {
   lastRefresh: RefreshInfo | null;
   documents: Collection;
 
-  constructor(manifestSource: string, client: MongoClient, databaseName: string = 'search') {
+  constructor(manifestSource: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;
     this.manifestSource = manifestSource;
     this.manifests = null;
