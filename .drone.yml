@@ -4,10 +4,10 @@ type: kubernetes
 name: default
 
 trigger:
-  branch:
-    - main
-  event:
-    - tag
+  ref:
+    include:
+      - 'refs/tags/v*'
+      - 'refs/heads/main'
 
 steps:
   - name: publish-staging
