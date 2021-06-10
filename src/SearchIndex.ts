@@ -253,6 +253,7 @@ export class SearchIndex {
   }
 
   async createRecommendedIndexes(): Promise<void> {
+    log.info('Creating indexes');
     await this.documents.createIndexes([
       { key: { searchProperty: 1, manifestRevisionId: 1 } },
       { key: { searchProperty: 1, slug: 1 } },

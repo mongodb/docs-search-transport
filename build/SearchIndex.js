@@ -182,6 +182,7 @@ class SearchIndex {
     return result;
   }
   async createRecommendedIndexes() {
+    log.info('Creating indexes');
     await this.documents.createIndexes([
       { key: { searchProperty: 1, manifestRevisionId: 1 } },
       { key: { searchProperty: 1, slug: 1 } },
