@@ -145,7 +145,6 @@ class SearchIndex {
   }
   async search(query, searchProperty) {
     const aggregationQuery = query.getAggregationQuery(searchProperty);
-    log.info(JSON.stringify(aggregationQuery, null, 4));
     aggregationQuery.push({ $limit: 50 });
     aggregationQuery.push({
       $project: {

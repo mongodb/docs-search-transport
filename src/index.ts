@@ -144,7 +144,6 @@ class Marian {
     req: http.IncomingMessage,
     res: http.ServerResponse
   ): Promise<void> {
-    const start = process.hrtime.bigint();
     const headers = {
       'Content-Type': 'application/json',
       Vary: 'Accept-Encoding',
@@ -168,9 +167,6 @@ class Marian {
     let responseBody = JSON.stringify(results);
     res.writeHead(200, headers);
     res.end(responseBody);
-
-    const end = process.hrtime.bigint();
-    log.info(Number(end - start) / 1000000);
   }
 
   async handleRefresh(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
