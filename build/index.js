@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node
 'use strict';
 var __importDefault =
   (this && this.__importDefault) ||
@@ -13,22 +13,25 @@ const url_1 = require('url');
 // @ts-ignore
 const basic_logger_1 = __importDefault(require('basic-logger'));
 const Query_1 = require('./Query');
+const util_1 = require('./util');
 const SearchIndex_1 = require('./SearchIndex');
 process.title = 'search-transport';
 const MAXIMUM_QUERY_LENGTH = 100;
 const STANDARD_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'deny',
 };
+const MANIFEST_URI_KEY = 'MANIFEST_URI';
+const ATLAS_URI_KEY = 'ATLAS_URI';
+const DATABASE_NAME_KEY = 'ATLAS_DATABASE';
+const DEFAULT_DATABASE_NAME = 'search';
 const log = new basic_logger_1.default({
   showTimestamp: true,
 });
-function escapeHTML(unsafe) {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+function checkAllowedOrigin(origin, headers) {
+  if (origin && util_1.isPermittedOrigin(new URL(origin))) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
 }
 /**
  * If the request method does not match the method parameter, return false
@@ -91,10 +94,6 @@ class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatus(parsedUrl, req, res);
       }
-    } else if (pathname === '') {
-      if (checkMethod(req, res, 'GET')) {
-        this.handleUI(parsedUrl, req, res);
-      }
     } else {
       res.writeHead(400, {});
       res.end('');
@@ -118,11 +117,11 @@ class Marian {
   async handleSearch(parsedUrl, req, res) {
     const headers = {
       'Content-Type': 'application/json',
-      Vary: 'Accept-Encoding',
+      Vary: 'Accept-Encoding, Origin',
       'Cache-Control': 'public,max-age=120,must-revalidate',
-      'Access-Control-Allow-Origin': '*',
     };
     Object.assign(headers, STANDARD_HEADERS);
+    checkAllowedOrigin(req.headers.origin, headers);
     let results;
     try {
       results = await this.fetchResults(parsedUrl);
@@ -170,11 +169,11 @@ class Marian {
   async handleStatus(parsedUrl, req, res) {
     const headers = {
       'Content-Type': 'application/json',
-      Vary: 'Accept-Encoding',
+      Vary: 'Accept-Encoding, Origin',
       Pragma: 'no-cache',
-      'Access-Control-Allow-Origin': '*',
     };
     Object.assign(headers, STANDARD_HEADERS);
+    checkAllowedOrigin(req.headers.origin, headers);
     if (this.index.manifests === null) {
       res.writeHead(503, headers);
       res.end('');
@@ -189,78 +188,7 @@ class Marian {
     res.writeHead(200, headers);
     res.end(JSON.stringify(response));
   }
-  async handleUI(parsedUrl, req, res) {
-    const headers = {
-      'Content-Type': 'text/html',
-      Vary: 'Accept-Encoding',
-      'Cache-Control': 'public,max-age=120,must-revalidate',
-    };
-    Object.assign(headers, STANDARD_HEADERS);
-    const dataList = (this.index.manifests || []).map((manifest) => encodeURIComponent(manifest.searchProperty));
-    if (dataList.length > 0) {
-      dataList.unshift('');
-    }
-    let query = parsedUrl.query.q || '';
-    if (Array.isArray(query)) {
-      query = query[0];
-    }
-    let searchProperty = parsedUrl.query.searchProperty || '';
-    if (Array.isArray(searchProperty)) {
-      searchProperty = searchProperty[0];
-    }
-    let results = [];
-    let resultError = false;
-    try {
-      results = await this.fetchResults(parsedUrl);
-    } catch (err) {
-      resultError = true;
-    }
-    const resultTextParts = results.map((result) => {
-      return `<li class="result">
-                <div class="result-title"><a href="${encodeURI(result.url)}">${escapeHTML(result.title)}</a></div>
-                <div class="result-preview">${escapeHTML(result.preview)}</div>
-            </li>`;
-    });
-    let responseBody = `<!doctype html><html lang="en">
-        <head><title>Marian</title><meta charset="utf-8">
-        <style>
-        .results{list-style:none}
-        .result{padding:10px 0;max-width:50em}
-        </style>
-        </head>
-        <body>
-        <form>
-        <input placeholder="Search query" maxLength=100 id="input-search" autofocus value="${escapeHTML(query)}">
-        <input placeholder="Property to search" maxLength=50 list="properties" id="input-properties" value="${escapeHTML(
-          searchProperty
-        )}">
-        <input type="submit" value="search" formaction="javascript:search()">
-        </form>
-        <datalist id=properties>
-        ${dataList.join('<option>')}
-        </datalist>
-        ${resultError ? '<p>Error fetching results</p>' : ''}
-        <ul class="results">
-        ${resultTextParts.join('\n')}
-        </ul>
-        <script>
-        function search() {
-            const rawQuery = document.getElementById("input-search").value
-            const rawProperties = document.getElementById("input-properties").value.trim()
-            const propertiesComponent = rawProperties.length > 0 ? "&searchProperty=" + encodeURIComponent(rawProperties) : ""
-            document.location.search = "q=" + encodeURIComponent(rawQuery) + propertiesComponent
-        }
-        </script>
-        </body>
-        </html>`;
-    res.writeHead(200, headers);
-    res.end(responseBody);
-  }
 }
-const MANIFEST_URI_KEY = 'MANIFEST_URI';
-const ATLAS_URI_KEY = 'ATLAS_URI';
-const DATABASE_NAME_KEY = 'ATLAS_DATABASE';
-const DEFAULT_DATABASE_NAME = 'search';
 function help() {
   console.error(`Usage: search-transport [--create-indexes]
 
