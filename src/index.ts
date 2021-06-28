@@ -4,7 +4,7 @@
 import { MongoClient } from 'mongodb';
 import assert from 'assert';
 import http from 'http';
-import { parse as parseUrl, UrlWithParsedQuery } from 'url';
+import { UrlWithParsedQuery } from 'url';
 
 // @ts-ignore
 import Logger from 'basic-logger';
@@ -37,7 +37,18 @@ interface StatusResponse {
 }
 
 function checkAllowedOrigin(origin: string | undefined, headers: Record<string, string>): void {
-  if (origin && isPermittedOrigin(new URL(origin))) {
+  if (!origin) {
+    return;
+  }
+
+  let url;
+  try {
+    url = new URL(origin);
+  } catch (err) {
+    return;
+  }
+
+  if (isPermittedOrigin(url)) {
     headers['Access-Control-Allow-Origin'] = origin;
   }
 }
@@ -98,7 +109,7 @@ class Marian {
     if (!url) {
       assert.fail('Assertion: Missing url');
     }
-    const parsedUrl = parseUrl(url, true);
+    const parsedUrl = new URL(url, `http://${req.headers.host}`);
 
     const pathname = (parsedUrl.pathname || '').replace(/\/+$/, '');
 
@@ -120,8 +131,8 @@ class Marian {
     }
   }
 
-  private async fetchResults(parsedUrl: UrlWithParsedQuery): Promise<any[]> {
-    const rawQuery = (parsedUrl.query.q || '').toString();
+  private async fetchResults(parsedUrl: URL): Promise<any[]> {
+    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
     if (!rawQuery) {
       throw new InvalidQuery();
     }
@@ -132,18 +143,14 @@ class Marian {
 
     const query = new Query(rawQuery);
 
-    let searchProperty = parsedUrl.query.searchProperty || null;
+    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
     return await this.index.search(query, searchProperty);
   }
 
-  async handleSearch(
-    parsedUrl: UrlWithParsedQuery,
-    req: http.IncomingMessage,
-    res: http.ServerResponse
-  ): Promise<void> {
+  async handleSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Vary: 'Accept-Encoding, Origin',
@@ -204,11 +211,7 @@ class Marian {
     res.end('');
   }
 
-  async handleStatus(
-    parsedUrl: UrlWithParsedQuery,
-    req: http.IncomingMessage,
-    res: http.ServerResponse
-  ): Promise<void> {
+  async handleStatus(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     const headers = {
       'Content-Type': 'application/json',
       Vary: 'Accept-Encoding, Origin',
@@ -228,7 +231,7 @@ class Marian {
       manifests: this.index.manifests.map((manifest) => manifest.searchProperty),
     };
 
-    if (parsedUrl.query.verbose) {
+    if (parsedUrl.searchParams.has('verbose')) {
       response.lastSync = this.index.lastRefresh;
     }
 

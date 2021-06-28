@@ -9,7 +9,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
 const mongodb_1 = require('mongodb');
 const assert_1 = __importDefault(require('assert'));
 const http_1 = __importDefault(require('http'));
-const url_1 = require('url');
 // @ts-ignore
 const basic_logger_1 = __importDefault(require('basic-logger'));
 const Query_1 = require('./Query');
@@ -29,7 +28,16 @@ const log = new basic_logger_1.default({
   showTimestamp: true,
 });
 function checkAllowedOrigin(origin, headers) {
-  if (origin && util_1.isPermittedOrigin(new URL(origin))) {
+  if (!origin) {
+    return;
+  }
+  let url;
+  try {
+    url = new URL(origin);
+  } catch (err) {
+    return;
+  }
+  if (util_1.isPermittedOrigin(url)) {
     headers['Access-Control-Allow-Origin'] = origin;
   }
 }
@@ -80,7 +88,7 @@ class Marian {
     if (!url) {
       assert_1.default.fail('Assertion: Missing url');
     }
-    const parsedUrl = url_1.parse(url, true);
+    const parsedUrl = new URL(url, `http://${req.headers.host}`);
     const pathname = (parsedUrl.pathname || '').replace(/\/+$/, '');
     if (pathname === '/search') {
       if (checkMethod(req, res, 'GET')) {
@@ -100,7 +108,7 @@ class Marian {
     }
   }
   async fetchResults(parsedUrl) {
-    const rawQuery = (parsedUrl.query.q || '').toString();
+    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
     if (!rawQuery) {
       throw new InvalidQuery();
     }
@@ -108,7 +116,7 @@ class Marian {
       throw new InvalidQuery();
     }
     const query = new Query_1.Query(rawQuery);
-    let searchProperty = parsedUrl.query.searchProperty || null;
+    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
@@ -182,7 +190,7 @@ class Marian {
     const response = {
       manifests: this.index.manifests.map((manifest) => manifest.searchProperty),
     };
-    if (parsedUrl.query.verbose) {
+    if (parsedUrl.searchParams.has('verbose')) {
       response.lastSync = this.index.lastRefresh;
     }
     res.writeHead(200, headers);
