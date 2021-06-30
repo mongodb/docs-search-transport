@@ -141,7 +141,7 @@ class Marian {
       }
       throw err;
     }
-    let responseBody = JSON.stringify(results);
+    let responseBody = JSON.stringify({ results: results });
     res.writeHead(200, headers);
     res.end(responseBody);
   }
