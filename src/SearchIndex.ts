@@ -53,6 +53,7 @@ export interface RefreshInfo {
   dateStarted: Date;
   dateFinished: Date | null;
   elapsedMS: number | null;
+  duplicateProperties: string[];
 }
 
 export function joinUrl(base: string, path: string): string {
@@ -283,7 +284,11 @@ export class SearchIndex {
       dateStarted: new Date(),
       dateFinished: null,
       elapsedMS: null,
+      duplicateProperties: [],
     };
+
+    const manifestsSeen = new Set();
+    const duplicateManifestsSeen = [];
 
     try {
       for (const manifest of manifests) {
@@ -292,6 +297,14 @@ export class SearchIndex {
         assert.ok(manifest.searchProperty);
         assert.strictEqual(typeof manifest.manifestRevisionId, 'string');
         assert.ok(manifest.manifestRevisionId);
+
+        const searchPropertyList = [manifest.searchProperty, ...(manifest.manifest.aliases || [])];
+        for (const property of searchPropertyList) {
+          if (manifestsSeen.has(property)) {
+            duplicateManifestsSeen.push(property);
+          }
+          manifestsSeen.add(property);
+        }
 
         await session.withTransaction(async () => {
           const operations: BulkWriteOperation<DatabaseDocument>[] = manifest.manifest.documents.map((document) => {
@@ -302,13 +315,13 @@ export class SearchIndex {
               ...document,
               url: joinUrl(manifest.manifest.url, document.slug),
               manifestRevisionId: manifest.manifestRevisionId,
-              searchProperty: [manifest.searchProperty, ...(manifest.manifest.aliases || [])],
+              searchProperty: searchPropertyList,
               includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
             };
 
             return {
               updateOne: {
-                filter: { searchProperty: newDocument.searchProperty, slug: newDocument.slug },
+                filter: { searchProperty: manifest.searchProperty, slug: newDocument.slug },
                 update: { $set: newDocument },
                 upsert: true,
               },
@@ -358,6 +371,7 @@ export class SearchIndex {
 
     status.dateFinished = new Date();
     status.elapsedMS = Number(process.hrtime.bigint() - startTime) / 1000000;
+    status.duplicateProperties = duplicateManifestsSeen;
     return status;
   }
 }
