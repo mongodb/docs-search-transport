@@ -172,6 +172,20 @@ describe('Searching', function () {
     deepStrictEqual(result, result3);
   });
 
+  // Test variants of searchProperty
+  it('should properly handle incorrect urls in manifests', async () => {
+    let result = await index.search(new Query('manual'), ['manual-v5.1']);
+
+    deepStrictEqual(result, [
+      {
+        preview:
+          'MongoDB 5.1 release candidates are not yet available. This version of the manual is for an upcoming release and is currently a work in progress.',
+        title: 'The MongoDB 5.1 Manual (Upcoming Release) — MongoDB Manual',
+        url: 'https://docs.mongodb.com/v5.1/index.html',
+      },
+    ]);
+  });
+
   after(async function () {
     // await client.db(TEST_DATABASE).collection("documents").deleteMany({})
     await client.close();

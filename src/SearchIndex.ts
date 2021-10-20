@@ -185,6 +185,13 @@ async function getManifests(manifestSource: string): Promise<Manifest[]> {
     throw new Error('Unknown manifest source protocol');
   }
 
+  // We have a persistent problem with weird URLs. Remove excess leading slashes.
+  for (const manifest of manifests) {
+    const urlRoot = new URL(manifest.manifest.url);
+    urlRoot.pathname = urlRoot.pathname.replace(/^\/+/, '');
+    manifest.manifest.url = urlRoot.toString();
+  }
+
   return manifests;
 }
 
