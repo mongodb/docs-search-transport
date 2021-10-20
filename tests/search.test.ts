@@ -56,9 +56,20 @@ describe('Searching', function () {
         url: 'https://docs.atlas.mongodb.com/driver-connection/index.html',
       },
       {
+        preview: 'The MongoDB Connector for BI is a named connector in Tableau.',
+        title: 'Connect from Tableau Desktop — MongoDB Connector for BI 2.2',
+        url: 'https://docs.mongodb.com/bi-connector/current/connect/tableau/index.html',
+      },
+      {
         title: 'Load File with mongoimport — MongoDB Atlas',
         preview: 'You can use mongoimport to import data from a JSON or a CSV file into MongoDB Atlas cluster.',
         url: 'https://docs.atlas.mongodb.com/import/mongoimport/index.html',
+      },
+      {
+        preview:
+          'For Atlas clusters deployed on Google Cloud Platform or Microsoft Azure, add the IP addresses of your GCP or Azure services to Atlas group IP whitelist to grant those services access to the cluster.',
+        title: 'Set up VPC Peering Connection — MongoDB Atlas',
+        url: 'https://docs.atlas.mongodb.com/security-vpc-peering/index.html',
       },
       {
         title: 'Migrate with mongomirror — MongoDB Atlas',
@@ -111,6 +122,22 @@ describe('Searching', function () {
         url: 'https://docs.mongodb.com/bi-connector/current/faq/index.html',
       },
       {
+        preview: 'MongoDB Connector for BI Version 2.2 is compatible with SQL-99 SELECT statements.',
+        title: 'Supported SQL Functions and Operators — MongoDB Connector for BI 2.2',
+        url: 'https://docs.mongodb.com/bi-connector/current/supported-operations/index.html',
+      },
+      {
+        preview:
+          'Atlas collects and displays metrics for your servers, databases, and MongoDB processes. Atlas displays three charts in the Clusters view and additional charts in the Metrics view.',
+        title: 'Monitor a Cluster — MongoDB Atlas',
+        url: 'https://docs.atlas.mongodb.com/monitor-cluster-metrics/index.html',
+      },
+      {
+        preview: 'Atlas Free Tier clusters do not support all functionality available to other clusters.',
+        title: 'Command Limitations in Free Tier Clusters — MongoDB Atlas',
+        url: 'https://docs.atlas.mongodb.com/unsupported-commands/index.html',
+      },
+      {
         title: 'mongodrdl — MongoDB Connector for BI 2.2',
         preview: 'The mongodrdl command man page.',
         url: 'https://docs.mongodb.com/bi-connector/current/reference/mongodrdl/index.html',
@@ -155,6 +182,11 @@ describe('Searching', function () {
         preview:
           'Changed in version 2.0: Prior to version 2.0, the MongoDB Connector for BI stored its own separate set of credentials.',
         url: 'https://docs.mongodb.com/bi-connector/current/faq/index.html',
+      },
+      {
+        preview: 'MongoDB Connector for BI Version 2.2 is compatible with SQL-99 SELECT statements.',
+        title: 'Supported SQL Functions and Operators — MongoDB Connector for BI 2.2',
+        url: 'https://docs.mongodb.com/bi-connector/current/supported-operations/index.html',
       },
       {
         title: 'mongodrdl — MongoDB Connector for BI 2.2',
