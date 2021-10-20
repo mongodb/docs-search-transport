@@ -1,0 +1,27 @@
+{
+    "url": "https://docs.mongodb.com//v5.1",
+    "includeInGlobalSearch": false,
+    "documents": [
+        {
+            "slug": "index.html",
+            "title": "The MongoDB 5.1 Manual (Upcoming Release) \u2014 MongoDB Manual",
+            "headings": [
+                "The MongoDB 5.1 Manual (Upcoming Release) ",
+                "Getting Started ",
+                "Support ",
+                "MongoDB Community ",
+                "MongoDB Atlas or Cloud Manager ",
+                "MongoDB Enterprise or Ops Manager ",
+                "Issues ",
+                "Community ",
+                "Learning MongoDB ",
+                "Licensing ",
+                "Additional Resources "
+            ],
+            "text": "The MongoDB 5.1 Manual (Upcoming Release) \u00b6 Warning MongoDB 5.1 Release Candidates MongoDB 5.1 release candidates are not yet available.\nThis version of the manual is for an upcoming release and is\ncurrently a work in progress. Welcome to the MongoDB 5.1 Manual! MongoDB is a\ndocument database designed for ease of development\nand scaling. The Manual introduces key concepts in MongoDB, presents the\nquery language, and provides operational and administrative\nconsiderations and procedures as well as a comprehensive reference\nsection. MongoDB offers both local and cloud-hosted deployment options: For locally hosted deployments, MongoDB offers both a  Community \nand an  Enterprise  version of the database: MongoDB Community is the  source available and free to use  edition of MongoDB. MongoDB Enterprise is available as part of the MongoDB Enterprise\nAdvanced subscription and includes comprehensive support for your\nMongoDB deployment. MongoDB Enterprise also adds enterprise-focused\nfeatures such as LDAP and Kerberos support, on-disk encryption,\nand auditing. MongoDB Atlas \nis a hosted MongoDB Enterprise service option in the cloud which\nrequires no installation overhead and offers a free tier to get\nstarted. The Manual documents features and functionality for MongoDB Community,\nEnterprise, and Atlas deployments. Getting Started \u00b6 MongoDB provides a Getting Started Guide in the following editions: mongo Shell Edition Node.JS Edition Python Edition C++ Edition Java Edition C# Edition Ruby Edition Once you complete the Getting Started Guide, you may find the following topics\nuseful. Introduction Developers Administrators Reference Introduction to MongoDB Installation Guides Databases and Collections Documents CRUD Operations Aggregation SQL to MongoDB Indexes Production Notes Replica Sets Sharded Clusters MongoDB Security Shell Methods Query Operators Reference Glossary Support \u00b6 MongoDB Community \u00b6 For questions, discussions, or general technical support, visit the\n MongoDB Community Forums .\nThe MongoDB Community Forums are a centralized place to connect with\nother MongoDB users, ask questions, and get answers. MongoDB Atlas or Cloud Manager \u00b6 For technical support questions, please log into your  MongoDB Cloud\naccount  and open a\nsupport ticket. MongoDB Enterprise or Ops Manager \u00b6 For technical support questions, please file a ticket through the\n MongoDB Support Portal . Issues \u00b6 For instructions on how to file a JIRA ticket for the MongoDB server or\none of the related projects, see\n https://github.com/mongodb/mongo/wiki/Submit-Bug-Reports . Community \u00b6 Getting involved in the MongoDB community is a great way to build\nrelationships with other talented and like-minded engineers, increase\nawareness for the interesting work that you are doing, and sharpen your\nskills. To learn about the MongoDB community, see\n Get Involved with MongoDB . Learning MongoDB \u00b6 In addition to the documentation, there are many ways to learn to use\nMongoDB. You can: Enroll in a free online course at  MongoDB University Browse the archive of  MongoDB Presentations Join a local  MongoDB User Group (MUG) Attend an upcoming MongoDB  event  or\n webinar Read the  MongoDB blog Download the  Architecture Guide Read the  Practical MongoDB Aggregations  e-book Licensing \u00b6 The manual is licensed under a  Creative Commons\nAttribution-NonCommercial-ShareAlike 3.0 United States License . For information on MongoDB licensing, see  MongoDB Licensing . Additional Resources \u00b6 MongoDB, Inc. The company behind MongoDB. MongoDB Atlas Database as a service. MongoDB Cloud Manager A cloud-based hosted operations management solution for MongoDB. MongoDB Ops Manager Enterprise operations management solution for MongoDB: includes\nAutomation, Backup, and Monitoring. MongoDB Drivers The documentation available for the drivers for use with MongoDB.",
+            "preview": "MongoDB 5.1 release candidates are not yet available. This version of the manual is for an upcoming release and is currently a work in progress.",
+            "tags": "",
+            "links": []
+        }
+    ]
+}
