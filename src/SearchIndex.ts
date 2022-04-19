@@ -225,6 +225,7 @@ export class SearchIndex {
         title: 1,
         preview: 1,
         url: 1,
+        searchProperty: 1,
       },
     });
     const cursor = await this.documents.aggregate(aggregationQuery);
