@@ -7,7 +7,7 @@ envSecrets:
   ATLAS_URI: docs-search-transport
 
 env:
-  MANIFEST_URI: 's3://docs-mongodb-org-stg/search-indexes/'
+  MANIFEST_URI: 's3://docs-search-indexes-test/search-indexes/preprd/'
   ATLAS_DATABASE: 'search-staging'
 
 service:
