@@ -201,6 +201,7 @@ export class Query {
    * @param {string} queryString The query to parse
    */
   constructor(queryString: string) {
+    console.log('Query parsing: ' + queryString);
     this.terms = new Set();
     this.phrases = [];
     this.rawQuery = queryString;
@@ -291,7 +292,7 @@ export class Query {
       });
     }
 
-    return [
+    const agg = [
       {
         $search: {
           compound,
@@ -299,5 +300,7 @@ export class Query {
       },
       { $match: filter },
     ];
+    console.log('Executing ' + JSON.stringify(agg));
+    return agg;
   }
 }
