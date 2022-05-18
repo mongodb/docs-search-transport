@@ -8,13 +8,14 @@ import { MongoClient, Collection, TransactionOptions, BulkWriteOperation, Db } f
 import dive from 'dive';
 // @ts-ignore
 import Logger from 'basic-logger';
+import { applyHeuristics } from './SearchHeuristics';
 import { Query } from './Query';
 
 const log = new Logger({
   showTimestamp: true,
 });
 
-interface Document {
+export interface Document {
   slug: string;
   title: string;
   headings: string[];
@@ -204,6 +205,7 @@ export class SearchIndex {
   db: Db;
   lastRefresh: RefreshInfo | null;
   documents: Collection;
+  unindexable: Collection;
 
   constructor(manifestSource: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;
@@ -213,6 +215,7 @@ export class SearchIndex {
     this.client = client;
     this.db = client.db(databaseName);
     this.documents = this.db.collection('documents');
+    this.unindexable = this.db.collection('unindexable');
     this.lastRefresh = null;
   }
 
@@ -269,11 +272,50 @@ export class SearchIndex {
   }
 
   private async sync(manifests: Manifest[]): Promise<RefreshInfo> {
-    // Syncing the database has a few discrete stages:
+    // Syncing the database has a few discrete stages, some of which are helper functions:
     // 1) Fetch all manifests from S3
+    // 1.5) Split manifest documents into searchable and unsearchable groupings
     // 2) Upsert all documents
     // 2.5) Remove documents that should not be part of each manifest
     // 3) Remove any documents attached to manifests that we don't know about
+
+    // HELPERS //
+    const deleteOldManifestEntries = async (collection: Collection, manifest: Manifest) => {
+      log.debug(`Removing old documents for ${manifest.searchProperty}`);
+        const deleteResult = await collection.deleteMany(
+          {
+            searchProperty: manifest.searchProperty,
+            manifestRevisionId: { $ne: manifest.manifestRevisionId },
+          },
+          { session }
+        );
+        status.deleted += deleteResult.deletedCount === undefined ? 0 : deleteResult.deletedCount;
+        log.debug(`Removed ${deleteResult.deletedCount} entries from  documents`);
+    }
+
+    const composeUpserts = (manifest: Manifest, documents: Document[]): BulkWriteOperation<DatabaseDocument>[] => {
+      return documents.map((document) => {
+        assert.strictEqual(typeof document.slug, 'string');
+        assert.ok(document.slug);
+  
+        const newDocument: DatabaseDocument = {
+          ...document,
+          url: joinUrl(manifest.manifest.url, document.slug),
+          manifestRevisionId: manifest.manifestRevisionId,
+          searchProperty: [manifest.searchProperty, ...(manifest.manifest.aliases || [])],
+          includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
+        };
+  
+        return {
+          updateOne: {
+            filter: { searchProperty: newDocument.searchProperty, slug: newDocument.slug },
+            update: { $set: newDocument },
+            upsert: true,
+          },
+        };
+      });
+    } 
+
 
     const session = this.client.startSession();
     const transactionOptions: TransactionOptions = {
@@ -293,6 +335,8 @@ export class SearchIndex {
       elapsedMS: null,
     };
 
+
+
     try {
       for (const manifest of manifests) {
         log.info(`Starting transaction: ${manifest.searchProperty}`);
@@ -302,46 +346,28 @@ export class SearchIndex {
         assert.ok(manifest.manifestRevisionId);
 
         await session.withTransaction(async () => {
-          const operations: BulkWriteOperation<DatabaseDocument>[] = manifest.manifest.documents.map((document) => {
-            assert.strictEqual(typeof document.slug, 'string');
-            assert.ok(document.slug);
 
-            const newDocument: DatabaseDocument = {
-              ...document,
-              url: joinUrl(manifest.manifest.url, document.slug),
-              manifestRevisionId: manifest.manifestRevisionId,
-              searchProperty: [manifest.searchProperty, ...(manifest.manifest.aliases || [])],
-              includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
-            };
+          // Apply base threshold criteria for a "searchable" document and split our documents accordingly
+          const { searchable, unsearchable } = applyHeuristics(manifest.manifest.documents);
+          
+          const searchableOperations = composeUpserts(manifest, searchable);
+          const unsearchableOperations = composeUpserts(manifest, unsearchable);
 
-            return {
-              updateOne: {
-                filter: { searchProperty: newDocument.searchProperty, slug: newDocument.slug },
-                update: { $set: newDocument },
-                upsert: true,
-              },
-            };
-          });
+          // Upsert documents deemed to be searchable, e.g. we want to surface them to users
+          if (searchableOperations.length > 0) {
+            const bulkWriteStatus = await this.documents.bulkWrite(searchableOperations, { session, ordered: false });
+            if (bulkWriteStatus.upsertedCount) status.updated.push(manifest.searchProperty);
+          }
 
-          // If there are any documents in the manifest, upsert them
-          if (operations.length > 0) {
-            const bulkWriteStatus = await this.documents.bulkWrite(operations, { session, ordered: false });
-            if (bulkWriteStatus.upsertedCount) {
-              status.updated.push(manifest.searchProperty);
-            }
+          // Upsert documents rejected from being searchable, for diagnostic purposes
+          if (unsearchableOperations.length > 0) {
+            const bulkWriteStatus = await this.unindexable.bulkWrite(unsearchableOperations, { session, ordered: false });
+            if (bulkWriteStatus.upsertedCount) status.updated.push(manifest.searchProperty);
           }
         }, transactionOptions);
 
-        log.debug(`Removing old documents for ${manifest.searchProperty}`);
-        const deleteResult = await this.documents.deleteMany(
-          {
-            searchProperty: manifest.searchProperty,
-            manifestRevisionId: { $ne: manifest.manifestRevisionId },
-          },
-          { session }
-        );
-        status.deleted += deleteResult.deletedCount === undefined ? 0 : deleteResult.deletedCount;
-        log.debug(`Removed ${deleteResult.deletedCount} documents`);
+        deleteOldManifestEntries(this.documents, manifest);
+        deleteOldManifestEntries(this.unindexable, manifest);
       }
 
       log.debug('Deleting old properties');
