@@ -10,7 +10,7 @@
     "src/index.js"
   ],
   "scripts": {
-    "build": "rm -r build; tsc",
+    "build": "rm -r build; tsc && npm run format",
     "test": "mocha",
     "lint": "npx prettier --check . && tsc --noEmit",
     "format": "npx prettier --write .",
