@@ -363,7 +363,7 @@ const deleteStaleDocuments = async (
     { session }
   );
   status.deleted += deleteResult.deletedCount === undefined ? 0 : deleteResult.deletedCount;
-  log.debug(`Removed ${deleteResult.deletedCount} entries from  documents`);
+  log.debug(`Removed ${deleteResult.deletedCount} entries from ${collection.collectionName}`);
 };
 
 const deleteStaleProperties = async (

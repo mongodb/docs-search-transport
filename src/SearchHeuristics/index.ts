@@ -11,7 +11,8 @@ interface FilteredDocuments {
 
 const hasMinimumTextThreshold = (doc: Document) => {
   const MINIMUM_CONTENT_LENGTH = 40;
-  return doc.text.length >= MINIMUM_CONTENT_LENGTH;
+  const titlelessText = doc.text.replace(doc.title, '');
+  return titlelessText.length >= MINIMUM_CONTENT_LENGTH;
 };
 
 const hasPreview = (doc: Document) => !!doc.preview?.trim();
