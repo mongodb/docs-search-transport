@@ -315,13 +315,13 @@ export class SearchIndex {
           // Upsert documents deemed to be searchable, e.g. we want to surface them to users
           if (searchableUpserts.length > 0) {
             const bulkWriteStatus = await this.documents.bulkWrite(searchableUpserts, { session, ordered: false });
-            if (bulkWriteStatus.upsertedCount) status.updated.push(manifest.searchProperty);
+            if (bulkWriteStatus.upsertedCount) status.updated.push(`${manifest.searchProperty} - indexable`);
           }
 
           // Upsert documents rejected from being searchable, for diagnostic purposes
           if (unsearchableUpserts.length > 0) {
             const bulkWriteStatus = await this.unindexable.bulkWrite(unsearchableUpserts, { session, ordered: false });
-            if (bulkWriteStatus.upsertedCount) status.updated.push(manifest.searchProperty);
+            if (bulkWriteStatus.upsertedCount) status.updated.push(`${manifest.searchProperty} - unindexable`);
           }
         }, transactionOptions);
 
