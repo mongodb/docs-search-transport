@@ -3,7 +3,8 @@ Object.defineProperty(exports, '__esModule', { value: true });
 exports.applyHeuristics = void 0;
 const hasMinimumTextThreshold = (doc) => {
   const MINIMUM_CONTENT_LENGTH = 40;
-  return doc.text.length >= MINIMUM_CONTENT_LENGTH;
+  const titlelessText = doc.text.replace(doc.title, '');
+  return titlelessText.length >= MINIMUM_CONTENT_LENGTH;
 };
 const hasPreview = (doc) => !!doc.preview?.trim();
 const isInteractive = (doc) => doc.links?.length >= 2;
