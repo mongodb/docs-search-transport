@@ -244,6 +244,7 @@ export class Query {
       text: {
         query: terms,
         path: 'text',
+        synonyms: 'search_synonyms',
       },
     });
 
@@ -252,6 +253,7 @@ export class Query {
         query: terms,
         path: 'headings',
         score: { boost: { value: 5 } },
+        synonyms: 'search_synonyms',
       },
     });
 
@@ -259,6 +261,7 @@ export class Query {
       text: {
         query: terms,
         path: 'title',
+        synonyms: 'search_synonyms',
         score: { boost: { value: 10 } },
       },
     });
@@ -267,6 +270,7 @@ export class Query {
       text: {
         query: terms,
         path: 'tags',
+        synonyms: 'search_synonyms',
         score: { boost: { value: 10 } },
       },
     });
