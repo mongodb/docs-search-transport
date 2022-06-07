@@ -298,6 +298,7 @@ export class Query {
           compound,
         },
       },
+      { $addFields: {"score": { "$meta": "searchScore" }}},
       { $match: filter },
     ];
     console.log('Executing ' + JSON.stringify(agg));
