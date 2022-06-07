@@ -131,7 +131,7 @@ class Marian {
     }
   }
 
-  private async fetchResults(parsedUrl: URL): Promise<any[]> {
+  private async fetchResults(parsedUrl: URL, retry: boolean): Promise<any[]> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
     if (!rawQuery) {
       throw new InvalidQuery();
@@ -143,12 +143,14 @@ class Marian {
 
     const query = new Query(rawQuery);
 
-    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
+    let searchProperty = retry === false ? parsedUrl.searchParams.getAll('searchProperty') || null : "";
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
     return await this.index.search(query, searchProperty);
   }
+
+
 
   async handleSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     const headers: Record<string, string> = {
@@ -161,8 +163,9 @@ class Marian {
     checkAllowedOrigin(req.headers.origin, headers);
 
     let results;
+    let highest;
     try {
-      results = await this.fetchResults(parsedUrl);
+      results = await this.fetchResults(parsedUrl, false);
     } catch (err) {
       if (err instanceof InvalidQuery) {
         res.writeHead(400, headers);
@@ -172,6 +175,22 @@ class Marian {
 
       throw err;
     }
+    highest = results[0]['score']
+    if (highest < 15) {
+        try {
+            results = await this.fetchResults(parsedUrl, true);
+        } catch (err) {
+            if (err instanceof InvalidQuery) {
+              res.writeHead(400, headers);
+              res.end('[]');
+              return;
+            }
+      
+            throw err;
+        }
+    }
+    
+    
     let responseBody = JSON.stringify({ results: results });
     res.writeHead(200, headers);
     res.end(responseBody);
