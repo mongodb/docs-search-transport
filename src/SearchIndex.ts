@@ -17,19 +17,18 @@ const log = new Logger({
 
 export interface Document {
   slug: string;
-  title: string;
-  headings: string[];
-  text: string;
-  preview: string;
-  tags: string;
-  links: string[];
+  title?: string;
+  headings?: string[];
+  paragraphs: string;
+  code: {}[];
+  preview?: string;
+  tags: null | string[];
 }
 
 interface ManifestData {
   documents: Document[];
   includeInGlobalSearch: boolean;
   url: string;
-  aliases?: string[];
 }
 
 interface Manifest {
@@ -306,22 +305,12 @@ export class SearchIndex {
         assert.ok(manifest.manifestRevisionId);
 
         await session.withTransaction(async () => {
-          // Apply base threshold criteria for a "searchable" document and split our documents accordingly
-          const { searchable, unsearchable } = applyHeuristics(manifest.manifest.documents);
+          const upserts = composeUpserts(manifest, manifest.manifest.documents);
 
-          const searchableUpserts = composeUpserts(manifest, searchable);
-          const unsearchableUpserts = composeUpserts(manifest, unsearchable);
-
-          // Upsert documents deemed to be searchable, e.g. we want to surface them to users
-          if (searchableUpserts.length > 0) {
+          // Upsert documents
+          if (upserts.length > 0) {
             const bulkWriteStatus = await this.documents.bulkWrite(searchableUpserts, { session, ordered: false });
             if (bulkWriteStatus.upsertedCount) status.updated.push(`${manifest.searchProperty} - indexable`);
-          }
-
-          // Upsert documents rejected from being searchable, for diagnostic purposes
-          if (unsearchableUpserts.length > 0) {
-            const bulkWriteStatus = await this.unindexable.bulkWrite(unsearchableUpserts, { session, ordered: false });
-            if (bulkWriteStatus.upsertedCount) status.updated.push(`${manifest.searchProperty} - unindexable`);
           }
         }, transactionOptions);
 
