@@ -295,7 +295,7 @@ const composeUpserts = (manifest, documents) => {
       ...document,
       url: joinUrl(manifest.manifest.url, document.slug),
       manifestRevisionId: manifest.manifestRevisionId,
-      searchProperty: [manifest.searchProperty, ...(manifest.manifest.aliases || [])],
+      searchProperty: [manifest.searchProperty, ...[]],
       includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
     };
     return {
