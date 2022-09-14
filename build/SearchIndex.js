@@ -15,7 +15,6 @@ const s3_1 = __importDefault(require('aws-sdk/clients/s3'));
 const dive_1 = __importDefault(require('dive'));
 // @ts-ignore
 const basic_logger_1 = __importDefault(require('basic-logger'));
-const SearchHeuristics_1 = require('./SearchHeuristics');
 const log = new basic_logger_1.default({
   showTimestamp: true,
 });
@@ -228,19 +227,11 @@ class SearchIndex {
         assert_1.default.strictEqual(typeof manifest.manifestRevisionId, 'string');
         assert_1.default.ok(manifest.manifestRevisionId);
         await session.withTransaction(async () => {
-          // Apply base threshold criteria for a "searchable" document and split our documents accordingly
-          const { searchable, unsearchable } = SearchHeuristics_1.applyHeuristics(manifest.manifest.documents);
-          const searchableUpserts = composeUpserts(manifest, searchable);
-          const unsearchableUpserts = composeUpserts(manifest, unsearchable);
-          // Upsert documents deemed to be searchable, e.g. we want to surface them to users
-          if (searchableUpserts.length > 0) {
-            const bulkWriteStatus = await this.documents.bulkWrite(searchableUpserts, { session, ordered: false });
+          const upserts = composeUpserts(manifest, manifest.manifest.documents);
+          // Upsert documents
+          if (upserts.length > 0) {
+            const bulkWriteStatus = await this.documents.bulkWrite(upserts, { session, ordered: false });
             if (bulkWriteStatus.upsertedCount) status.updated.push(`${manifest.searchProperty} - indexable`);
-          }
-          // Upsert documents rejected from being searchable, for diagnostic purposes
-          if (unsearchableUpserts.length > 0) {
-            const bulkWriteStatus = await this.unindexable.bulkWrite(unsearchableUpserts, { session, ordered: false });
-            if (bulkWriteStatus.upsertedCount) status.updated.push(`${manifest.searchProperty} - unindexable`);
           }
         }, transactionOptions);
         deleteStaleDocuments(this.documents, manifest, session, status);
@@ -295,7 +286,7 @@ const composeUpserts = (manifest, documents) => {
       ...document,
       url: joinUrl(manifest.manifest.url, document.slug),
       manifestRevisionId: manifest.manifestRevisionId,
-      searchProperty: [manifest.searchProperty, ...[]],
+      searchProperty: [manifest.searchProperty],
       includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
     };
     return {

@@ -8,7 +8,6 @@ import { MongoClient, Collection, TransactionOptions, BulkWriteOperation, Db, Cl
 import dive from 'dive';
 // @ts-ignore
 import Logger from 'basic-logger';
-import { applyHeuristics } from './SearchHeuristics';
 import { Query } from './Query';
 
 const log = new Logger({
@@ -309,7 +308,7 @@ export class SearchIndex {
 
           // Upsert documents
           if (upserts.length > 0) {
-            const bulkWriteStatus = await this.documents.bulkWrite(searchableUpserts, { session, ordered: false });
+            const bulkWriteStatus = await this.documents.bulkWrite(upserts, { session, ordered: false });
             if (bulkWriteStatus.upsertedCount) status.updated.push(`${manifest.searchProperty} - indexable`);
           }
         }, transactionOptions);
@@ -382,7 +381,7 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): BulkWriteOpe
       ...document,
       url: joinUrl(manifest.manifest.url, document.slug),
       manifestRevisionId: manifest.manifestRevisionId,
-      searchProperty: [manifest.searchProperty, ...(manifest.manifest.aliases || [])],
+      searchProperty: [manifest.searchProperty],
       includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
     };
 
