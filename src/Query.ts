@@ -243,7 +243,7 @@ export class Query {
     parts.push({
       text: {
         query: terms,
-        path: 'text',
+        path: ['paragraphs', 'code.lang'],
       },
     });
 
@@ -252,6 +252,14 @@ export class Query {
         query: terms,
         path: 'headings',
         score: { boost: { value: 5 } },
+      },
+    });
+
+    parts.push({
+      text: {
+        query: terms,
+        path: 'code.value',
+        score: { boost: { value: 10 } },
       },
     });
 
@@ -286,7 +294,7 @@ export class Query {
         return {
           phrase: {
             query: phrase,
-            path: ['text', 'headings', 'title'],
+            path: ['paragraphs', 'headings', 'code.value', 'title'],
           },
         };
       });
