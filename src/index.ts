@@ -282,7 +282,7 @@ async function main() {
     process.exit(1);
   }
 
-  log.info(`Loading manifests from ${manifestUri}`)
+  log.info(`Loading manifests from ${manifestUri}`);
 
   const client = await MongoClient.connect(atlasUri, { useUnifiedTopology: true });
   const searchIndex = new SearchIndex(manifestUri, client, databaseName);
