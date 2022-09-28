@@ -313,19 +313,19 @@ export class SearchIndex {
           }
         }, transactionOptions);
 
-        deleteStaleDocuments(this.documents, manifest, session, status);
-        deleteStaleDocuments(this.unindexable, manifest, session, status);
+        await deleteStaleDocuments(this.documents, manifest, session, status);
+        await deleteStaleDocuments(this.unindexable, manifest, session, status);
       }
 
-      deleteStaleProperties(this.documents, manifests, session, status);
-      deleteStaleProperties(this.unindexable, manifests, session, status);
+      await deleteStaleProperties(this.documents, manifests, session, status);
+      await deleteStaleProperties(this.unindexable, manifests, session, status);
 
       this.lastRefresh = status;
     } catch (err) {
       log.error(err);
       status.errors.push(err);
     } finally {
-      session.endSession();
+      await session.endSession();
       log.info('Done!');
     }
 
