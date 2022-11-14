@@ -18,8 +18,9 @@ export interface Document {
   slug: string;
   title?: string;
   headings?: string[];
-  paragraphs: string;
-  code: {}[];
+  text?: string; // legacy manifests have text instead of paragraphs
+  paragraphs?: string; // legacy manifests will not have paragraphs
+  code?: {}[]; // legacy manifests will not have code field
   preview?: string;
   tags: null | string[];
 }
