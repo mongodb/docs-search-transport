@@ -220,7 +220,7 @@ class Query {
     parts.push({
       text: {
         query: terms,
-        path: ['paragraphs', 'code.lang'],
+        path: ['paragraphs', 'code.lang', 'code.value', 'text'],
       },
     });
     parts.push({
@@ -228,13 +228,6 @@ class Query {
         query: terms,
         path: 'headings',
         score: { boost: { value: 5 } },
-      },
-    });
-    parts.push({
-      text: {
-        query: terms,
-        path: 'code.value',
-        score: { boost: { value: 10 } },
       },
     });
     parts.push({
@@ -264,7 +257,7 @@ class Query {
         return {
           phrase: {
             query: phrase,
-            path: ['paragraphs', 'headings', 'code.value', 'title'],
+            path: ['paragraphs', 'text', 'headings', 'code.value', 'title'],
           },
         };
       });
