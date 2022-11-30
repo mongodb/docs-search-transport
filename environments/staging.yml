@@ -24,3 +24,9 @@ probes:
     timeoutSeconds: 1
     successThreshold: 1
     failureThreshold: 3
+
+resources:
+  limits:
+    memory: 350Mi
+  requests:
+    memory: 500Mi
