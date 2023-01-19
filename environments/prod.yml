@@ -26,6 +26,6 @@ probes:
 
 resources:
   limits:
-    memory: 900Mi
+    memory: 1300Mi
   requests:
-    memory: 1200Mi
+    memory: 1100Mi
