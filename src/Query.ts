@@ -296,6 +296,9 @@ export class Query {
       {
         $search: {
           compound,
+          tracking : {
+            searchTerms : this.terms, 
+          },
         },
       },
       { $match: filter },
