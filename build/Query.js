@@ -267,7 +267,7 @@ class Query {
         $search: {
           compound,
           tracking: {
-            searchTerms: this.terms,
+            searchTerms: this.rawQuery,
           },
         },
       },
