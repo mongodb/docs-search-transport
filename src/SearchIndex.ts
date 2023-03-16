@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import util from 'util';
 import S3 from 'aws-sdk/clients/s3';
-import { MongoClient, Collection, TransactionOptions, BulkWriteOperation, Db, ClientSession } from 'mongodb';
+import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession } from 'mongodb';
 // @ts-ignore
 import dive from 'dive';
 // @ts-ignore
@@ -203,8 +203,8 @@ export class SearchIndex {
   client: MongoClient;
   db: Db;
   lastRefresh: RefreshInfo | null;
-  documents: Collection;
-  unindexable: Collection;
+  documents: Collection<DatabaseDocument>;
+  unindexable: Collection<DatabaseDocument>;
 
   constructor(manifestSource: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;
@@ -213,8 +213,8 @@ export class SearchIndex {
 
     this.client = client;
     this.db = client.db(databaseName);
-    this.documents = this.db.collection('documents');
-    this.unindexable = this.db.collection('unindexable');
+    this.documents = this.db.collection<DatabaseDocument>('documents');
+    this.unindexable = this.db.collection<DatabaseDocument>('unindexable');
     this.lastRefresh = null;
   }
 
@@ -338,7 +338,7 @@ export class SearchIndex {
 
 // sync() helpers //
 const deleteStaleDocuments = async (
-  collection: Collection,
+  collection: Collection<DatabaseDocument>,
   manifest: Manifest,
   session: ClientSession,
   status: RefreshInfo
@@ -356,7 +356,7 @@ const deleteStaleDocuments = async (
 };
 
 const deleteStaleProperties = async (
-  collection: Collection,
+  collection: Collection<DatabaseDocument>,
   manifests: Manifest[],
   session: ClientSession,
   status: RefreshInfo
@@ -368,12 +368,12 @@ const deleteStaleProperties = async (
         $nin: manifests.map((manifest) => manifest.searchProperty),
       },
     },
-    { session, w: 'majority' }
+    { session, writeConcern: { w: 'majority' } }
   );
   status.deleted += deleteResult.deletedCount === undefined ? 0 : deleteResult.deletedCount;
 };
 
-const composeUpserts = (manifest: Manifest, documents: Document[]): BulkWriteOperation<DatabaseDocument>[] => {
+const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWriteOperation<DatabaseDocument>[] => {
   return documents.map((document) => {
     assert.strictEqual(typeof document.slug, 'string');
     assert.ok(document.slug);
