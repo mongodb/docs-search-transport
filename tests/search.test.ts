@@ -14,7 +14,7 @@ describe('Searching', function () {
     return;
   }
 
-  const client = new MongoClient(connectionString, { useUnifiedTopology: true });
+  const client = new MongoClient(connectionString);
   let index: SearchIndex;
 
   before('Loading test data', async function () {
