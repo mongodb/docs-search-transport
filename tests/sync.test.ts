@@ -21,11 +21,9 @@ describe('Synchronization', function () {
   let index: SearchIndex;
 
   before(function (done) {
-    console.log('Starting before()');
     client.connect().then(async () => {
       await client.db(DB).dropDatabase();
       index = new SearchIndex(PATH_STATE_1, client, DB);
-      console.log('About to be done()');
       done();
     });
   });
@@ -35,7 +33,6 @@ describe('Synchronization', function () {
   });
 
   const loadInitialState = async () => {
-    console.log('Running loadInitialState()');
     await index.load(PATH_STATE_1);
     const documentsCursor = client.db(DB).collection<DatabaseDocument>('documents');
     const documents = await documentsCursor.find().toArray();
