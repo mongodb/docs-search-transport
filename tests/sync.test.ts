@@ -17,12 +17,11 @@ function sortDocuments(documents: DatabaseDocument[]): void {
 
 describe('Synchronization', function () {
   this.slow(1000);
-  const client = new MongoClient('mongodb://localhost', { useUnifiedTopology: true });
+  const client = new MongoClient('mongodb://localhost');
   let index: SearchIndex;
 
   before(function (done) {
-    client.connect(async (err) => {
-      strictEqual(err, null, `Error connecting to MongoDB: ${err}`);
+    client.connect().then(async () => {
       await client.db(DB).dropDatabase();
       index = new SearchIndex(PATH_STATE_1, client, DB);
       done();
@@ -35,7 +34,7 @@ describe('Synchronization', function () {
 
   const loadInitialState = async () => {
     await index.load(PATH_STATE_1);
-    const documentsCursor = client.db(DB).collection('documents');
+    const documentsCursor = client.db(DB).collection<DatabaseDocument>('documents');
     const documents = await documentsCursor.find().toArray();
     sortDocuments(documents);
 
@@ -49,7 +48,7 @@ describe('Synchronization', function () {
 
     // manual/tutorial/index.html has a typo: ensure that's present
     strictEqual(
-      documents.filter((doc) => doc.searchProperty == 'manual' && doc.slug === 'tutorial/index.html')[0].title,
+      documents.filter((doc) => doc.searchProperty.includes('manual') && doc.slug === 'tutorial/index.html')[0].title,
       'Create a Task Tracker Ap'
     );
   };
@@ -58,7 +57,7 @@ describe('Synchronization', function () {
 
   it('loads disjoint state', async function () {
     await index.load(PATH_STATE_2);
-    const documentsCursor = client.db(DB).collection('documents');
+    const documentsCursor = client.db(DB).collection<DatabaseDocument>('documents');
     const documents = await documentsCursor.find().toArray();
     sortDocuments(documents);
 
@@ -78,7 +77,7 @@ describe('Synchronization', function () {
 
     // manual/tutorial/index.html fixes a typo: ensure the fix is present
     strictEqual(
-      documents.filter((doc) => doc.searchProperty == 'manual' && doc.slug === 'tutorial/index.html')[0].title,
+      documents.filter((doc) => doc.searchProperty.includes('manual') && doc.slug === 'tutorial/index.html')[0].title,
       'Create a Task Tracker App'
     );
   });

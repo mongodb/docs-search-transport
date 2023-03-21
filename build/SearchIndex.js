@@ -274,7 +274,7 @@ const deleteStaleProperties = async (collection, manifests, session, status) => 
         $nin: manifests.map((manifest) => manifest.searchProperty),
       },
     },
-    { session, w: 'majority' }
+    { session, writeConcern: { w: 'majority' } }
   );
   status.deleted += deleteResult.deletedCount === undefined ? 0 : deleteResult.deletedCount;
 };

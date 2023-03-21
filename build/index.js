@@ -234,7 +234,7 @@ async function main() {
     process.exit(1);
   }
   log.info(`Loading manifests from ${manifestUri}`);
-  const client = await mongodb_1.MongoClient.connect(atlasUri, { useUnifiedTopology: true });
+  const client = await mongodb_1.MongoClient.connect(atlasUri);
   const searchIndex = new SearchIndex_1.SearchIndex(manifestUri, client, databaseName);
   if (process.argv[2] === '--create-indexes') {
     await searchIndex.createRecommendedIndexes();
