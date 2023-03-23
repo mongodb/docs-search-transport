@@ -376,7 +376,9 @@ const deleteStaleProperties = async (
 const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWriteOperation<DatabaseDocument>[] => {
   return documents.map((document) => {
     assert.strictEqual(typeof document.slug, 'string');
-    assert.ok(document.slug);
+    // DOP-3545 and DOP-3585
+    // slug is possible to be empty string ''
+    assert.ok(document.slug || document.slug === '');
 
     const newDocument: DatabaseDocument = {
       ...document,
