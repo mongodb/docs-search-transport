@@ -281,7 +281,9 @@ const deleteStaleProperties = async (collection, manifests, session, status) => 
 const composeUpserts = (manifest, documents) => {
   return documents.map((document) => {
     assert_1.default.strictEqual(typeof document.slug, 'string');
-    assert_1.default.ok(document.slug);
+    // DOP-3545 and DOP-3585
+    // slug is possible to be empty string ''
+    assert_1.default.ok(document.slug || document.slug === '');
     const newDocument = {
       ...document,
       url: joinUrl(manifest.manifest.url, document.slug),
