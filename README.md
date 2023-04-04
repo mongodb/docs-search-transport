@@ -22,7 +22,7 @@ All commits merged to `main` deploy via Kanopy to a staging instance.
 The staging instance is viewable at https://docs-search-transport.docs.staging.corp.mongodb.com/status. 
 
 ## Releasing
-We have configured an automatic release process using [GitHub Actions](https://github.com/features/actions) that is triggered by [npm-version](https://docs.npmjs.com/cli/version).
+New release tags automatically begain deployment via Kanopy to production instances.
 
 Cutting a release with a new tag via the [Github UI](https://github.com/mongodb/docs-search-transport/releases/new) is the recommended method of deploying to production. As a matter of practice, release tags should be cut from `main`.
 
@@ -36,22 +36,11 @@ npm test  # alias for npm run test
 
 ### Unit tests
 
-Unit tests are located in the `tests` directory. To run only unit tests, use:
+Tests are located in the `tests` directory, and run via `mocha`.
 
 ```shell
-npm run test:unit
+npm run test
 ```
-
-### Running individual suites
-
-Jest includes configurations for running individual test suites:
-
-```shell
-npm test -- my-test   # or
-npm test -- path/to/my-test.js
-```
-
-For more information, see the [Jest CLI Options](https://jestjs.io/docs/en/cli) documentation, or run `npm test -- --help`.
 
 ## Linting & Style
 
