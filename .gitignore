@@ -2,4 +2,3 @@ src/*.js
 node_modules/
 .husky/
 .env
-build/
