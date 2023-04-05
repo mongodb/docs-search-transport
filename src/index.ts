@@ -1,6 +1,8 @@
 #!/usr/bin/env ts-node
 'use strict';
 
+console.log('test DOP-3596')
+
 import { MongoClient } from 'mongodb';
 import assert from 'assert';
 import http from 'http';
