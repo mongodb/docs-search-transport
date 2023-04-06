@@ -6,8 +6,6 @@
 npm install
 ```
 
-Make sure that you have `mongod` running locally with port 27017 open. 
-
 ## Running locally
 
 ```shell
