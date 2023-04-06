@@ -1,7 +1,6 @@
 #!/usr/bin/env ts-node
 'use strict';
 
-
 import { MongoClient } from 'mongodb';
 import assert from 'assert';
 import http from 'http';
