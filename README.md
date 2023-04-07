@@ -6,6 +6,9 @@
 npm install
 ```
 
+Create a .env file and copy over the contents of `sample.env`. Some values may have to be added or replaced.
+If adding a new environment variable, please add the name and a sample value to the `sample.env`.
+
 ## Running locally
 
 ```shell
