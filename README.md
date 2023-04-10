@@ -1,5 +1,7 @@
 # MongoDB Documentation Search Indexer & Query Server
 
+REST server that indexes search documents within an Atlas cluster and handles user search requests, deployed via Kanopy
+
 ## Installation
 
 ```shell
@@ -23,7 +25,7 @@ All commits merged to `main` deploy via Kanopy to a staging instance.
 The staging instance is viewable at https://docs-search-transport.docs.staging.corp.mongodb.com/status. 
 
 ## Releasing
-New release tags automatically begain deployment via Kanopy to production instances.
+New release tags automatically begin deployment via Kanopy to production instances.
 
 Cutting a release with a new tag via the [Github UI](https://github.com/mongodb/docs-search-transport/releases/new) is the recommended method of deploying to production. As a matter of practice, release tags should be cut from `main`.
 
