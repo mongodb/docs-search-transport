@@ -1,6 +1,10 @@
 #!/usr/bin/env ts-node
 'use strict';
 
+import * as dotenv from 'dotenv';
+// dotenv.config() should be invoked immediately, before any other imports, to ensure config is present
+dotenv.config();
+
 import { MongoClient } from 'mongodb';
 import assert from 'assert';
 import http from 'http';
