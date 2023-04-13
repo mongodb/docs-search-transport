@@ -336,7 +336,7 @@ async function main() {
 
   if (process.argv[2] === '--create-indexes') {
     await searchIndex.createRecommendedIndexes();
-    await searchIndex.createSearchIndex(groupId, clusterName, databaseName, collectionName);
+    await searchIndex.patchSearchIndex(groupId, clusterName, databaseName, collectionName);
   }
 
   const server = new Marian(searchIndex);

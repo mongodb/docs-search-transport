@@ -61,6 +61,14 @@ export function joinUrl(base: string, path: string): string {
   return base.replace(/\/*$/, '/') + path.replace(/^\/*/, '');
 }
 
+const DEFAULT_ATLAS_API_OPTIONS: RequestOptions = {
+  headers: { 
+    'content-type': 'application/json',
+  },
+  dataType: 'json',
+  digestAuth: `${process.env['ADMIN_PUBLIC_KEY']}:${process.env['ADMIN_PRIVATE_KEY']}`,
+};
+
 function generateHash(data: string): Promise<string> {
   const hash = crypto.createHash('sha256');
 
@@ -272,51 +280,55 @@ export class SearchIndex {
     ]);
   }
 
-  async createSearchIndex(groupId: string, clusterName: string, db: string, collection: string) {
-    // NOTE: currently searching for existence of any Search Index.
-    // may need to specify a certain index to search for.
-    log.info('Creating Search Index');
-    const fetchUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes/${db}/${collection}`;
-    const fetchOptions: RequestOptions = {
-      method: 'GET', 
-      dataType: 'json',
-      digestAuth: `${process.env['ADMIN_PUBLIC_KEY']}:${process.env['ADMIN_PRIVATE_KEY']}`
-    };
-
+  async patchSearchIndex(groupId: string, clusterName: string, db: string, collection: string, indexName: string = 'default') {
+    log.info('patching search index')
     try {
-      const { data, res}  = await request(fetchUrl, fetchOptions);
+      const index = await this.findSearchIndex(groupId, clusterName, db, collection, indexName);
+      if (!index) {
+        return this.createSearchIndex(groupId, clusterName, db, collection, indexName);
+      }
+      return this.updateSearchindex(groupId, clusterName, db, collection, index['indexID'], indexName)
+    } catch (e) {
+      log.error(`Error while patching searching index: ${JSON.stringify(e)}`)
+    }
+  }
+
+  private async findSearchIndex(groupId: string, clusterName: string, db: string, collection: string, indexName: string) {
+    log.info('finding Atlas search index');
+
+    const url = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes/${db}/${collection}`;
+    const options = DEFAULT_ATLAS_API_OPTIONS;
+    options['method'] = 'GET';
+    
+    try {
+      const { data, res}  = await request(url, options);
       if (res.statusCode !== 200) {
         log.error(res)
         throw res;
       }
-      if (data.length) {
-        log.info('Already found, returning existing')
-        return data[0];
-      }
 
+      return data.find((index: any) => index.name === indexName)
     } catch (e) {
-      log.error(`Error while fetching existing search indexes: ${JSON.stringify(e)}`)
+      log.error(`Error while fetching search index: ${JSON.stringify(e)}`)
       throw e;
     }
+  }
 
-    const postUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes`
-    const postOptions: RequestOptions = {
-      method: 'POST',
-      headers: { 
-        'content-type': 'application/json',
-      },
-      dataType: 'json',
-      digestAuth: `${process.env['ADMIN_PUBLIC_KEY']}:${process.env['ADMIN_PRIVATE_KEY']}`,
-      data: {
-        'mappings': SearchIndexData['mappings'],
-        'collectionName': collection,
-        database: db,
-        'name': 'default', // TODO: this can be consistent... 
-      }
-    }
+  private async createSearchIndex(groupId: string, clusterName: string, db: string, collection: string, indexName: string) {
+    log.info('creating Atlas search index');
+
+    const url = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes`
+    const options = DEFAULT_ATLAS_API_OPTIONS;
+    options['method'] = 'POST';
+    options['data'] = {
+      'mappings': SearchIndexData['mappings'],
+      'collectionName': collection,
+      database: db,
+      'name': indexName
+    };
 
     try {
-      const { res, data } = await request(postUrl, postOptions);
+      const { res, data } = await request(url, options);
       if (res.statusCode !== 200) {
         log.error(res)
         throw res;
@@ -327,6 +339,32 @@ export class SearchIndex {
 
     } catch (e) {
       log.error(`Error while creating new search index: ${JSON.stringify(e)}`)
+      throw e;
+    }
+  }
+
+  private async updateSearchindex(groupId: string, clusterName: string, db: string, collection: string, indexId: string, indexName: string) {
+    log.info('updating Atlas search index');
+    const url = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes/${indexId}`
+    
+    const options = DEFAULT_ATLAS_API_OPTIONS;
+    options['method'] = 'PATCH';
+    options['data'] = {
+      'mappings': SearchIndexData['mappings'],
+      'collectionName': collection,
+      database: db,
+      'name': indexName
+    };
+
+    try {
+      const { res, data } = await request(url, options);
+      if (res.statusCode !== 200) {
+        log.error(res)
+        throw res;
+      }
+      return data;
+    } catch (e) {
+      log.error(`Error while updating search index: ${JSON.stringify(e)}`)
       throw e;
     }
   }
