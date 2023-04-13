@@ -7,7 +7,7 @@ dotenv.config();
 
 import { MongoClient } from 'mongodb';
 import assert from 'assert';
-import http from 'http';
+import http, { IncomingMessage } from 'http';
 import { UrlWithParsedQuery } from 'url';
 
 // @ts-ignore
@@ -29,7 +29,13 @@ const STANDARD_HEADERS = {
 const MANIFEST_URI_KEY = 'MANIFEST_URI';
 const ATLAS_URI_KEY = 'ATLAS_URI';
 const DATABASE_NAME_KEY = 'ATLAS_DATABASE';
+// TODO: consolidate with Param store names
+const CLUSTER_NAME_KEY= 'CLUSTER_NAME'
+const GROUP_ID_KEY = 'GROUP_ID';
+const COLLECTION_NAME_KEY = 'COLLECTION_NAME'
 const DEFAULT_DATABASE_NAME = 'search';
+const DEFAULT_CLUSTER_NAME = 'Search';
+const DEFAULT_COLLECTION_NAME = 'documents';
 
 const log = new Logger({
   showTimestamp: true,
@@ -78,18 +84,26 @@ class Marian {
 
   constructor(index: SearchIndex) {
     this.index = index;
+  }
 
-    // Fire-and-forget loading
-    this.index
-      .load()
-      .then((result) => {
-        if (result) {
-          log.info(JSON.stringify(result));
-        }
-      })
-      .catch((err) => {
-        log.error(err);
-      });
+  async initData() {
+    // start the cluster and load the search index
+    // admin API calls to search
+    try {
+
+    } catch(e) {
+      log.error(`Error starting up cluster for search: ${e}`);
+      throw e;
+    }
+
+    // 
+    try {
+      const res = await this.index.load();
+      if (res) {log.info(JSON.stringify(res))}
+    } catch(e) {
+      log.error(`Error loading index: ${e}`)
+      throw e;
+    }
   }
 
   start(port: number) {
@@ -129,7 +143,12 @@ class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatus(parsedUrl, req, res);
       }
-    } else {
+    } else if (pathname === '/init') {
+      if (checkMethod(req, res, 'GET')) { // TODO: make this post
+        this.handleInit(req, res);
+      } 
+    }
+    else {
       res.writeHead(400, {});
       res.end('');
     }
@@ -242,6 +261,23 @@ class Marian {
     res.writeHead(200, headers);
     res.end(JSON.stringify(response));
   }
+
+  /**
+   * Request handler for db initialization
+   * @param req 
+   * @param res 
+   */
+  async handleInit(req: http.IncomingMessage, res: http.ServerResponse) {
+    // const headers: Record<string, string> = {
+    //   Vary: 'Accept-Encoding',
+    // };
+    // Object.assign(headers, STANDARD_HEADERS);
+    // await this.index.
+
+
+
+
+  }
 }
 
 function help(): void {
@@ -268,6 +304,9 @@ async function main() {
 
   const manifestUri = process.env[MANIFEST_URI_KEY];
   const atlasUri = process.env[ATLAS_URI_KEY];
+  const groupId = process.env[GROUP_ID_KEY];
+  const clusterName = process.env[CLUSTER_NAME_KEY] || DEFAULT_CLUSTER_NAME;
+  const collectionName = process.env[COLLECTION_NAME_KEY] || DEFAULT_COLLECTION_NAME;
 
   let databaseName = DEFAULT_DATABASE_NAME;
   const envDBName = process.env[DATABASE_NAME_KEY];
@@ -275,27 +314,40 @@ async function main() {
     databaseName = envDBName;
   }
 
-  if (!manifestUri || !atlasUri) {
+  if (!manifestUri || !atlasUri || !groupId) {
     if (!manifestUri) {
       console.error(`Missing ${MANIFEST_URI_KEY}`);
     }
     if (!atlasUri) {
       console.error(`Missing ${ATLAS_URI_KEY}`);
     }
+    if (!groupId) {
+      console.error(`Missing ${GROUP_ID_KEY}`);
+    }
     help();
     process.exit(1);
   }
 
   log.info(`Loading manifests from ${manifestUri}`);
+  log.info(`atlasUri ${atlasUri}`);
 
   const client = await MongoClient.connect(atlasUri);
   const searchIndex = new SearchIndex(manifestUri, client, databaseName);
 
   if (process.argv[2] === '--create-indexes') {
     await searchIndex.createRecommendedIndexes();
+    await searchIndex.createSearchIndex(groupId, clusterName, databaseName, collectionName);
   }
 
   const server = new Marian(searchIndex);
+
+  // wait for server to fetch from DB
+  try {
+    await server.initData()
+  } catch(e) {
+    log.error(`Server init failed: ${e}`);
+  }
+
   server.start(8080);
 }
 

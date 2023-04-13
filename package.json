@@ -27,7 +27,8 @@
     "basic-logger": "^0.4.4",
     "dive": "^0.5.0",
     "dotenv": "^16.0.3",
-    "mongodb": "^5.1.0"
+    "mongodb": "^5.1.0",
+    "urllib": "^3.13.1"
   },
   "devDependencies": {
     "@types/mocha": "^8.2.2",

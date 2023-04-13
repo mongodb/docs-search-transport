@@ -2,6 +2,7 @@ import assert from 'assert';
 import crypto from 'crypto';
 import fs from 'fs';
 import util from 'util';
+import { request, RequestOptions } from 'urllib';
 import S3 from 'aws-sdk/clients/s3';
 import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession } from 'mongodb';
 // @ts-ignore
@@ -9,6 +10,7 @@ import dive from 'dive';
 // @ts-ignore
 import Logger from 'basic-logger';
 import { Query } from './Query';
+import SearchIndexData from './data/search_index.json';
 
 const log = new Logger({
   showTimestamp: true,
@@ -256,7 +258,7 @@ export class SearchIndex {
     } catch (err) {
       throw err;
     } finally {
-      this.currentlyIndexing = false;
+      this.currentlyIndexing = false; 
     }
 
     return result;
@@ -268,6 +270,65 @@ export class SearchIndex {
       { key: { searchProperty: 1, manifestRevisionId: 1 } },
       { key: { searchProperty: 1, slug: 1 } },
     ]);
+  }
+
+  async createSearchIndex(groupId: string, clusterName: string, db: string, collection: string) {
+    // NOTE: currently searching for existence of any Search Index.
+    // may need to specify a certain index to search for.
+    log.info('Creating Search Index');
+    const fetchUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes/${db}/${collection}`;
+    const fetchOptions: RequestOptions = {
+      method: 'GET', 
+      dataType: 'json',
+      digestAuth: `${process.env['ADMIN_PUBLIC_KEY']}:${process.env['ADMIN_PRIVATE_KEY']}`
+    };
+
+    try {
+      const { data, res}  = await request(fetchUrl, fetchOptions);
+      if (res.statusCode !== 200) {
+        log.error(res)
+        throw res;
+      }
+      if (data.length) {
+        log.info('Already found, returning existing')
+        return data[0];
+      }
+
+    } catch (e) {
+      log.error(`Error while fetching existing search indexes: ${JSON.stringify(e)}`)
+      throw e;
+    }
+
+    const postUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes`
+    const postOptions: RequestOptions = {
+      method: 'POST',
+      headers: { 
+        'content-type': 'application/json',
+      },
+      dataType: 'json',
+      digestAuth: `${process.env['ADMIN_PUBLIC_KEY']}:${process.env['ADMIN_PRIVATE_KEY']}`,
+      data: {
+        'mappings': SearchIndexData['mappings'],
+        'collectionName': collection,
+        database: db,
+        'name': 'default', // TODO: this can be consistent... 
+      }
+    }
+
+    try {
+      const { res, data } = await request(postUrl, postOptions);
+      if (res.statusCode !== 200) {
+        log.error(res)
+        throw res;
+      }
+      if (data.length) {
+        return data;
+      }
+
+    } catch (e) {
+      log.error(`Error while creating new search index: ${JSON.stringify(e)}`)
+      throw e;
+    }
   }
 
   private async sync(manifests: Manifest[]): Promise<RefreshInfo> {
