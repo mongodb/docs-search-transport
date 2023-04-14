@@ -1,14 +1,20 @@
-FROM node:14-alpine
-RUN mkdir -p /app
+# build stage
+FROM node:14-alpine as builder
 WORKDIR /app
-COPY package.json /app
-COPY package-lock.json* /app
-RUN npm install
 
-ENV NODE_ENV=production
-RUN chown -R node:node /app
-USER node
-
+COPY package*.json tsconfig*.json ./
+RUN npm ci
+COPY . ./
 RUN npm run build
+
+# main image
+FROM node:14-alpine as main
+ENV NODE_ENV=production
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+COPY --from=builder /app/build ./build
+
 EXPOSE 8080
 ENTRYPOINT ["node", "build/index.js"]

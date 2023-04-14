@@ -3,5 +3,5 @@
 
 !package.json
 !package-lock.json
-!build/**/*.js
 !tsconfig.json
+!src/
