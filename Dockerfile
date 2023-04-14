@@ -1,10 +1,12 @@
 FROM node:14-alpine
 RUN mkdir -p /app
 WORKDIR /app
-COPY . /app
+COPY package.json /app
+COPY package-lock.json* /app
+RUN npm install
 
 ENV NODE_ENV=production
-RUN npm ci --production && chown -R node:node /app
+RUN chown -R node:node /app
 USER node
 
 RUN npm run build
