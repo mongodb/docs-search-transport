@@ -62,7 +62,7 @@ export function joinUrl(base: string, path: string): string {
 }
 
 const DEFAULT_ATLAS_API_OPTIONS: RequestOptions = {
-  headers: { 
+  headers: {
     'content-type': 'application/json',
   },
   dataType: 'json',
@@ -228,18 +228,20 @@ export class SearchIndex {
     this.lastRefresh = null;
   }
 
-  async search(query: Query, searchProperty: string[] | null) {
-    const aggregationQuery = query.getAggregationQuery(searchProperty);
-    aggregationQuery.push({ $limit: 50 });
-    aggregationQuery.push({
-      $project: {
-        _id: 0,
-        title: 1,
-        preview: 1,
-        url: 1,
-        searchProperty: 1,
-      },
-    });
+  async search(query: Query, searchProperty: string[] | null, useFacets = false) {
+    const aggregationQuery = query.getAggregationQuery(searchProperty, useFacets);
+    if (!useFacets) {
+      aggregationQuery.push({ $limit: 50 });
+      aggregationQuery.push({
+        $project: {
+          _id: 0,
+          title: 1,
+          preview: 1,
+          url: 1,
+          searchProperty: 1,
+        },
+      });
+    }
     const cursor = await this.documents.aggregate(aggregationQuery);
     return await cursor.toArray();
   }
@@ -266,7 +268,7 @@ export class SearchIndex {
     } catch (err) {
       throw err;
     } finally {
-      this.currentlyIndexing = false; 
+      this.currentlyIndexing = false;
     }
 
     return result;
@@ -280,91 +282,120 @@ export class SearchIndex {
     ]);
   }
 
-  async patchSearchIndex(groupId: string, clusterName: string, db: string, collection: string, indexName: string = 'default') {
-    log.info('patching search index')
+  async patchSearchIndex(
+    groupId: string,
+    clusterName: string,
+    db: string,
+    collection: string,
+    indexName: string = 'default'
+  ) {
+    log.info('patching search index');
     try {
       const index = await this.findSearchIndex(groupId, clusterName, db, collection, indexName);
       if (!index) {
         return this.createSearchIndex(groupId, clusterName, db, collection, indexName);
       }
-      return this.updateSearchindex(groupId, clusterName, db, collection, index['indexID'], indexName)
+      return this.updateSearchindex(groupId, clusterName, db, collection, index['indexID'], indexName);
     } catch (e) {
-      log.error(`Error while patching searching index: ${JSON.stringify(e)}`)
+      log.error(`Error while patching searching index: ${JSON.stringify(e)}`);
     }
   }
 
-  private async findSearchIndex(groupId: string, clusterName: string, db: string, collection: string, indexName: string) {
+  async aggregate(aggregationOperations: Document[]) {
+    const cursor = this.db.aggregate(aggregationOperations);
+    return await cursor.toArray();
+  }
+
+  private async findSearchIndex(
+    groupId: string,
+    clusterName: string,
+    db: string,
+    collection: string,
+    indexName: string
+  ) {
     log.info('finding Atlas search index');
 
     const url = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes/${db}/${collection}`;
     const options = DEFAULT_ATLAS_API_OPTIONS;
     options['method'] = 'GET';
-    
+
     try {
-      const { data, res}  = await request(url, options);
+      const { data, res } = await request(url, options);
       if (res.statusCode !== 200) {
-        log.error(res)
+        log.error(res);
         throw res;
       }
 
-      return data.find((index: any) => index.name === indexName)
+      return data.find((index: any) => index.name === indexName);
     } catch (e) {
-      log.error(`Error while fetching search index: ${JSON.stringify(e)}`)
+      log.error(`Error while fetching search index: ${JSON.stringify(e)}`);
       throw e;
     }
   }
 
-  private async createSearchIndex(groupId: string, clusterName: string, db: string, collection: string, indexName: string) {
+  private async createSearchIndex(
+    groupId: string,
+    clusterName: string,
+    db: string,
+    collection: string,
+    indexName: string
+  ) {
     log.info('creating Atlas search index');
 
-    const url = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes`
+    const url = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes`;
     const options = DEFAULT_ATLAS_API_OPTIONS;
     options['method'] = 'POST';
     options['data'] = {
-      'mappings': SearchIndexData['mappings'],
-      'collectionName': collection,
+      mappings: SearchIndexData['mappings'],
+      collectionName: collection,
       database: db,
-      'name': indexName
+      name: indexName,
     };
 
     try {
       const { res, data } = await request(url, options);
       if (res.statusCode !== 200) {
-        log.error(res)
+        log.error(res);
         throw res;
       }
       if (data.length) {
         return data;
       }
-
     } catch (e) {
-      log.error(`Error while creating new search index: ${JSON.stringify(e)}`)
+      log.error(`Error while creating new search index: ${JSON.stringify(e)}`);
       throw e;
     }
   }
 
-  private async updateSearchindex(groupId: string, clusterName: string, db: string, collection: string, indexId: string, indexName: string) {
+  private async updateSearchindex(
+    groupId: string,
+    clusterName: string,
+    db: string,
+    collection: string,
+    indexId: string,
+    indexName: string
+  ) {
     log.info('updating Atlas search index');
-    const url = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes/${indexId}`
-    
+    const url = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes/${indexId}`;
+
     const options = DEFAULT_ATLAS_API_OPTIONS;
     options['method'] = 'PATCH';
     options['data'] = {
-      'mappings': SearchIndexData['mappings'],
-      'collectionName': collection,
+      mappings: SearchIndexData['mappings'],
+      collectionName: collection,
       database: db,
-      'name': indexName
+      name: indexName,
     };
 
     try {
       const { res, data } = await request(url, options);
       if (res.statusCode !== 200) {
-        log.error(res)
+        log.error(res);
         throw res;
       }
       return data;
     } catch (e) {
-      log.error(`Error while updating search index: ${JSON.stringify(e)}`)
+      log.error(`Error while updating search index: ${JSON.stringify(e)}`);
       throw e;
     }
   }

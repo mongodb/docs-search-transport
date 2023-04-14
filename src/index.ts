@@ -30,9 +30,9 @@ const MANIFEST_URI_KEY = 'MANIFEST_URI';
 const ATLAS_URI_KEY = 'ATLAS_URI';
 const DATABASE_NAME_KEY = 'ATLAS_DATABASE';
 // TODO: consolidate with Param store names
-const CLUSTER_NAME_KEY= 'CLUSTER_NAME'
+const CLUSTER_NAME_KEY = 'CLUSTER_NAME';
 const GROUP_ID_KEY = 'GROUP_ID';
-const COLLECTION_NAME_KEY = 'COLLECTION_NAME'
+const COLLECTION_NAME_KEY = 'COLLECTION_NAME';
 const DEFAULT_DATABASE_NAME = 'search';
 const DEFAULT_CLUSTER_NAME = 'Search';
 const DEFAULT_COLLECTION_NAME = 'documents';
@@ -90,18 +90,19 @@ class Marian {
     // start the cluster and load the search index
     // admin API calls to search
     try {
-
-    } catch(e) {
+    } catch (e) {
       log.error(`Error starting up cluster for search: ${e}`);
       throw e;
     }
 
-    // 
+    //
     try {
       const res = await this.index.load();
-      if (res) {log.info(JSON.stringify(res))}
-    } catch(e) {
-      log.error(`Error loading index: ${e}`)
+      if (res) {
+        log.info(JSON.stringify(res));
+      }
+    } catch (e) {
+      log.error(`Error loading index: ${e}`);
       throw e;
     }
   }
@@ -143,18 +144,18 @@ class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatus(parsedUrl, req, res);
       }
-    } else if (pathname === '/init') {
-      if (checkMethod(req, res, 'GET')) { // TODO: make this post
-        this.handleInit(req, res);
-      } 
-    }
-    else {
+    } else if (pathname === '/facet-query') {
+      if (checkMethod(req, res, 'GET')) {
+        // TODO: make this post
+        this.handleFacetQuery(parsedUrl, req, res);
+      }
+    } else {
       res.writeHead(400, {});
       res.end('');
     }
   }
 
-  private async fetchResults(parsedUrl: URL): Promise<any[]> {
+  private async fetchResults(parsedUrl: URL, facetedSearch = false): Promise<any[]> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
     if (!rawQuery) {
       throw new InvalidQuery();
@@ -170,7 +171,7 @@ class Marian {
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
-    return await this.index.search(query, searchProperty);
+    return await this.index.search(query, searchProperty, facetedSearch);
   }
 
   async handleSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
@@ -264,19 +265,38 @@ class Marian {
 
   /**
    * Request handler for db initialization
-   * @param req 
-   * @param res 
+   * @param req
+   * @param res
    */
-  async handleInit(req: http.IncomingMessage, res: http.ServerResponse) {
-    // const headers: Record<string, string> = {
-    //   Vary: 'Accept-Encoding',
-    // };
-    // Object.assign(headers, STANDARD_HEADERS);
-    // await this.index.
+  async handleFacetQuery(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse) {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Vary: 'Accept-Encoding, Origin',
+      'Cache-Control': 'public,max-age=120,must-revalidate',
+    };
+    Object.assign(headers, STANDARD_HEADERS);
 
+    checkAllowedOrigin(req.headers.origin, headers);
 
+    let results;
+    try {
+      const query = '';
+      results = await this.fetchResults(parsedUrl, true);
+      log.info('check results');
+      log.info(JSON.stringify(results));
+      // results = await this.fetchResults(parsedUrl);
+    } catch (err) {
+      if (err instanceof InvalidQuery) {
+        res.writeHead(400, headers);
+        res.end('[]');
+        return;
+      }
 
-
+      throw err;
+    }
+    let responseBody = JSON.stringify({ results: results });
+    res.writeHead(200, headers);
+    res.end(responseBody);
   }
 }
 
@@ -343,8 +363,8 @@ async function main() {
 
   // wait for server to fetch from DB
   try {
-    await server.initData()
-  } catch(e) {
+    await server.initData();
+  } catch (e) {
     log.error(`Server init failed: ${e}`);
   }
 

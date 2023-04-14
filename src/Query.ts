@@ -1,5 +1,7 @@
 'use strict';
 
+import { Document } from 'mongodb';
+
 const CORRELATIONS = [
   ['regexp', 'regex', 0.8],
   ['regular expression', 'regex', 0.8],
@@ -236,7 +238,7 @@ export class Query {
     }
   }
 
-  getAggregationQuery(searchProperty: string[] | null): any[] {
+  getAggregationQuery(searchProperty: string[] | null, faceted: boolean = false): any[] {
     const parts: any[] = [];
     const terms = Array.from(this.terms);
 
@@ -292,17 +294,74 @@ export class Query {
       });
     }
 
-    const agg = [
-      {
+    const agg: Document[] = [
+      // { $match: filter }
+    ];
+
+    if (faceted) {
+      const searchFacet = {
+        $search: {
+          facet: {
+            operator: {
+              compound: compound,
+            },
+            facets: {},
+          },
+        },
+      } as Document;
+
+      // TODO: there should be master list of available facets
+      // where to keep this hierchical structure
+      // if stored in run time memory, may increase memory required
+      const facetNames = ['genre', 'product'];
+      for (const facetName of facetNames) {
+        searchFacet['$search']['facet']['facets'][`${facetName}Facet`] = {
+          type: 'string',
+          path: `${facetName}.value`,
+        };
+      }
+      console.log('check searchFacet');
+      console.log(searchFacet);
+
+      agg.push(searchFacet);
+    } else {
+      agg.push({
         $search: {
           compound,
           tracking: {
             searchTerms: this.rawQuery,
           },
         },
-      },
-      { $match: filter },
-    ];
+      });
+    }
+
+    agg.push({ $match: filter });
+
+    if (faceted) {
+      agg.push({
+        $facet: {
+          docs: [
+            {
+              $project: {
+                _id: 0,
+                title: 1,
+                preview: 1,
+                url: 1,
+                searchProperty: 1,
+              },
+            },
+          ],
+          meta: [{ $replaceWith: '$$SEARCH_META' }, { $limit: 1 }],
+        },
+      });
+      agg.push({
+        $set: {
+          meta: {
+            $arrayElemAt: ['$meta', 0],
+          },
+        },
+      });
+    }
     console.log('Executing ' + JSON.stringify(agg));
     return agg;
   }

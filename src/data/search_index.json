@@ -27,6 +27,20 @@
         },
         "type": "document"
       },
+      "genre": {
+        "dynamic": true,
+        "fields": {
+          "value": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "stringFacet"
+            }
+          ]
+        },
+        "type": "document"
+      },
       "headings": {
         "analyzer": "lucene.english",
         "searchAnalyzer": "lucene.english",
@@ -37,6 +51,34 @@
         "analyzer": "lucene.english",
         "searchAnalyzer": "lucene.english",
         "type": "string"
+      },
+      "product": {
+        "dynamic": true,
+        "fields": {
+          "children": {
+            "dynamic": true,
+            "fields": {
+              "value": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "stringFacet"
+                }
+              ]
+            },
+            "type": "document"
+          },
+          "value": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "stringFacet"
+            }
+          ]
+        },
+        "type": "document"
       },
       "tags": {
         "analyzer": "lucene.english",
