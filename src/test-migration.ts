@@ -6,68 +6,134 @@ dotenv.config();
 import { MongoClient } from 'mongodb';
 
 // plan is to add new fields to search.documents
-// ignore source of truth for facet hierarchy
+// facet structure will be as such:
+// Object where each key represents the category (or sub category)
+// and each value is a key
+// an empty object signifies there are no further properties / children
 // this is intended to mimic the ending result for mut-index documents
 // and add facet category values to search.documents
-const test_values = {
-  genre: {
-    value: 'reference',
-    children: [],
-  },
-};
 
-const test_values_2 = {
-  product: {
-    value: 'server',
-    children: [
-      {
-        value: 'v5.0',
-      },
-    ],
-  },
-};
-const test_values_3 = {
-  product: {
-    value: 'server',
-    children: [
-      {
-        value: 'v6.0',
-      },
-    ],
-  },
-};
+// facets: {
+//   genre: {
+//     'products': {
+//       'server': {
+//         'versions': {
+//           'v5.0': {}
+//           'v6.0': {
+//             'subproducts': {
+//               'server-admin': {},
+//               'server-cli': {}
+//             },
+//             'languages': {
+//               'python': {},
+//               'javascript': {}
+//             }
+//           }
+//         }
+//       },
+//       'atlas': {
+//         'versions': {
+//           'master': {},
+//           'v1.0': {}
+//         },
+//         'subproducts': {
+//           'cli': {}
+//         }
+//       }
+//     }
+//   }
+// }
 
 async function testMigration() {
   const client = await MongoClient.connect(process.env['ATLAS_URI'] || '');
   const db = client.db(process.env['ATLAS_DATABASE']);
   const documents = db.collection('documents');
 
-  const filter = {
-    url: /reference/,
-  };
+  const urlFilters = [
+    /atlas\-cli/,
+    /v5\.0/,
+    /v6\.0/
+  ];
 
-  const update = { $set: test_values };
+  const languages = ['python', 'javascript', 'go', 'c'];
 
-  const filter2 = {
-    url: /v5\.0/,
-  };
+  const updates = [
+    {
+      facets: {
+        'products': {
+          'atlas-cli': {
+            'versions': {
+              'master': {}
+            }
+          },
+          'languages': {
+            'python': {
+              '3.7': {}
+            },
+            'javascript': {
+              'versions': {
+                'es5': {},
+                'es6': {},
+              }
+            },
+            'go': {},
+            'c': {}
+          }
+        }
+      }
+    },
+    {
+      facets: {
+        'products': {
+          'server': {
+            versions: {
+              'v6.0': {}
+            },
+          }
+        },
+        "languages": {
+          "python": {},
+          "javascript": {}
+        }
+      }
+    },
+    {
+      facets: {
+        'products': {
+          'server': {
+            versions: {
+              'v5.0': {}
+            },
+          }
+        },
+        "languages": {
+          "c": {},
+          "javascript": {},
+          'go': {}
+        }
+      }
+    },
 
-  const update2 = { $set: test_values_2 };
 
-  const filter3 = {
-    url: /v6\.0/,
-  };
-  const update3 = { $set: test_values_3 };
+
+  ]
+
+  const promises = urlFilters.map(async (filter, index) => {
+    const mdFilter = {url: filter}
+    const mdUpdate = updates[index]
+    return documents.updateMany({url: filter}, {$set: mdUpdate}).then((res) => {
+      console.log(`success at res : ${JSON.stringify(res)}`);
+      
+    })
+  })
 
   try {
-    const updateRes1 = await documents.updateMany(filter, update);
-    const updateRes2 = await documents.updateMany(filter2, update2);
-    const updateRes3 = await documents.updateMany(filter3, update3);
+    const res = await Promise.all(promises);
 
-    console.log(`update success1 ${JSON.stringify(updateRes1)}`);
-    console.log(`update success2: ${JSON.stringify(updateRes2)}`);
-    console.log(`update success3: ${JSON.stringify(updateRes3)}`);
+    console.log(`update success ${JSON.stringify(res)}`);
   } catch (e) {
+    console.log(e);
+    
     console.error(`Error updating: ${JSON.stringify(e)}`);
   }
 }

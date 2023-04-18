@@ -1,0 +1,48 @@
+{
+  "facets": {
+    "products": {
+      "server": {
+        "versions": {
+          "v5.0": {
+            "subproducts": {
+              "server-admin": {},
+              "server-cli": {}
+            }
+          },
+          "v6.0": {}
+        }
+      },
+      "atlas": {
+        "versions": {
+          "master": {},
+          "v1.0": {}
+        },
+        "subproducts": {
+          "cli": {
+            "versions": {
+              "upcoming": {},
+              "v1.0": {}
+            }
+          }
+        }
+      }
+    },
+    "languages": {
+      "python": {
+        "versions": {
+          "3.7": {},
+          "2.8": {}
+        }
+      },
+      "javascript": {
+        "versions": {
+          "es5": {},
+          "es6": {}
+        }
+      },
+      "go": {},
+      "c": {}
+    }
+  }
+}
+
