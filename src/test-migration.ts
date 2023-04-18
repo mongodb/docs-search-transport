@@ -60,57 +60,25 @@ async function testMigration() {
   const updates = [
     {
       facets: {
-        'products': {
-          'atlas-cli': {
-            'versions': {
-              'master': {}
-            }
-          },
-          'languages': {
-            'python': {
-              '3.7': {}
-            },
-            'javascript': {
-              'versions': {
-                'es5': {},
-                'es6': {},
-              }
-            },
-            'go': {},
-            'c': {}
-          }
-        }
+        'products': ['atlas-cli'],
+        'products→atlas-cli→versions': ['master'],
+        'languages': ['python', 'javascript', 'go', 'c'],
+        'languages→python→versions': ['3.7'],
+        'languages→python→javascript': ['es5', 'es6'],
       }
     },
     {
       facets: {
-        'products': {
-          'server': {
-            versions: {
-              'v6.0': {}
-            },
-          }
-        },
-        "languages": {
-          "python": {},
-          "javascript": {}
-        }
+        'products': ['server'],
+        'products→server→versions': ['v6.0'],
+        'languages': ['python', 'javascript'],
       }
     },
     {
       facets: {
-        'products': {
-          'server': {
-            versions: {
-              'v5.0': {}
-            },
-          }
-        },
-        "languages": {
-          "c": {},
-          "javascript": {},
-          'go': {}
-        }
+        'products': ['server'],
+        'products→server→versions': ['v5.0'],
+        'languages': ['python', 'javascript'],
       }
     },
 

@@ -52,33 +52,59 @@
         "searchAnalyzer": "lucene.english",
         "type": "string"
       },
-      "product": {
-        "dynamic": true,
+      "facets": {
+        "dynamic": false,
+        "type": "document",
         "fields": {
-          "children": {
-            "dynamic": true,
-            "fields": {
-              "value": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "stringFacet"
-                }
-              ]
-            },
-            "type": "document"
-          },
-          "value": [
-            {
-              "type": "string"
-            },
+          "products": [
             {
               "type": "stringFacet"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "products→atlas-cli→versions": [
+            {
+              "type": "stringFacet"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "products→server→versions": [
+            {
+              "type": "stringFacet"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "languages": [
+            {
+              "type": "stringFacet"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "languages→python→versions": [
+            {
+              "type": "stringFacet"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "languages→python→javascript": [
+            {
+              "type": "stringFacet"
+            },
+            {
+              "type": "string"
             }
           ]
-        },
-        "type": "document"
+        }
       },
       "tags": {
         "analyzer": "lucene.english",
