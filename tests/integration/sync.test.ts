@@ -1,6 +1,6 @@
 import { strictEqual, deepStrictEqual } from 'assert';
 import { Db, MongoClient } from 'mongodb';
-import { SearchIndex, DatabaseDocument } from '../src/SearchIndex';
+import { SearchIndex, DatabaseDocument } from '../../src/SearchIndex';
 
 const DB = 'search_testing';
 

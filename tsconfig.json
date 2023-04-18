@@ -63,6 +63,6 @@
     /* Advanced Options */
     "forceConsistentCasingInFileNames": true  /* Disallow inconsistently-cased references to the same file. */
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "tests/unit/Query.test.ts", "tests/unit/SearchIndex.test.ts", "tests/unit/util.test.ts"],
   "exclude": ["node_modules", "**/*.test.ts"]
 }

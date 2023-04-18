@@ -1,6 +1,6 @@
 import { strictEqual, deepStrictEqual, ok } from 'assert';
-import { Query } from '../src/Query';
-import { SearchIndex } from '../src/SearchIndex';
+import { Query } from '../../src/Query';
+import { SearchIndex } from '../../src/SearchIndex';
 import { env } from 'process';
 import { MongoClient } from 'mongodb';
 
