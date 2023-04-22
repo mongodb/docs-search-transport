@@ -42,9 +42,6 @@
         "type": "document"
       },
       "headings": {
-        "analyzer": "lucene.english",
-        "searchAnalyzer": "lucene.english",
-        "store": false,
         "type": "string"
       },
       "paragraphs": {

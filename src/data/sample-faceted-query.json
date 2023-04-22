@@ -37,8 +37,8 @@
           }
         },
         "facets": {
-          "genreFacet": { "type": "string", "path": "facets.products" },
-          "productFacet": { "type": "string", "path": "facets.languages" }
+          "productFacet": { "type": "string", "path": "facets.products" },
+          "languageFacet": { "type": "string", "path": "facets.languages" }
         }
       }
     }

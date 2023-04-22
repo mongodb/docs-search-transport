@@ -228,8 +228,8 @@ export class SearchIndex {
     this.lastRefresh = null;
   }
 
-  async search(query: Query, searchProperty: string[] | null, useFacets = false) {
-    const aggregationQuery = query.getAggregationQuery(searchProperty, useFacets);
+  async search(query: Query, searchProperty: string[] | null, useFacets = false, selectedFacets: string[] = []) {
+    const aggregationQuery = query.getAggregationQuery(searchProperty, useFacets, selectedFacets);
     if (!useFacets) {
       aggregationQuery.push({ $limit: 50 });
       aggregationQuery.push({

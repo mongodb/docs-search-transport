@@ -2,6 +2,8 @@
 
 import { Document } from 'mongodb';
 
+import * as sampleFacets from './data/sample-facets.json';
+
 const CORRELATIONS = [
   ['regexp', 'regex', 0.8],
   ['regular expression', 'regex', 0.8],
@@ -150,9 +152,13 @@ function isStopWord(word: string): boolean {
 }
 
 function tokenize(text: string, fuzzy: boolean): string[] {
+  console.log(`check text ${text}`);
+  
+  
   const components = text.split(/[^\w$%.]+/).map((token) => {
     return token.toLocaleLowerCase().replace(/(?:^\.)|(?:\.$)/g, '');
   });
+  console.log(`check components ${components}`);
 
   const tokens = [];
   for (let i = 0; i < components.length; i += 1) {
@@ -238,7 +244,7 @@ export class Query {
     }
   }
 
-  getAggregationQuery(searchProperty: string[] | null, faceted: boolean = false): any[] {
+  getAggregationQuery(searchProperty: string[] | null, faceted: boolean = false, selectedFacets:string[] = []): any[] {
     const parts: any[] = [];
     const terms = Array.from(this.terms);
 
@@ -299,6 +305,7 @@ export class Query {
     ];
 
     if (faceted) {
+      // TODO: split into separate fn
       const searchFacet = {
         $search: {
           facet: {
@@ -313,11 +320,48 @@ export class Query {
       // TODO: there should be master list of available facets
       // where to keep this hierchical structure
       // if stored in run time memory, may increase memory required
-      const facetNames = ['genre', 'product'];
+
+      const EQUALS_KEY = '←';
+      const FACET_CHILD_KEY = '→';
+      http://localhost:8080/facet-query?q=drivers&facets[]=products%E2%86%90server&facets[]=languages%E2%86%90python
+      // products→server→versions
+      console.log('check selectedFacets ');
+      console.log(selectedFacets);
+
+      // [
+      //   'products←server',
+      //   'languages←python',
+      //   'languages→python→versions←3.7'
+      // ]
+      const facetSelections: {[key: string]: string} = {};
+      for (const selectedFacet of selectedFacets) {
+        const [key, value] = selectedFacet.split(EQUALS_KEY);
+        facetSelections[key] = value;
+      }
+      // {
+      //   products: 'server',
+      //   languages: 'python',
+      //   'languages→python→versions': '3.7'
+      // }
+      const baseFacets: {[key: string]: object} = sampleFacets.facets;
+      for (const selectedFacetKey in facetSelections) {
+        const baseFacetName = selectedFacetKey.split(FACET_CHILD_KEY)[0];
+        if (baseFacetName && baseFacets[baseFacetName]) {
+          delete baseFacets[baseFacetName];
+        }
+        baseFacets[`${selectedFacetKey}→`]
+      }
+
+
+
+
+
+
+      const facetNames = ['languages', 'products'];
       for (const facetName of facetNames) {
-        searchFacet['$search']['facet']['facets'][`${facetName}Facet`] = {
+        searchFacet['$search']['facet']['facets'][`${facetName}`] = {
           type: 'string',
-          path: `${facetName}.value`,
+          path: `facets.${facetName}`,
         };
       }
       console.log('check searchFacet');
@@ -352,13 +396,6 @@ export class Query {
             },
           ],
           meta: [{ $replaceWith: '$$SEARCH_META' }, { $limit: 1 }],
-        },
-      });
-      agg.push({
-        $set: {
-          meta: {
-            $arrayElemAt: ['$meta', 0],
-          },
         },
       });
     }

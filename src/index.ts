@@ -157,6 +157,9 @@ class Marian {
 
   private async fetchResults(parsedUrl: URL, facetedSearch = false): Promise<any[]> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
+    const selectedFacets = parsedUrl.searchParams.getAll('facets[]') || [];
+    
+    // const facetSelection = parsedUrl
     if (!rawQuery) {
       throw new InvalidQuery();
     }
@@ -171,7 +174,7 @@ class Marian {
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
-    return await this.index.search(query, searchProperty, facetedSearch);
+    return await this.index.search(query, searchProperty, facetedSearch, selectedFacets);
   }
 
   async handleSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
