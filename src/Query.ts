@@ -258,6 +258,14 @@ export class Query {
     parts.push({
       text: {
         query: terms,
+        path: { "value": "headings", "multi": "whitespace" },
+        score: { boost: { value: 20 } },
+      },
+    });
+
+    parts.push({
+      text: {
+        query: terms,
         path: 'title',
         score: { boost: { value: 10 } },
       },
