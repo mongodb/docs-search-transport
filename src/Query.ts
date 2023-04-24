@@ -259,7 +259,7 @@ export class Query {
       text: {
         query: terms,
         path: { "value": "headings", "multi": "whitespace" },
-        score: { boost: { value: 20 } },
+        score: { boost: { value: 5 } },
       },
     });
 
@@ -267,6 +267,14 @@ export class Query {
       text: {
         query: terms,
         path: 'title',
+        score: { boost: { value: 10 } },
+      },
+    });
+
+    parts.push({
+      text: {
+        query: terms,
+        path: { "value": "title", "multi": "whitespace" },
         score: { boost: { value: 10 } },
       },
     });
