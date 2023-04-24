@@ -258,7 +258,7 @@ export class Query {
     parts.push({
       text: {
         query: terms,
-        path: { "value": "headings", "multi": "whitespace" },
+        path: { value: 'headings', multi: 'whitespace' },
         score: { boost: { value: 5 } },
       },
     });
@@ -274,7 +274,7 @@ export class Query {
     parts.push({
       text: {
         query: terms,
-        path: { "value": "title", "multi": "whitespace" },
+        path: { value: 'title', multi: 'whitespace' },
         score: { boost: { value: 10 } },
       },
     });
