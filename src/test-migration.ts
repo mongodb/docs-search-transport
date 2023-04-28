@@ -16,13 +16,13 @@ import { MongoClient } from 'mongodb';
 // facets: {
 //   genre: {
 //     'products': {
-//       'server': {
+//       'manual': {
 //         'versions': {
 //           'v5.0': {}
 //           'v6.0': {
 //             'subproducts': {
-//               'server-admin': {},
-//               'server-cli': {}
+//               'manual-admin': {},
+//               'manual-cli': {}
 //             },
 //             'languages': {
 //               'python': {},
@@ -64,20 +64,20 @@ async function testMigration() {
         'products←atlas-cli→versions': ['master'],
         'languages': ['python', 'javascript', 'go', 'c'],
         'languages←python→versions': ['3.7'],
-        'languages←python→javascript': ['es5', 'es6'],
+        'languages←javascript→versions': ['es5', 'es6'],
       }
     },
     {
       facets: {
-        'products': ['server'],
-        'products←server→versions': ['v6.0'],
+        'products': ['manual'],
+        'products←manual→versions': ['v6.0'],
         'languages': ['python', 'javascript'],
       }
     },
     {
       facets: {
-        'products': ['server'],
-        'products←server→versions': ['v5.0'],
+        'products': ['manual'],
+        'products←manual→versions': ['v5.0'],
         'languages': ['python', 'javascript'],
       }
     },

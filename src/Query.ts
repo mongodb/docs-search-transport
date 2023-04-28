@@ -3,6 +3,7 @@
 import { Document } from 'mongodb';
 
 import * as sampleFacets from './data/sample-facets.json';
+import { log } from 'console';
 
 const CORRELATIONS = [
   ['regexp', 'regex', 0.8],
@@ -19,6 +20,10 @@ const CORRELATIONS = [
   ['x509', 'x.509', 1.0],
   ['auth', 'authentication', 0.25],
 ];
+
+type loopObject = {
+  [key: string]: loopObject
+}
 
 const stopWords = new Set([
   'a',
@@ -341,16 +346,51 @@ export class Query {
       // {
       //   products: 'server',
       //   languages: 'python',
-      //   'languages→python→versions': '3.7'
+      //   'languages←python→versions': '3.7'
       // }
-      const baseFacets: {[key: string]: object} = sampleFacets.facets;
+      let targetFacets: string[] = Object.keys(sampleFacets.facets);
+      console.log(`check base targetFacets ${targetFacets}`);
+      
       for (const selectedFacetKey in facetSelections) {
         const baseFacetName = selectedFacetKey.split(FACET_CHILD_KEY)[0];
-        if (baseFacetName && baseFacets[baseFacetName]) {
-          delete baseFacets[baseFacetName];
+        console.log(`check baseFacetName ${baseFacetName}`);
+        
+        const baseFacetIdx = targetFacets.findIndex((e) => e === baseFacetName);
+        // remove the base facet selection if farther selection exists
+        if (baseFacetIdx > -1) {
+          targetFacets.splice(baseFacetIdx, 1);
         }
-        baseFacets[`${selectedFacetKey}→`]
+
+        // drill down the existing selection
+        const drilldownKeys = selectedFacetKey.split(/[→←]/);
+        console.log(`check drilldownKeys ${drilldownKeys}`);
+        // http://localhost:8080/facet-query?q=drivers&facets[]=products%E2%86%90server
+        
+        let lookup: loopObject = sampleFacets.facets;
+        for (let idx = 0; idx < drilldownKeys.length; idx++ ){
+          const drilldownKey = drilldownKeys[idx];
+          if (lookup[drilldownKey]) {
+            lookup = lookup[drilldownKey];
+          }
+        }
+        console.log(`check facetSelected ${JSON.stringify(facetSelections)} and selectedFacetKey ${selectedFacetKey}`);
+        
+        lookup = lookup[facetSelections[selectedFacetKey]];
+        console.log(`check lookup`);
+        console.log(lookup);
+        
+        
+        
+        for (const key of Object.keys(lookup)) {
+          targetFacets.push(selectedFacetKey + EQUALS_KEY + facetSelections[selectedFacetKey] + FACET_CHILD_KEY + key)
+        }
+
       }
+
+      console.log(`CHECK targetFacets`);
+      console.log(targetFacets);
+      
+      
 
 
 
@@ -358,7 +398,7 @@ export class Query {
 
 
       const facetNames = ['languages', 'products'];
-      for (const facetName of facetNames) {
+      for (const facetName of targetFacets) {
         searchFacet['$search']['facet']['facets'][`${facetName}`] = {
           type: 'string',
           path: `facets.${facetName}`,

@@ -1,7 +1,7 @@
 {
   "facets": {
     "products": {
-      "server": {
+      "manual": {
         "versions": {
           "v5.0": {
             "subproducts": {
