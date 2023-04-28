@@ -243,7 +243,7 @@ export class Query {
     parts.push({
       text: {
         query: terms,
-        path: ['paragraphs', 'code.lang', 'code.value', 'text'],
+        path: ['paragraphs', 'code.lang', 'code.value', 'text', { value: 'code.value', multi: 'simple' }],
       },
     });
 
