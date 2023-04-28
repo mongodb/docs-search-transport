@@ -207,15 +207,11 @@ export class Query {
     this.rawQuery = queryString;
 
     const parts = queryString.split(/((?:\s+|^)"[^"]+"(?:\s+|$))/);
-    console.log('parts', parts);
     let inQuotes = false;
     for (const part of parts) {
       inQuotes = Boolean(part.match(/^\s*"/));
 
-      console.log('inQuotes', inQuotes);
-
       if (!inQuotes) {
-        console.log('process part for add term', processPart(part))
         this.addTerms(processPart(part));
       } else {
         const phraseMatch = part.match(/\s*"([^"]*)"?\s*/);
@@ -231,8 +227,6 @@ export class Query {
         const phraseParts = processPart(phrase);
         this.addTerms(phraseParts);
       }
-
-      console.log('this term', this.terms);
     }
   }
 
@@ -245,7 +239,6 @@ export class Query {
   getAggregationQuery(searchProperty: string[] | null): any[] {
     const parts: any[] = [];
     const terms = Array.from(this.terms);
-    console.log('terms from getAggregationQuery', terms);
 
     parts.push({
       text: {
@@ -278,22 +271,16 @@ export class Query {
       },
     });
 
-    console.log('search property', searchProperty);
-
 
     const filter =
       searchProperty !== null && searchProperty.length !== 0
         ? { searchProperty: { $elemMatch: { $in: searchProperty } } }
         : { includeInGlobalSearch: true };
 
-    console.log('filter', filter);
-
     const compound: { should: any[]; must?: any[]; minimumShouldMatch: number } = {
       should: parts,
       minimumShouldMatch: 1,
     };
-
-    console.log('phrases', this.phrases);
 
     if (this.phrases.length > 0) {
       compound.must = this.phrases.map((phrase) => {
@@ -305,9 +292,6 @@ export class Query {
         };
       });
     }
-
-    console.log('this raw query', this.rawQuery);
-    console.log('filter before agg', filter);
 
     const agg = [
       {
