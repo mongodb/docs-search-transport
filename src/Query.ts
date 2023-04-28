@@ -243,7 +243,7 @@ export class Query {
     parts.push({
       text: {
         query: terms,
-        path: ['paragraphs', 'code.lang', 'code.value', 'text', { "value": "code.value", "multi": "simple" }],
+        path: ['paragraphs', 'code.lang', 'code.value', 'text', { value: 'code.value', multi: 'simple' }],
       },
     });
 
@@ -270,7 +270,6 @@ export class Query {
         score: { boost: { value: 10 } },
       },
     });
-
 
     const filter =
       searchProperty !== null && searchProperty.length !== 0
@@ -302,7 +301,7 @@ export class Query {
           },
         },
       },
-      { $match: filter }, 
+      { $match: filter },
     ];
     console.log('Executing ' + JSON.stringify(agg));
     return agg;
