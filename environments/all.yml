@@ -1,0 +1,25 @@
+envSecrets:
+  ATLAS_URI: docs-search-transport
+  ATLAS_ADMIN_API_KEY: docs-search-transport
+
+env:
+  MANIFEST_URI: 's3://docs-search-indexes-test/search-indexes/preprd/'
+  ATLAS_DATABASE: 'search-staging'
+  GROUP_ID: '5bad1d3d96e82129f16c5df3'
+  CLUSTER_NAME: 'Search'
+  COLLECTION_NAME: 'documents'
+
+service:
+  targetPort: 8080
+
+probes:
+  enabled: true
+  path: /status
+  headers: {}
+  liveness:
+    httpGet: true
+    initialDelaySeconds: 10
+    periodSeconds: 60
+    timeoutSeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
