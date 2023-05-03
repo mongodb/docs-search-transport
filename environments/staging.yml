@@ -5,6 +5,7 @@ ingress:
 
 envSecrets:
   ATLAS_URI: docs-search-transport
+  ATLAS_ADMIN_API_KEY: docs-search-transport
 
 env:
   MANIFEST_URI: 's3://docs-search-indexes-test/search-indexes/preprd/'
