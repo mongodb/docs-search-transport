@@ -16,6 +16,7 @@ import Logger from 'basic-logger';
 import { Query } from './Query';
 import { isPermittedOrigin } from './util';
 import { SearchIndex, RefreshInfo } from './SearchIndex';
+import { AtlasAdminManager } from './AtlasAdmin';
 
 process.title = 'search-transport';
 
@@ -276,6 +277,7 @@ async function main() {
   }
 
   if (!manifestUri || !atlasUri) {
+    // TODO: add admin api keys
     if (!manifestUri) {
       console.error(`Missing ${MANIFEST_URI_KEY}`);
     }
@@ -296,6 +298,13 @@ async function main() {
   }
 
   const server = new Marian(searchIndex);
+  const atlasAdmin = new AtlasAdminManager(process.env['ATLAS_ADMIN_PUB_KEY']!, process.env['ATLAS_ADMIN_API_KEY']!);
+
+  try {
+    await atlasAdmin.patchSearchIndex();
+  } catch (e) {
+    console.error(`Error while initializing server: ${JSON.stringify(e)}`)
+  }
   server.start(8080);
 }
 
