@@ -21,7 +21,6 @@ const GROUP_ID = process.env['GROUP_ID'] || '';
 const DB = process.env['ATLAS_DATABASE'] || 'search';
 const SEARCH_INDEX = 'default';
 
-
 /**
  * Manager is intended to keep Atlas Search Index in sync across environments
  * Index should be edited in ../configs directory and expect to be updated on deploy
@@ -52,11 +51,7 @@ export class AtlasAdminManager {
     }
   }
 
-  private async findSearchIndex(
-    db: string,
-    collection: string,
-    indexName: string
-  ) {
+  private async findSearchIndex(db: string, collection: string, indexName: string) {
     log.info('finding Atlas search index');
     const url = `${this.baseUrl}/${db}/${collection}`;
     const options = DEFAULT_ATLAS_API_OPTIONS;
@@ -76,7 +71,7 @@ export class AtlasAdminManager {
     }
   }
 
-  private async createSearchIndex(mappingsData: any ) {
+  private async createSearchIndex(mappingsData: any) {
     log.info('creating Atlas search index');
     const url = `${this.baseUrl}`;
     const options = this._getPostPatchOptions(mappingsData);
@@ -97,10 +92,7 @@ export class AtlasAdminManager {
     }
   }
 
-  private async updateSearchindex(
-    indexId: string,
-    mappingsData: any
-  ) {
+  private async updateSearchindex(indexId: string, mappingsData: any) {
     log.info('updating Atlas search index');
     const url = `${this.baseUrl}/${indexId}`;
 
@@ -114,7 +106,7 @@ export class AtlasAdminManager {
         log.error(res);
         throw res;
       }
-      
+
       return data;
     } catch (e) {
       log.error(`Error while updating search index: ${JSON.stringify(e)}`);
@@ -132,11 +124,9 @@ export class AtlasAdminManager {
     });
     return options;
   }
-  
-  private _convertToString(facet: any) {
-    
-  }
-  
+
+  private _convertToString(facet: any) {}
+
   // TODO: should be a util function to convert input format of facet taxonomy
   // into facet keys by calling convertToString on some arbitrary object
   private _convertTaxonomyToMappings(file: any, mappingsData: any) {

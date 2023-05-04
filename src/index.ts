@@ -303,7 +303,7 @@ async function main() {
   try {
     await atlasAdmin.patchSearchIndex();
   } catch (e) {
-    console.error(`Error while initializing server: ${JSON.stringify(e)}`)
+    console.error(`Error while initializing server: ${JSON.stringify(e)}`);
   }
   server.start(8080);
 }
