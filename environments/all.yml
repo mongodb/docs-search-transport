@@ -8,6 +8,7 @@ env:
   GROUP_ID: '5bad1d3d96e82129f16c5df3'
   CLUSTER_NAME: 'Search'
   COLLECTION_NAME: 'documents'
+  ATLAS_ADMIN_PUB_KEY: 'dgrhrxpv'
 
 service:
   targetPort: 8080
