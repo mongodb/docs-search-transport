@@ -114,9 +114,6 @@ export class AtlasAdminManager {
         log.error(res);
         throw res;
       }
-      console.log('success update');
-      console.log(JSON.stringify(res));
-      
       
       return data;
     } catch (e) {
@@ -127,12 +124,22 @@ export class AtlasAdminManager {
 
   private _getPostPatchOptions(mappingsData: any) {
     const options = DEFAULT_ATLAS_API_OPTIONS;
-    options['data'] = {
-      mappings: mappingsData['mappings'],
+    options['data'] = this._convertTaxonomyToMappings(null, mappingsData);
+    options['data'] = Object.assign(options['data'], {
       collectionName: COLLECTION_NAME,
       database: DB,
       name: SEARCH_INDEX,
-    };
+    });
     return options;
+  }
+  
+  private _convertToString(facet: any) {
+    
+  }
+  
+  // TODO: should be a util function to convert input format of facet taxonomy
+  // into facet keys by calling convertToString on some arbitrary object
+  private _convertTaxonomyToMappings(file: any, mappingsData: any) {
+    return mappingsData;
   }
 }
