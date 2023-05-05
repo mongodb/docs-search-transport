@@ -3,6 +3,10 @@ ingress:
   hosts:
     - docs-search-transport.docs.staging.corp.mongodb.com
 
+env:
+  MANIFEST_URI: 's3://docs-search-indexes-test/search-indexes/preprd/'
+  ATLAS_DATABASE: 'search-staging'
+
 resources:
   limits:
     memory: 550Mi
