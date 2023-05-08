@@ -301,7 +301,10 @@ async function main() {
   const atlasAdmin = new AtlasAdminManager(process.env['ATLAS_ADMIN_PUB_KEY']!, process.env['ATLAS_ADMIN_API_KEY']!);
 
   try {
-    await atlasAdmin.patchSearchIndex();
+    // TODO: call this after taxonomy is resolved
+    // await atlasAdmin.fetchTaxonomy(process.env['TAXONOMY_URL']!);
+    const res = await atlasAdmin.patchSearchIndex();
+    console.info(`Search Index res ${JSON.stringify(res)}`)
   } catch (e) {
     console.error(`Error while initializing server: ${JSON.stringify(e)}`);
   }

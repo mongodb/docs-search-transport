@@ -2,7 +2,8 @@ import { request, RequestOptions } from 'urllib';
 
 // @ts-ignore
 import Logger from 'basic-logger';
-import SearchIndexData from './configs/atlas-search-index.json';
+import { SearchIndex } from './data/atlas-search-index';
+import { IndexMappings } from './data/atlas-types';
 
 const DEFAULT_ATLAS_API_OPTIONS: RequestOptions = {
   headers: {
@@ -29,6 +30,7 @@ const SEARCH_INDEX = 'default';
 export class AtlasAdminManager {
   defaultHeaders: RequestOptions;
   baseUrl: string;
+  taxonomy: {[key: string]: any};
 
   constructor(publicApiKey: string, privApiKey: string) {
     // set base headers
@@ -36,6 +38,8 @@ export class AtlasAdminManager {
     this.defaultHeaders['digestAuth'] = `${publicApiKey}:${privApiKey}`;
     // set base url
     this.baseUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${GROUP_ID}/clusters/${CLUSTER_NAME}/fts/indexes`;
+
+    this.taxonomy = {};
   }
 
   async patchSearchIndex() {
@@ -43,11 +47,27 @@ export class AtlasAdminManager {
     try {
       const index = await this.findSearchIndex(DB, COLLECTION_NAME, SEARCH_INDEX);
       if (!index) {
-        return this.createSearchIndex(SearchIndexData);
+        return this.createSearchIndex(SearchIndex);
       }
-      return this.updateSearchindex(index['indexID'], SearchIndexData);
+      return this.updateSearchindex(index['indexID'], SearchIndex);
     } catch (e) {
       log.error(`Error while patching searching index: ${JSON.stringify(e)}`);
+    }
+  }
+
+  /**
+   * fetches taxonomy TOML from 
+   */
+  async fetchTaxonomy(url: string) {
+    if (!url) {throw new Error("Taxonomy URL required")}
+    try {
+      const res = await fetch(url);
+      // TODO: should do some conversion to convert taxonomy input into {[key:string]:object}
+      // nested, hierachical taxonomy
+      this.taxonomy = res;
+    } catch (e) {
+      console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`)
+      throw e;
     }
   }
 
@@ -71,10 +91,10 @@ export class AtlasAdminManager {
     }
   }
 
-  private async createSearchIndex(mappingsData: any) {
+  private async createSearchIndex(searchIndex: IndexMappings) {
     log.info('creating Atlas search index');
     const url = `${this.baseUrl}`;
-    const options = this._getPostPatchOptions(mappingsData);
+    const options = this._getPostPatchOptions(searchIndex);
     options['method'] = 'POST';
 
     try {
@@ -83,6 +103,9 @@ export class AtlasAdminManager {
         log.error(res);
         throw res;
       }
+      console.log(JSON.stringify(data));
+      console.log(JSON.stringify(res));
+      
       if (data.length) {
         return data;
       }
@@ -92,12 +115,12 @@ export class AtlasAdminManager {
     }
   }
 
-  private async updateSearchindex(indexId: string, mappingsData: any) {
+  private async updateSearchindex(indexId: string, searchIndex: IndexMappings) {
     log.info('updating Atlas search index');
     const url = `${this.baseUrl}/${indexId}`;
 
     // const options = DEFAULT_ATLAS_API_OPTIONS;
-    const options = this._getPostPatchOptions(mappingsData);
+    const options = this._getPostPatchOptions(searchIndex);
     options['method'] = 'PATCH';
 
     try {
@@ -114,9 +137,9 @@ export class AtlasAdminManager {
     }
   }
 
-  private _getPostPatchOptions(mappingsData: any) {
+  private _getPostPatchOptions(searchIndex: IndexMappings) {
     const options = DEFAULT_ATLAS_API_OPTIONS;
-    options['data'] = this._convertTaxonomyToMappings(null, mappingsData);
+    options['data'] = this._insertTaxonomyIntoSearchIndex(searchIndex);
     options['data'] = Object.assign(options['data'], {
       collectionName: COLLECTION_NAME,
       database: DB,
@@ -125,11 +148,14 @@ export class AtlasAdminManager {
     return options;
   }
 
-  private _convertToString(facet: any) {}
+  private _convertToString(facet: any) {
+
+  }
 
   // TODO: should be a util function to convert input format of facet taxonomy
   // into facet keys by calling convertToString on some arbitrary object
-  private _convertTaxonomyToMappings(file: any, mappingsData: any) {
-    return mappingsData;
+  private _insertTaxonomyIntoSearchIndex(searchIndex: IndexMappings) {
+    // convert this.taxonomy{} and insert into searchIndex.facets by calling _convertToString
+    return searchIndex;
   }
 }

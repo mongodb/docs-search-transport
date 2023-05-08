@@ -1,4 +1,6 @@
-{
+import { IndexMappings } from "./atlas-types"
+
+export const SearchIndex:IndexMappings = {
   "mappings": {
     "dynamic": false,
     "fields": {
