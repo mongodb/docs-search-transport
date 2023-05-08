@@ -30,7 +30,7 @@ const SEARCH_INDEX = 'default';
 export class AtlasAdminManager {
   defaultHeaders: RequestOptions;
   baseUrl: string;
-  taxonomy: {[key: string]: any};
+  taxonomy: { [key: string]: any };
 
   constructor(publicApiKey: string, privApiKey: string) {
     // set base headers
@@ -56,17 +56,19 @@ export class AtlasAdminManager {
   }
 
   /**
-   * fetches taxonomy TOML from 
+   * fetches taxonomy TOML from specified URL
    */
   async fetchTaxonomy(url: string) {
-    if (!url) {throw new Error("Taxonomy URL required")}
+    if (!url) {
+      throw new Error('Taxonomy URL required');
+    }
     try {
       const res = await fetch(url);
       // TODO: should do some conversion to convert taxonomy input into {[key:string]:object}
       // nested, hierachical taxonomy
       this.taxonomy = res;
     } catch (e) {
-      console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`)
+      console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
       throw e;
     }
   }
@@ -105,7 +107,7 @@ export class AtlasAdminManager {
       }
       console.log(JSON.stringify(data));
       console.log(JSON.stringify(res));
-      
+
       if (data.length) {
         return data;
       }
@@ -148,9 +150,7 @@ export class AtlasAdminManager {
     return options;
   }
 
-  private _convertToString(facet: any) {
-
-  }
+  private _convertToString(facet: any) {}
 
   // TODO: should be a util function to convert input format of facet taxonomy
   // into facet keys by calling convertToString on some arbitrary object

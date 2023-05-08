@@ -1,10 +1,6 @@
-type mappingKeys = 
-  'mappings' |
-  'analyzers' |
-  'synonyms';
+type mappingKeys = 'mappings' | 'analyzers' | 'synonyms';
 
-export type IndexMappings = { [Key in mappingKeys]?: any }
-
+export type IndexMappings = { [Key in mappingKeys]?: any };
 
 /**
  * TODO: below are typings for admin API requests
@@ -20,7 +16,7 @@ interface customAnalyzer {
 interface synonymMapping {
   name: string;
   analyzer: string;
-  source: { 'collection': string };
+  source: { collection: string };
 }
 
 export interface CreateBodySchema {
@@ -31,5 +27,5 @@ export interface CreateBodySchema {
   mappings?: IndexMappings;
   name: string;
   searchAnalyzer?: string;
-  synonyms?: synonymMapping[]
+  synonyms?: synonymMapping[];
 }

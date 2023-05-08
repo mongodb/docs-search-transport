@@ -304,7 +304,7 @@ async function main() {
     // TODO: call this after taxonomy is resolved
     // await atlasAdmin.fetchTaxonomy(process.env['TAXONOMY_URL']!);
     const res = await atlasAdmin.patchSearchIndex();
-    console.info(`Search Index res ${JSON.stringify(res)}`)
+    console.info(`Search Index res ${JSON.stringify(res)}`);
   } catch (e) {
     console.error(`Error while initializing server: ${JSON.stringify(e)}`);
   }
