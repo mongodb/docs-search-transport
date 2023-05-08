@@ -105,12 +105,8 @@ export class AtlasAdminManager {
         log.error(res);
         throw res;
       }
-      console.log(JSON.stringify(data));
-      console.log(JSON.stringify(res));
 
-      if (data.length) {
-        return data;
-      }
+      return data;
     } catch (e) {
       log.error(`Error while creating new search index: ${JSON.stringify(e)}`);
       throw e;
@@ -121,7 +117,6 @@ export class AtlasAdminManager {
     log.info('updating Atlas search index');
     const url = `${this.baseUrl}/${indexId}`;
 
-    // const options = DEFAULT_ATLAS_API_OPTIONS;
     const options = this._getPostPatchOptions(searchIndex);
     options['method'] = 'PATCH';
 
