@@ -1,7 +1,8 @@
-import { request, RequestOptions } from 'urllib';
-
 // @ts-ignore
 import Logger from 'basic-logger';
+import fetch from 'node-fetch';
+import { parse } from 'toml';
+import { request, RequestOptions } from 'urllib';
 import { SearchIndex } from './data/atlas-search-index';
 import { IndexMappings } from './data/atlas-types';
 
@@ -30,7 +31,7 @@ const SEARCH_INDEX = 'default';
 export class AtlasAdminManager {
   defaultHeaders: RequestOptions;
   baseUrl: string;
-  taxonomy: { [key: string]: any };
+  taxonomy: Record<string, object>;
 
   constructor(publicApiKey: string, privApiKey: string) {
     // set base headers
@@ -66,10 +67,42 @@ export class AtlasAdminManager {
       const res = await fetch(url);
       // TODO: should do some conversion to convert taxonomy input into {[key:string]:object}
       // nested, hierachical taxonomy
-      this.taxonomy = res;
+      const toml = await res.text();
+      this.taxonomy = parse(toml);
     } catch (e) {
-      console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
-      throw e;
+      // console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
+      // throw e;
+
+      // TODO: remove test
+      console.log(`Setting test taxonomy with test toml`);
+      
+      this.taxonomy = parse(
+        `
+        name = "Taxonomy"
+
+        [[genres]]
+        name = "Reference"
+
+        [[genres]]
+        name = "Tutorial"
+
+        [[target_platforms]]
+        name = "Atlas"
+        versions = ["v1.2", "master"]
+        
+        [[target_platforms]]
+        name = "Server"
+        versions = ["v1.0", "master"]
+
+        [[target_platforms]]
+        name = "Realm"
+
+        [[target_platforms]]
+        name = "Drivers"
+        versions = ["v1.4", "v1.6", "v2.0"]
+        
+        `
+      )
     }
   }
 
