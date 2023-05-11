@@ -8,14 +8,16 @@ dotenv.config();
 import { MongoClient } from 'mongodb';
 import assert from 'assert';
 import http from 'http';
-import { UrlWithParsedQuery } from 'url';
+import fetch from 'node-fetch';
+import { parse } from 'toml';
 
 // @ts-ignore
 import Logger from 'basic-logger';
 
+import { taxonomy } from './data/sample-taxonomy';
 import { Query } from './Query';
 import { isPermittedOrigin } from './util';
-import { SearchIndex, RefreshInfo } from './SearchIndex';
+import { SearchIndex, RefreshInfo, Taxonomy } from './SearchIndex';
 import { AtlasAdminManager } from './AtlasAdmin';
 
 process.title = 'search-transport';
@@ -76,21 +78,11 @@ class InvalidQuery extends Error {}
 
 class Marian {
   index: SearchIndex;
+  atlasAdmin: AtlasAdminManager;
 
-  constructor(index: SearchIndex) {
+  constructor(index: SearchIndex, atlasAdmin: AtlasAdminManager) {
     this.index = index;
-
-    // Fire-and-forget loading
-    this.index
-      .load()
-      .then((result) => {
-        if (result) {
-          log.info(JSON.stringify(result));
-        }
-      })
-      .catch((err) => {
-        log.error(err);
-      });
+    this.atlasAdmin = atlasAdmin;
   }
 
   start(port: number) {
@@ -130,29 +122,14 @@ class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatus(parsedUrl, req, res);
       }
+    } else if (pathname === '/v2/search') {
+      if (checkMethod(req, res, 'GET')) {
+        this.handleFacetSearch(parsedUrl, req, res);
+      }
     } else {
       res.writeHead(400, {});
       res.end('');
     }
-  }
-
-  private async fetchResults(parsedUrl: URL): Promise<any[]> {
-    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
-    if (!rawQuery) {
-      throw new InvalidQuery();
-    }
-
-    if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
-      throw new InvalidQuery();
-    }
-
-    const query = new Query(rawQuery);
-
-    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
-    if (typeof searchProperty === 'string') {
-      searchProperty = [searchProperty];
-    }
-    return await this.index.search(query, searchProperty);
   }
 
   async handleSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
@@ -189,7 +166,7 @@ class Marian {
     Object.assign(headers, STANDARD_HEADERS);
 
     try {
-      await this.index.load();
+      await this.load();
     } catch (err) {
       log.error(err);
       headers['Content-Type'] = 'application/json';
@@ -242,6 +219,84 @@ class Marian {
 
     res.writeHead(200, headers);
     res.end(JSON.stringify(response));
+  }
+
+  async load() {
+    let taxonomy: Taxonomy;
+    try {
+      taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!)
+      const atlasAdminRes = await this.atlasAdmin.patchSearchIndex(taxonomy);
+      const loadRes = await this.index.load(taxonomy);
+    } catch(e) {
+      log.error(`Error while loading Marian server ${JSON.stringify(e)}`)
+    }
+  }
+  
+  private async handleFacetSearch (parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Vary: 'Accept-Encoding, Origin',
+      'Cache-Control': 'public,max-age=120,must-revalidate',
+    };
+    Object.assign(headers, STANDARD_HEADERS);
+    checkAllowedOrigin(req.headers.origin, headers);
+
+    let results;
+    try {
+      const query = '';
+      // results = await this.fetchResults(parsedUrl, true);
+      // log.info('check results');
+      // log.info(JSON.stringify(results));
+      // results = await this.fetchResults(parsedUrl);
+    } catch (err) {
+      if (err instanceof InvalidQuery) {
+        res.writeHead(400, headers);
+        res.end('[]');
+        return;
+      }
+
+      throw err;
+    }
+    let responseBody = JSON.stringify({ results: results });
+    res.writeHead(200, headers);
+    res.end(responseBody);
+  }
+
+  private async fetchResults(parsedUrl: URL): Promise<any[]> {
+    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
+    if (!rawQuery) {
+      throw new InvalidQuery();
+    }
+
+    if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
+      throw new InvalidQuery();
+    }
+
+    const query = new Query(rawQuery);
+
+    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
+    if (typeof searchProperty === 'string') {
+      searchProperty = [searchProperty];
+    }
+    return await this.index.search(query, searchProperty);
+  }
+
+  private async fetchTaxonomy(url: string) {
+    if (!url) {
+      throw new Error('Taxonomy URL required');
+    }
+    try {
+      const res = await fetch(url);
+      const toml = await res.text();
+      return parse(toml);
+    } catch (e) {
+      // console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
+      // throw e;
+
+      // TODO: remove test
+      console.log(`Returning test taxonomy with test toml`);
+      return parse(taxonomy)
+    }
   }
 }
 
@@ -297,14 +352,11 @@ async function main() {
     await searchIndex.createRecommendedIndexes();
   }
 
-  const server = new Marian(searchIndex);
   const atlasAdmin = new AtlasAdminManager(process.env['ATLAS_ADMIN_PUB_KEY']!, process.env['ATLAS_ADMIN_API_KEY']!);
+  const server = new Marian(searchIndex, atlasAdmin);
 
   try {
-    // TODO: call this after taxonomy is resolved
-    // await atlasAdmin.fetchTaxonomy(process.env['TAXONOMY_URL']!);
-    const res = await atlasAdmin.patchSearchIndex();
-    console.info(`Search Index res ${JSON.stringify(res)}`);
+    await server.load();
   } catch (e) {
     console.error(`Error while initializing server: ${JSON.stringify(e)}`);
   }

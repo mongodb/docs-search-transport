@@ -1,10 +1,9 @@
 // @ts-ignore
 import Logger from 'basic-logger';
-import fetch from 'node-fetch';
-import { parse } from 'toml';
 import { request, RequestOptions } from 'urllib';
 import { SearchIndex } from './data/atlas-search-index';
 import { IndexMappings } from './data/atlas-types';
+import { Taxonomy } from './SearchIndex';
 
 const DEFAULT_ATLAS_API_OPTIONS: RequestOptions = {
   headers: {
@@ -31,7 +30,6 @@ const SEARCH_INDEX = 'default';
 export class AtlasAdminManager {
   defaultHeaders: RequestOptions;
   baseUrl: string;
-  taxonomy: Record<string, object>;
 
   constructor(publicApiKey: string, privApiKey: string) {
     // set base headers
@@ -39,70 +37,18 @@ export class AtlasAdminManager {
     this.defaultHeaders['digestAuth'] = `${publicApiKey}:${privApiKey}`;
     // set base url
     this.baseUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${GROUP_ID}/clusters/${CLUSTER_NAME}/fts/indexes`;
-
-    this.taxonomy = {};
   }
 
-  async patchSearchIndex() {
+  async patchSearchIndex(taxonomy: Taxonomy) {
     log.info('patchSearchIndex');
     try {
       const index = await this.findSearchIndex(DB, COLLECTION_NAME, SEARCH_INDEX);
       if (!index) {
-        return this.createSearchIndex(SearchIndex);
+        return this.createSearchIndex(SearchIndex, taxonomy);
       }
-      return this.updateSearchindex(index['indexID'], SearchIndex);
+      return this.updateSearchindex(index['indexID'], SearchIndex, taxonomy);
     } catch (e) {
       log.error(`Error while patching searching index: ${JSON.stringify(e)}`);
-    }
-  }
-
-  /**
-   * fetches taxonomy TOML from specified URL
-   */
-  async fetchTaxonomy(url: string) {
-    if (!url) {
-      throw new Error('Taxonomy URL required');
-    }
-    try {
-      const res = await fetch(url);
-      // TODO: should do some conversion to convert taxonomy input into {[key:string]:object}
-      // nested, hierachical taxonomy
-      const toml = await res.text();
-      this.taxonomy = parse(toml);
-    } catch (e) {
-      // console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
-      // throw e;
-
-      // TODO: remove test
-      console.log(`Setting test taxonomy with test toml`);
-      
-      this.taxonomy = parse(
-        `
-        name = "Taxonomy"
-
-        [[genres]]
-        name = "Reference"
-
-        [[genres]]
-        name = "Tutorial"
-
-        [[target_platforms]]
-        name = "Atlas"
-        versions = ["v1.2", "master"]
-        
-        [[target_platforms]]
-        name = "Server"
-        versions = ["v1.0", "master"]
-
-        [[target_platforms]]
-        name = "Realm"
-
-        [[target_platforms]]
-        name = "Drivers"
-        versions = ["v1.4", "v1.6", "v2.0"]
-        
-        `
-      )
     }
   }
 
@@ -126,10 +72,10 @@ export class AtlasAdminManager {
     }
   }
 
-  private async createSearchIndex(searchIndex: IndexMappings) {
+  private async createSearchIndex(searchIndex: IndexMappings, taxonomy: Taxonomy) {
     log.info('creating Atlas search index');
     const url = `${this.baseUrl}`;
-    const options = this._getPostPatchOptions(searchIndex);
+    const options = this._getPostPatchOptions(searchIndex, taxonomy);
     options['method'] = 'POST';
 
     try {
@@ -146,11 +92,11 @@ export class AtlasAdminManager {
     }
   }
 
-  private async updateSearchindex(indexId: string, searchIndex: IndexMappings) {
+  private async updateSearchindex(indexId: string, searchIndex: IndexMappings, taxonomy: Taxonomy) {
     log.info('updating Atlas search index');
     const url = `${this.baseUrl}/${indexId}`;
 
-    const options = this._getPostPatchOptions(searchIndex);
+    const options = this._getPostPatchOptions(searchIndex, taxonomy);
     options['method'] = 'PATCH';
 
     try {
@@ -167,9 +113,9 @@ export class AtlasAdminManager {
     }
   }
 
-  private _getPostPatchOptions(searchIndex: IndexMappings) {
+  private _getPostPatchOptions(searchIndex: IndexMappings, taxonomy: Taxonomy) {
     const options = DEFAULT_ATLAS_API_OPTIONS;
-    options['data'] = this._insertTaxonomyIntoSearchIndex(searchIndex);
+    options['data'] = this._insertTaxonomyIntoSearchIndex(searchIndex, taxonomy);
     options['data'] = Object.assign(options['data'], {
       collectionName: COLLECTION_NAME,
       database: DB,
@@ -178,12 +124,45 @@ export class AtlasAdminManager {
     return options;
   }
 
-  private _convertToString(facet: any) {}
-
-  // TODO: should be a util function to convert input format of facet taxonomy
-  // into facet keys by calling convertToString on some arbitrary object
-  private _insertTaxonomyIntoSearchIndex(searchIndex: IndexMappings) {
-    // convert this.taxonomy{} and insert into searchIndex.facets by calling _convertToString
+  /**
+   * takes in Search Index config and parsed taxonomy toml
+   * inserts into Search Index and returns
+   * 
+   * @param searchIndex 
+   * @param taxonomy 
+   * @returns Search Index with faceted indexes added from taxonomy
+   */
+  private _insertTaxonomyIntoSearchIndex(searchIndex: IndexMappings, taxonomy: Taxonomy) {
+    const keyList = getFacetKeys(taxonomy);
+    searchIndex['mappings']['fields']['facets'] = {
+      'type': 'document',
+      'fields': {}
+    };
+    for (const facetKey of keyList) {
+      searchIndex['mappings']['fields']['facets']['fields'][facetKey] = [{
+        "type": "string",
+      },{
+        "type": "stringFacet",
+      }]
+    }
     return searchIndex;
   }
 }
+
+// TODO: possibly move to taxonomy utils
+const getFacetKeys = (taxonomy: Taxonomy) => {
+  const keyList: string[] = [];
+  const pushKeys = (baseStr = '', currentRecord: Taxonomy) => {
+    for (const key in currentRecord) {
+      if (key === 'name') { continue; }
+      const res = baseStr ? `${baseStr}→${key}`: key;
+      for (const child of currentRecord[key]) {
+        const name = child['name'];
+        pushKeys(`${res}←${name}`, child as Taxonomy)
+      }
+      keyList.push(res);
+    }
+  }
+  pushKeys('', taxonomy);
+  return keyList;
+};

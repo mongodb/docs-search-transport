@@ -55,6 +55,12 @@ export interface RefreshInfo {
   elapsedMS: number | null;
 }
 
+interface TaxonomyEntity {
+  name: string;
+  [x: string]: TaxonomyEntity[] | string
+}
+export type Taxonomy = Record<string, TaxonomyEntity[]>
+
 export function joinUrl(base: string, path: string): string {
   return base.replace(/\/*$/, '/') + path.replace(/^\/*/, '');
 }
@@ -205,6 +211,7 @@ export class SearchIndex {
   lastRefresh: RefreshInfo | null;
   documents: Collection<DatabaseDocument>;
   unindexable: Collection<DatabaseDocument>;
+  taxonomy: Taxonomy
 
   constructor(manifestSource: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;
@@ -216,6 +223,7 @@ export class SearchIndex {
     this.documents = this.db.collection<DatabaseDocument>('documents');
     this.unindexable = this.db.collection<DatabaseDocument>('unindexable');
     this.lastRefresh = null;
+    this.taxonomy = {};
   }
 
   async search(query: Query, searchProperty: string[] | null) {
@@ -234,7 +242,9 @@ export class SearchIndex {
     return await cursor.toArray();
   }
 
-  async load(manifestSource?: string): Promise<RefreshInfo> {
+  async load(taxonomy: Taxonomy, manifestSource?: string): Promise<RefreshInfo> {
+    this.taxonomy = taxonomy;
+
     log.info('Starting fetch');
     if (this.currentlyIndexing) {
       throw new Error('already-indexing');
