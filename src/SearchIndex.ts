@@ -1,6 +1,7 @@
 import assert from 'assert';
 import crypto from 'crypto';
 import fs from 'fs';
+import { Document as MongoDocument } from 'mongodb';
 import util from 'util';
 import S3 from 'aws-sdk/clients/s3';
 import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession } from 'mongodb';
@@ -55,7 +56,7 @@ export interface RefreshInfo {
   elapsedMS: number | null;
 }
 
-interface TaxonomyEntity {
+export interface TaxonomyEntity {
   name: string;
   [x: string]: TaxonomyEntity[] | string
 }
@@ -238,6 +239,13 @@ export class SearchIndex {
         searchProperty: 1,
       },
     });
+    const cursor = await this.documents.aggregate(aggregationQuery);
+    return await cursor.toArray();
+  }
+
+  async factedSearch(query: Query, searchProperty: string[]| null, facetKeys: string[]): Promise<MongoDocument[]> {
+    const aggregationQuery = query.getFacetedAggregationQuery(searchProperty, facetKeys, this.taxonomy);
+    // aggregationQuery.push({ $limit: 50 });
     const cursor = await this.documents.aggregate(aggregationQuery);
     return await cursor.toArray();
   }

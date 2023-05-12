@@ -244,10 +244,7 @@ class Marian {
     let results;
     try {
       const query = '';
-      // results = await this.fetchResults(parsedUrl, true);
-      // log.info('check results');
-      // log.info(JSON.stringify(results));
-      // results = await this.fetchResults(parsedUrl);
+      results = await this.fetchResults(parsedUrl, true);
     } catch (err) {
       if (err instanceof InvalidQuery) {
         res.writeHead(400, headers);
@@ -262,9 +259,11 @@ class Marian {
     res.end(responseBody);
   }
 
-  private async fetchResults(parsedUrl: URL): Promise<any[]> {
+  private async fetchResults(parsedUrl: URL, useFactedSearch: boolean = false): Promise<any[]> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
-    if (!rawQuery) {
+
+    if (!rawQuery && !useFactedSearch) {
+      // allow blank query for facet data only
       throw new InvalidQuery();
     }
 
@@ -278,6 +277,13 @@ class Marian {
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
+
+    if (useFactedSearch) {
+      // TODO: check for blank case to return all facets(?)
+      const selectedFacets = parsedUrl.searchParams.getAll('facets[]') || [];
+      return await this.index.factedSearch(query, searchProperty, selectedFacets);
+    }
+    
     return await this.index.search(query, searchProperty);
   }
 
