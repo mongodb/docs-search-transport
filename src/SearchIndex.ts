@@ -24,6 +24,7 @@ export interface Document {
   code?: {}[]; // legacy manifests will not have code field
   preview?: string;
   tags: null | string[];
+  facets?: {}
 }
 
 interface ManifestData {
@@ -245,8 +246,7 @@ export class SearchIndex {
 
   async factedSearch(query: Query, searchProperty: string[]| null, facetKeys: string[]): Promise<MongoDocument[]> {
     const aggregationQuery = query.getFacetedAggregationQuery(searchProperty, facetKeys, this.taxonomy);
-    // aggregationQuery.push({ $limit: 50 });
-    const cursor = await this.documents.aggregate(aggregationQuery);
+    const cursor = this.documents.aggregate(aggregationQuery);
     return await cursor.toArray();
   }
 
@@ -398,12 +398,30 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     // slug is possible to be empty string ''
     assert.ok(document.slug || document.slug === '');
 
+    // TODO: remove before merge.
+    // creating test data for facets
+    const facets: Record<string, string> = {};
+    if (document.slug.includes('reference')) {
+      facets['genres'] = 'reference';
+    } else if (document.slug.includes('tutorial')) {
+      facets['genres'] = 'tutorial'
+    }
+
+    // target_platform and target_platform->atlas<-versions acquired from manifest.searchProperty
+    const parts = manifest.searchProperty.split('-')
+    const target = parts.slice(0, parts.length-1).join('')
+    const version = parts.slice(parts.length - 1).join('');
+    facets['target_platforms'] = target;
+    facets[`target_platforms←${target}→versions`] = version;
+
+
     const newDocument: DatabaseDocument = {
       ...document,
       url: joinUrl(manifest.manifest.url, document.slug),
       manifestRevisionId: manifest.manifestRevisionId,
       searchProperty: [manifest.searchProperty],
       includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
+      facets: facets
     };
 
     return {

@@ -383,8 +383,8 @@ export class Query {
 
       compound.filter.push({
         "text": {
-          "query": selectedFacetKey.slice(idx),
-          "path": selectedFacetKey.slice(0, idx)
+          "query": selectedFacetKey.slice(idx+1),
+          "path": `facets.${selectedFacetKey.slice(0, idx)}`
         }
       })
     }
@@ -407,17 +407,17 @@ export class Query {
     ];
     agg.push({
       $facet: {
-        docs: [
-          {
-            $project: {
-              _id: 0,
-              title: 1,
-              preview: 1,
-              url: 1,
-              searchProperty: 1,
-            },
-          },
-        ],
+        docs: [{
+          "$project": {
+            "_id": 0,
+            "title": 1,
+            "preview": 1,
+            "url": 1,
+            "searchProperty": 1
+          }
+        }, {
+          "$limit": 50
+        }],
         meta: [{ $replaceWith: '$$SEARCH_META' }, { $limit: 1 }],
       },
     });
