@@ -262,7 +262,7 @@ class Marian {
   private async fetchResults(parsedUrl: URL, useFactedSearch: boolean = false): Promise<any[]> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
 
-    if (!rawQuery && !useFactedSearch) {
+    if (!rawQuery) {
       // allow blank query for facet data only
       throw new InvalidQuery();
     }
