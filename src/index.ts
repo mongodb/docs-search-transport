@@ -288,10 +288,10 @@ class Marian {
   }
 
   private async fetchTaxonomy(url: string) {
-    if (!url) {
-      throw new Error('Taxonomy URL required');
-    }
     try {
+      if (!url) {
+        throw new Error('Taxonomy URL required');
+      }
       const res = await fetch(url);
       const toml = await res.text();
       return parse(toml);
