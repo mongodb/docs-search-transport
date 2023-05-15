@@ -243,7 +243,6 @@ class Marian {
 
     let results;
     try {
-      const query = '';
       results = await this.fetchResults(parsedUrl, true);
     } catch (err) {
       if (err instanceof InvalidQuery) {
@@ -254,7 +253,7 @@ class Marian {
 
       throw err;
     }
-    let responseBody = JSON.stringify({ results: results });
+    let responseBody = JSON.stringify(results[0]);
     res.writeHead(200, headers);
     res.end(responseBody);
   }

@@ -423,7 +423,7 @@ export class Query {
     });
     agg.push({
       $unwind: {
-        path: 'meta'
+        path: '$meta'
       }
     })
     console.log('Executing ' + JSON.stringify(agg));
