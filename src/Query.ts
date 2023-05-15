@@ -421,6 +421,11 @@ export class Query {
         meta: [{ $replaceWith: '$$SEARCH_META' }, { $limit: 1 }],
       },
     });
+    agg.push({
+      $unwind: {
+        path: 'meta'
+      }
+    })
     console.log('Executing ' + JSON.stringify(agg));
     return agg;
   }
