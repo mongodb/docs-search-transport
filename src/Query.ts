@@ -1,6 +1,6 @@
 'use strict';
 
-import { Taxonomy } from "./SearchIndex";
+import { Taxonomy } from './SearchIndex';
 
 const CORRELATIONS = [
   ['regexp', 'regex', 0.8],
@@ -325,7 +325,7 @@ export class Query {
     return agg;
   }
 
-  getFacetedAggregationQuery(searchProperty: string[] | null, selectedFacets: string[], taxonomy:Taxonomy):any[] {
+  getFacetedAggregationQuery(searchProperty: string[] | null, selectedFacets: string[], taxonomy: Taxonomy): any[] {
     const parts: any[] = [];
     const terms = Array.from(this.terms);
 
@@ -360,7 +360,7 @@ export class Query {
       searchProperty !== null && searchProperty.length !== 0
         ? { searchProperty: { $elemMatch: { $in: searchProperty } } }
         : { includeInGlobalSearch: true };
-    const compound: { should: any[]; must?: any[]; filter?: any[], minimumShouldMatch: number } = {
+    const compound: { should: any[]; must?: any[]; filter?: any[]; minimumShouldMatch: number } = {
       should: parts,
       minimumShouldMatch: 1,
     };
@@ -382,16 +382,16 @@ export class Query {
       }
 
       compound.filter.push({
-        "text": {
-          "query": selectedFacetKey.slice(idx+1),
-          "path": `facets.${selectedFacetKey.slice(0, idx)}`
-        }
-      })
+        text: {
+          query: selectedFacetKey.slice(idx + 1),
+          path: `facets.${selectedFacetKey.slice(0, idx)}`,
+        },
+      });
     }
 
     const facets = getFacets(selectedFacets, taxonomy);
 
-    const agg:any = [
+    const agg: any = [
       {
         $search: {
           facet: {
@@ -399,7 +399,7 @@ export class Query {
               compound: compound,
             },
             // facets: {},
-            facets: facets
+            facets: facets,
           },
         },
       },
@@ -407,33 +407,36 @@ export class Query {
     ];
     agg.push({
       $facet: {
-        docs: [{
-          "$project": {
-            "_id": 0,
-            "title": 1,
-            "preview": 1,
-            "url": 1,
-            "searchProperty": 1
-          }
-        }, {
-          "$limit": 50
-        }],
+        docs: [
+          {
+            $project: {
+              _id: 0,
+              title: 1,
+              preview: 1,
+              url: 1,
+              searchProperty: 1,
+            },
+          },
+          {
+            $limit: 50,
+          },
+        ],
         meta: [{ $replaceWith: '$$SEARCH_META' }, { $limit: 1 }],
       },
     });
     agg.push({
       $unwind: {
-        path: '$meta'
-      }
-    })
+        path: '$meta',
+      },
+    });
     console.log('Executing ' + JSON.stringify(agg));
     return agg;
   }
 }
 
-const getFacets = (selectedFacets: string[], taxonomy:Taxonomy) => {
-  const facetStrings:string[] = [];
-  const selectedBaseFacetSet:Set<string> = new Set();
+const getFacets = (selectedFacets: string[], taxonomy: Taxonomy) => {
+  const facetStrings: string[] = [];
+  const selectedBaseFacetSet: Set<string> = new Set();
   for (const selectedFacet of selectedFacets) {
     const chars = [...selectedFacet];
     const baseIdx = chars.indexOf('←');
@@ -441,23 +444,22 @@ const getFacets = (selectedFacets: string[], taxonomy:Taxonomy) => {
     selectedBaseFacetSet.add(baseFacet);
 
     // gotta add the expansion
-    let ref:any = taxonomy[baseFacet],
-        startRef = baseIdx + 1;
-    
+    let ref: any = taxonomy[baseFacet],
+      startRef = baseIdx + 1;
+
     for (let idx = baseIdx + 1; idx < chars.length; idx++) {
       const char = chars[idx];
       if (char === '→' || idx === chars.length - 1) {
         const targetName = chars.slice(startRef, idx + 1).join('');
-        ref = ref.find((te:any) => te.name === targetName)
+        ref = ref.find((te: any) => te.name === targetName);
       } else if (char === '←') {
-        ref = ref[chars.slice(startRef, idx).join('')]
+        ref = ref[chars.slice(startRef, idx).join('')];
         startRef = idx + 1;
       }
     }
 
     for (const key in ref) {
-      if (key !== 'name')
-      facetStrings.push(`${selectedFacet}→${key}`)
+      if (key !== 'name') facetStrings.push(`${selectedFacet}→${key}`);
     }
   }
 
@@ -466,12 +468,12 @@ const getFacets = (selectedFacets: string[], taxonomy:Taxonomy) => {
     facetStrings.push(baseName);
   }
 
-  const res:{[key: string]: {type: string, path:string}} = {};
+  const res: { [key: string]: { type: string; path: string } } = {};
   for (const facetString of facetStrings) {
     res[facetString] = {
       type: 'string',
-      path: `facets.${facetString}`
-    }
+      path: `facets.${facetString}`,
+    };
   }
   return res;
-}
+};

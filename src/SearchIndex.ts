@@ -24,7 +24,7 @@ export interface Document {
   code?: {}[]; // legacy manifests will not have code field
   preview?: string;
   tags: null | string[];
-  facets?: {}
+  facets?: {};
 }
 
 interface ManifestData {
@@ -59,9 +59,9 @@ export interface RefreshInfo {
 
 export interface TaxonomyEntity {
   name: string;
-  [x: string]: TaxonomyEntity[] | string
+  [x: string]: TaxonomyEntity[] | string;
 }
-export type Taxonomy = Record<string, TaxonomyEntity[]>
+export type Taxonomy = Record<string, TaxonomyEntity[]>;
 
 export function joinUrl(base: string, path: string): string {
   return base.replace(/\/*$/, '/') + path.replace(/^\/*/, '');
@@ -213,7 +213,7 @@ export class SearchIndex {
   lastRefresh: RefreshInfo | null;
   documents: Collection<DatabaseDocument>;
   unindexable: Collection<DatabaseDocument>;
-  taxonomy: Taxonomy
+  taxonomy: Taxonomy;
 
   constructor(manifestSource: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;
@@ -244,7 +244,7 @@ export class SearchIndex {
     return await cursor.toArray();
   }
 
-  async factedSearch(query: Query, searchProperty: string[]| null, facetKeys: string[]): Promise<MongoDocument[]> {
+  async factedSearch(query: Query, searchProperty: string[] | null, facetKeys: string[]): Promise<MongoDocument[]> {
     const aggregationQuery = query.getFacetedAggregationQuery(searchProperty, facetKeys, this.taxonomy);
     const cursor = this.documents.aggregate(aggregationQuery);
     return await cursor.toArray();
@@ -404,16 +404,15 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     if (document.slug.includes('reference')) {
       facets['genres'] = 'reference';
     } else if (document.slug.includes('tutorial')) {
-      facets['genres'] = 'tutorial'
+      facets['genres'] = 'tutorial';
     }
 
     // target_platform and target_platform->atlas<-versions acquired from manifest.searchProperty
-    const parts = manifest.searchProperty.split('-')
-    const target = parts.slice(0, parts.length-1).join('')
+    const parts = manifest.searchProperty.split('-');
+    const target = parts.slice(0, parts.length - 1).join('');
     const version = parts.slice(parts.length - 1).join('');
     facets['target_platforms'] = target;
     facets[`target_platforms←${target}→versions`] = version;
-
 
     const newDocument: DatabaseDocument = {
       ...document,
@@ -421,7 +420,7 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
       manifestRevisionId: manifest.manifestRevisionId,
       searchProperty: [manifest.searchProperty],
       includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
-      facets: facets
+      facets: facets,
     };
 
     return {

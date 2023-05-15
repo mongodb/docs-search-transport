@@ -127,23 +127,26 @@ export class AtlasAdminManager {
   /**
    * takes in Search Index config and parsed taxonomy toml
    * inserts into Search Index and returns
-   * 
-   * @param searchIndex 
-   * @param taxonomy 
+   *
+   * @param searchIndex
+   * @param taxonomy
    * @returns Search Index with faceted indexes added from taxonomy
    */
   private _insertTaxonomyIntoSearchIndex(searchIndex: IndexMappings, taxonomy: Taxonomy) {
     const keyList = getFacetKeys(taxonomy);
     searchIndex['mappings']['fields']['facets'] = {
-      'type': 'document',
-      'fields': {}
+      type: 'document',
+      fields: {},
     };
     for (const facetKey of keyList) {
-      searchIndex['mappings']['fields']['facets']['fields'][facetKey] = [{
-        "type": "string",
-      },{
-        "type": "stringFacet",
-      }]
+      searchIndex['mappings']['fields']['facets']['fields'][facetKey] = [
+        {
+          type: 'string',
+        },
+        {
+          type: 'stringFacet',
+        },
+      ];
     }
     return searchIndex;
   }
@@ -154,15 +157,17 @@ const getFacetKeys = (taxonomy: Taxonomy) => {
   const keyList: string[] = [];
   const pushKeys = (baseStr = '', currentRecord: Taxonomy) => {
     for (const key in currentRecord) {
-      if (key === 'name') { continue; }
-      const res = baseStr ? `${baseStr}→${key}`: key;
+      if (key === 'name') {
+        continue;
+      }
+      const res = baseStr ? `${baseStr}→${key}` : key;
       for (const child of currentRecord[key]) {
         const name = child['name'];
-        pushKeys(`${res}←${name}`, child as Taxonomy)
+        pushKeys(`${res}←${name}`, child as Taxonomy);
       }
       keyList.push(res);
     }
-  }
+  };
   pushKeys('', taxonomy);
   return keyList;
 };
