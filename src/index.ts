@@ -122,10 +122,6 @@ class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatus(parsedUrl, req, res);
       }
-    } else if (pathname === '/v2/search') {
-      if (checkMethod(req, res, 'GET')) {
-        this.handleFacetSearch(parsedUrl, req, res);
-      }
     } else {
       res.writeHead(400, {});
       res.end('');
@@ -157,6 +153,25 @@ class Marian {
     let responseBody = JSON.stringify({ results: results });
     res.writeHead(200, headers);
     res.end(responseBody);
+  }
+
+  private async fetchResults(parsedUrl: URL): Promise<any[]> {
+    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
+    if (!rawQuery) {
+      throw new InvalidQuery();
+    }
+
+    if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
+      throw new InvalidQuery();
+    }
+
+    const query = new Query(rawQuery);
+
+    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
+    if (typeof searchProperty === 'string') {
+      searchProperty = [searchProperty];
+    }
+    return await this.index.search(query, searchProperty);
   }
 
   async handleRefresh(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
@@ -232,55 +247,6 @@ class Marian {
     }
   }
 
-  private async handleFacetSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Vary: 'Accept-Encoding, Origin',
-      'Cache-Control': 'public,max-age=120,must-revalidate',
-    };
-    Object.assign(headers, STANDARD_HEADERS);
-    checkAllowedOrigin(req.headers.origin, headers);
-
-    let results;
-    try {
-      const query = '';
-      // results = await this.fetchResults(parsedUrl, true);
-      // log.info('check results');
-      // log.info(JSON.stringify(results));
-      // results = await this.fetchResults(parsedUrl);
-    } catch (err) {
-      if (err instanceof InvalidQuery) {
-        res.writeHead(400, headers);
-        res.end('[]');
-        return;
-      }
-
-      throw err;
-    }
-    let responseBody = JSON.stringify({ results: results });
-    res.writeHead(200, headers);
-    res.end(responseBody);
-  }
-
-  private async fetchResults(parsedUrl: URL): Promise<any[]> {
-    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
-    if (!rawQuery) {
-      throw new InvalidQuery();
-    }
-
-    if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
-      throw new InvalidQuery();
-    }
-
-    const query = new Query(rawQuery);
-
-    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
-    if (typeof searchProperty === 'string') {
-      searchProperty = [searchProperty];
-    }
-    return await this.index.search(query, searchProperty);
-  }
-
   private async fetchTaxonomy(url: string) {
     if (!url) {
       throw new Error('Taxonomy URL required');
@@ -292,8 +258,6 @@ class Marian {
     } catch (e) {
       // console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
       // throw e;
-
-      // TODO: remove test
       console.log(`Returning test taxonomy with test toml`);
       return parse(taxonomy);
     }
