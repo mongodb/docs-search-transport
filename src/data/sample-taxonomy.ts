@@ -7,38 +7,61 @@ export const taxonomy = `
   name = "Taxonomy"
 
   [[genres]]
-  name = "Reference"
+  name = "reference"
 
   [[genres]]
-  name = "Tutorial"
+  name = "tutorial"
 
   [[target_platforms]]
-  name = "Atlas"
+  name = "atlas"
   [[target_platforms.versions]]
   name = "v1.2"
   [[target_platforms.versions]]
   name = "master"
 
   [[target_platforms]]
-  name = "Server"
+  name = "atlas-cli"
+  [[target_platforms.versions]]
+  name = "v1.2"
+  [[target_platforms.versions]]
+  name = "master"
+
+  [[target_platforms]]
+  name = "manual"
   [[target_platforms.versions]]
   name = "v1.0"
   [[target_platforms.versions]]
   name = "master"
 
   [[target_platforms]]
-  name = "Realm"
-
-  [[target_platforms]]
-  name = "Drivers"
-  [[target_platforms.versions]]
-  name = "v1.4"
-  [[target_platforms.versions.subversions]]
-  name = "v1.4.1"
-  [[target_platforms.versions.subversions]]
-  name = "v1.4.9"
-  [[target_platforms.versions]]
-  name = "v1.6"
+  name = "spark-connector"
   [[target_platforms.versions]]
   name = "v2.0"
+  [[target_platforms.versions]]
+  name = "v2.1"
+
+  [[target_platforms]]
+  name = "node"
+  [[target_platforms.versions]]
+  name = "v4.9"
+
+  [[target_platforms]]
+  name = "mongocli"
+  [[target_platforms.versions]]
+  name = "v1.0"
+
+  [[target_platforms]]
+  name = "visual-studio-extension"
+  [[target_platforms.versions]]
+  name = "current"
+
+  [[target_platforms]]
+  name = "golang"
+  [[target_platforms.versions]]
+  name = "v1.7"
+
+  [[target_platforms]]
+  name = "java"
+  [[target_platforms.versions]]
+  name = "v4.3"
 `;
