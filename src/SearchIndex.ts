@@ -57,7 +57,11 @@ export interface RefreshInfo {
   elapsedMS: number | null;
 }
 
+<<<<<<< HEAD
 export interface TaxonomyEntity {
+=======
+interface TaxonomyEntity {
+>>>>>>> DOP-3569-implementation
   name: string;
   [x: string]: TaxonomyEntity[] | string;
 }
@@ -244,12 +248,15 @@ export class SearchIndex {
     return await cursor.toArray();
   }
 
+<<<<<<< HEAD
   async factedSearch(query: Query, searchProperty: string[] | null, facetKeys: string[]): Promise<MongoDocument[]> {
     const aggregationQuery = query.getFacetedAggregationQuery(searchProperty, facetKeys, this.taxonomy);
     const cursor = this.documents.aggregate(aggregationQuery);
     return await cursor.toArray();
   }
 
+=======
+>>>>>>> DOP-3569-implementation
   async load(taxonomy: Taxonomy, manifestSource?: string): Promise<RefreshInfo> {
     this.taxonomy = taxonomy;
 

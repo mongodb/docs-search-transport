@@ -297,8 +297,6 @@ class Marian {
     } catch (e) {
       // console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
       // throw e;
-
-      // TODO: remove test
       console.log(`Returning test taxonomy with test toml`);
       return parse(taxonomy);
     }
