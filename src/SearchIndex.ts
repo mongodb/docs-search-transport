@@ -57,9 +57,9 @@ export interface RefreshInfo {
 
 interface TaxonomyEntity {
   name: string;
-  [x: string]: TaxonomyEntity[] | string
+  [x: string]: TaxonomyEntity[] | string;
 }
-export type Taxonomy = Record<string, TaxonomyEntity[]>
+export type Taxonomy = Record<string, TaxonomyEntity[]>;
 
 export function joinUrl(base: string, path: string): string {
   return base.replace(/\/*$/, '/') + path.replace(/^\/*/, '');
@@ -211,7 +211,7 @@ export class SearchIndex {
   lastRefresh: RefreshInfo | null;
   documents: Collection<DatabaseDocument>;
   unindexable: Collection<DatabaseDocument>;
-  taxonomy: Taxonomy
+  taxonomy: Taxonomy;
 
   constructor(manifestSource: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;

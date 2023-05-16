@@ -224,15 +224,15 @@ class Marian {
   async load() {
     let taxonomy: Taxonomy;
     try {
-      taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!)
+      taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
       const atlasAdminRes = await this.atlasAdmin.patchSearchIndex(taxonomy);
       const loadRes = await this.index.load(taxonomy);
-    } catch(e) {
-      log.error(`Error while loading Marian server ${JSON.stringify(e)}`)
+    } catch (e) {
+      log.error(`Error while loading Marian server ${JSON.stringify(e)}`);
     }
   }
-  
-  private async handleFacetSearch (parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+
+  private async handleFacetSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Vary: 'Accept-Encoding, Origin',
@@ -295,7 +295,7 @@ class Marian {
 
       // TODO: remove test
       console.log(`Returning test taxonomy with test toml`);
-      return parse(taxonomy)
+      return parse(taxonomy);
     }
   }
 }
