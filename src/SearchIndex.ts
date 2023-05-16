@@ -57,11 +57,7 @@ export interface RefreshInfo {
   elapsedMS: number | null;
 }
 
-<<<<<<< HEAD
 export interface TaxonomyEntity {
-=======
-interface TaxonomyEntity {
->>>>>>> DOP-3569-implementation
   name: string;
   [x: string]: TaxonomyEntity[] | string;
 }
