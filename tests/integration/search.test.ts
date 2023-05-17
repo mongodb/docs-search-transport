@@ -19,7 +19,7 @@ describe('Searching', function () {
 
   before('Loading test data', async function () {
     await client.connect();
-    index = new SearchIndex('dir:tests/search_test_data/', client, TEST_DATABASE);
+    index = new SearchIndex('dir:tests/integration/search_test_data/', client, TEST_DATABASE);
     const result = await index.load();
     await index.createRecommendedIndexes();
 
