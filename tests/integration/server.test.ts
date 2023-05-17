@@ -2,15 +2,18 @@ import { ok, strictEqual } from 'assert';
 import * as child_process from 'child_process';
 import * as http from 'http';
 import * as readline from 'readline';
+import * as dotenv from 'dotenv';
+// dotenv.config() should be invoked immediately, before any other imports, to ensure config is present
+dotenv.config();
 
 export function startServer(path: string, done: () => void): { child: child_process.ChildProcess; port: number } {
   let isDone = false;
-
   const child = child_process.spawn('./node_modules/.bin/ts-node', ['./src/index.ts'], {
     stdio: [0, 'pipe', 2],
     env: {
-      MANIFEST_URI: 'dir:tests/search_test_data/',
-      ATLAS_URI: 'mongodb://localhost:27017',
+      MANIFEST_URI: 'dir:tests/integration/search_test_data/',
+      ATLAS_DATABASE: 'search-test',
+      ATLAS_URI: process.env.ATLAS_URI,
       PATH: process.env.PATH,
     },
   });
@@ -87,7 +90,7 @@ describe('http interface', function () {
   let ctx: { child: child_process.ChildProcess; port: number } | null = null;
 
   before('starting server', function (done) {
-    ctx = startServer('dir:test/manifests/', done);
+    ctx = startServer('dir:tests/manifests/', done);
   });
 
   it('should return proper Access-Control-Allow-Origin headers', async function () {
