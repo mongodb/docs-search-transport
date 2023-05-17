@@ -36,7 +36,6 @@ describe('Synchronization', function () {
     const documentsCursor = client.db(DB).collection<DatabaseDocument>('documents');
     const documents = await documentsCursor.find().toArray();
     sortDocuments(documents);
-    console.log('initial state')
     // Ensure that the correct slugs exist for state #1
     deepStrictEqual(
       documents.map((doc) => {
