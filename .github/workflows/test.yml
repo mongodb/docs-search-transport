@@ -12,7 +12,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    env:
+      ATLAS_URI: ${{ secrets.CI_ATLAS_URI }}
     strategy:
       matrix:
         node-version: [14.x]
