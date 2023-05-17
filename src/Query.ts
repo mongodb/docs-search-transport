@@ -243,7 +243,7 @@ export class Query {
     parts.push({
       text: {
         query: terms,
-        path: ['paragraphs', 'code.lang', 'code.value', 'text'],
+        path: ['paragraphs', 'code.lang', 'code.value', 'text', { value: 'code.value', multi: 'simple' }],
       },
     });
 
@@ -258,7 +258,23 @@ export class Query {
     parts.push({
       text: {
         query: terms,
+        path: { value: 'headings', multi: 'whitespace' },
+        score: { boost: { value: 5 } },
+      },
+    });
+
+    parts.push({
+      text: {
+        query: terms,
         path: 'title',
+        score: { boost: { value: 10 } },
+      },
+    });
+
+    parts.push({
+      text: {
+        query: terms,
+        path: { value: 'title', multi: 'whitespace' },
         score: { boost: { value: 10 } },
       },
     });

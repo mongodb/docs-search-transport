@@ -3,26 +3,9 @@ ingress:
   hosts:
     - docs-search-transport.docs.prod.corp.mongodb.com
 
-envSecrets:
-  ATLAS_URI: docs-search-transport
-
 env:
   MANIFEST_URI: 's3://docs-search-indexes-test/search-indexes/prd/'
-
-service:
-  targetPort: 8080
-
-probes:
-  enabled: true
-  path: /status
-  headers: {}
-  liveness:
-    httpGet: true
-    initialDelaySeconds: 10
-    periodSeconds: 60
-    timeoutSeconds: 1
-    successThreshold: 1
-    failureThreshold: 3
+  ATLAS_DATABASE: 'search'
 
 resources:
   limits:
