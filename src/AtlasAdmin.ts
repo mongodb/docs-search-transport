@@ -24,12 +24,12 @@ const SEARCH_INDEX = 'default';
 
 /**
  * Manager is intended to keep Atlas Search Index in sync across environments
- * Index should be edited in ../configs directory and expect to be updated on deploy
+ * Index should be edited in ../data directory and expect to be updated on deploy
  */
 
 export class AtlasAdminManager {
-  defaultHeaders: RequestOptions;
-  baseUrl: string;
+  private defaultHeaders: RequestOptions;
+  private baseUrl: string;
 
   constructor(publicApiKey: string, privApiKey: string) {
     // set base headers

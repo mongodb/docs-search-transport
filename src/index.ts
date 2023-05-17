@@ -33,6 +33,9 @@ const MANIFEST_URI_KEY = 'MANIFEST_URI';
 const ATLAS_URI_KEY = 'ATLAS_URI';
 const DATABASE_NAME_KEY = 'ATLAS_DATABASE';
 const DEFAULT_DATABASE_NAME = 'search';
+const GROUP_KEY = 'GROUP_ID';
+const ADMIN_API_KEY = 'ATLAS_ADMIN_API_KEY';
+const ADMIN_PUB_KEY = 'ATLAS_ADMIN_PUB_KEY';
 
 const log = new Logger({
   showTimestamp: true,
@@ -270,7 +273,47 @@ function help(): void {
 The following environment variables are used:
 * ${MANIFEST_URI_KEY}
 * ${ATLAS_URI_KEY}
-* ${DATABASE_NAME_KEY} (defaults to "search")`);
+* ${DATABASE_NAME_KEY} (defaults to "search")
+* ${GROUP_KEY}
+* ${ADMIN_API_KEY}
+* ${ADMIN_PUB_KEY}
+`);
+}
+
+function verifyEnvVars() {
+  const manifestUri = process.env[MANIFEST_URI_KEY];
+  const atlasUri = process.env[ATLAS_URI_KEY];
+  const groupId = process.env[GROUP_KEY];
+  const adminPubKey = process.env[ADMIN_PUB_KEY];
+  const adminPrivKey = process.env[ADMIN_API_KEY];
+
+  if (!manifestUri || !atlasUri || !groupId || !adminPrivKey || !adminPubKey) {
+    if (!manifestUri) {
+      console.error(`Missing ${MANIFEST_URI_KEY}`);
+    }
+    if (!atlasUri) {
+      console.error(`Missing ${ATLAS_URI_KEY}`);
+    }
+    if (!groupId) {
+      console.error(`Missing ${GROUP_KEY}`);
+    }
+    if (!adminPrivKey) {
+      console.error(`Missing ${ADMIN_API_KEY}`);
+    }
+    if (!adminPubKey) {
+      console.error(`Missing ${ADMIN_PUB_KEY}`);
+    }
+    help();
+    process.exit(1);
+  }
+
+  return {
+    manifestUri,
+    atlasUri,
+    groupId,
+    adminPubKey,
+    adminPrivKey
+  }
 }
 
 async function main() {
@@ -286,25 +329,12 @@ async function main() {
     process.exit(1);
   }
 
-  const manifestUri = process.env[MANIFEST_URI_KEY];
-  const atlasUri = process.env[ATLAS_URI_KEY];
+  const { manifestUri, atlasUri } = verifyEnvVars();
 
   let databaseName = DEFAULT_DATABASE_NAME;
   const envDBName = process.env[DATABASE_NAME_KEY];
   if (envDBName) {
     databaseName = envDBName;
-  }
-
-  if (!manifestUri || !atlasUri) {
-    // TODO: add admin api keys
-    if (!manifestUri) {
-      console.error(`Missing ${MANIFEST_URI_KEY}`);
-    }
-    if (!atlasUri) {
-      console.error(`Missing ${ATLAS_URI_KEY}`);
-    }
-    help();
-    process.exit(1);
   }
 
   log.info(`Loading manifests from ${manifestUri}`);
