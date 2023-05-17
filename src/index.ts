@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 // dotenv.config() should be invoked immediately, before any other imports, to ensure config is present
 dotenv.config();
 
-import { MongoClient } from 'mongodb';
+import { Document, MongoClient } from 'mongodb';
 import assert from 'assert';
 import http from 'http';
 import fetch from 'node-fetch';
@@ -141,7 +141,7 @@ class Marian {
 
     checkAllowedOrigin(req.headers.origin, headers);
 
-    let results;
+    let results: Document[];
     try {
       results = await this.fetchResults(parsedUrl);
     } catch (err) {
@@ -158,7 +158,7 @@ class Marian {
     res.end(responseBody);
   }
 
-  private async fetchResults(parsedUrl: URL): Promise<any[]> {
+  private async fetchResults(parsedUrl: URL) {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
     if (!rawQuery) {
       throw new InvalidQuery();
@@ -174,7 +174,7 @@ class Marian {
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
-    return await this.index.search(query, searchProperty);
+    return this.index.search(query, searchProperty);
   }
 
   async handleRefresh(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
@@ -242,6 +242,7 @@ class Marian {
   async load() {
     let taxonomy: Taxonomy;
     try {
+      // TODO: include taxonomy url in verifyEnvVars after it has been released
       taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
       const atlasAdminRes = await this.atlasAdmin.patchSearchIndex(taxonomy);
       const loadRes = await this.index.load(taxonomy);
@@ -312,8 +313,8 @@ function verifyEnvVars() {
     atlasUri,
     groupId,
     adminPubKey,
-    adminPrivKey
-  }
+    adminPrivKey,
+  };
 }
 
 async function main() {

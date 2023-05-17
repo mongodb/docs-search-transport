@@ -29,3 +29,16 @@ export interface CreateBodySchema {
   searchAnalyzer?: string;
   synonyms?: synonymMapping[];
 }
+
+export interface SearchIndexResponse {
+  analyzer?: string;
+  analyzers?: customAnalyzer[];
+  collectionName: string;
+  database: string;
+  indexID?: string;
+  mappings?: IndexMappings['mappings'];
+  name: string;
+  searchAnalyzer?: string;
+  status?: string;
+  synonyms?: IndexMappings['synonyms'];
+}
