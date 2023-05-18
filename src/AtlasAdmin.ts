@@ -18,7 +18,6 @@ const log = new Logger({
 
 const CLUSTER_NAME = process.env['CLUSTER_NAME'] || 'Search';
 const COLLECTION_NAME = process.env['COLLECTION_NAME'] || 'documents';
-const GROUP_ID = process.env['GROUP_ID'] || '';
 const DB = process.env['ATLAS_DATABASE'] || 'search';
 const SEARCH_INDEX = 'default';
 
@@ -28,15 +27,12 @@ const SEARCH_INDEX = 'default';
  */
 
 export class AtlasAdminManager {
-  private defaultHeaders: RequestOptions;
-  private baseUrl: string;
+  private readonly baseUrl: string;
 
-  constructor(publicApiKey: string, privApiKey: string) {
-    // set base headers
-    this.defaultHeaders = DEFAULT_ATLAS_API_OPTIONS;
-    this.defaultHeaders['digestAuth'] = `${publicApiKey}:${privApiKey}`;
+  constructor(publicApiKey: string, privApiKey: string, groupId: string) {
+    DEFAULT_ATLAS_API_OPTIONS['digestAuth'] = `${publicApiKey}:${privApiKey}`;
     // set base url
-    this.baseUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${GROUP_ID}/clusters/${CLUSTER_NAME}/fts/indexes`;
+    this.baseUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${CLUSTER_NAME}/fts/indexes`;
   }
 
   async patchSearchIndex(taxonomy: Taxonomy) {

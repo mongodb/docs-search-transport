@@ -284,7 +284,7 @@ The following environment variables are used:
 `);
 }
 
-function verifyEnvVars() {
+function verifyAndGetEnvVars() {
   const manifestUri = process.env[MANIFEST_URI_KEY];
   const atlasUri = process.env[ATLAS_URI_KEY];
   const groupId = process.env[GROUP_KEY];
@@ -307,6 +307,7 @@ function verifyEnvVars() {
     if (!adminPubKey) {
       console.error(`Missing ${ADMIN_PUB_KEY}`);
     }
+    // TODO: add taxonomy url
     help();
     process.exit(1);
   }
@@ -333,7 +334,7 @@ async function main() {
     process.exit(1);
   }
 
-  const { manifestUri, atlasUri } = verifyEnvVars();
+  const { manifestUri, atlasUri, groupId, adminPubKey, adminPrivKey } = verifyAndGetEnvVars();
 
   let databaseName = DEFAULT_DATABASE_NAME;
   const envDBName = process.env[DATABASE_NAME_KEY];
@@ -350,7 +351,7 @@ async function main() {
     await searchIndex.createRecommendedIndexes();
   }
 
-  const atlasAdmin = new AtlasAdminManager(process.env['ATLAS_ADMIN_PUB_KEY']!, process.env['ATLAS_ADMIN_API_KEY']!);
+  const atlasAdmin = new AtlasAdminManager(adminPubKey, adminPrivKey, groupId);
   const server = new Marian(searchIndex, atlasAdmin);
 
   try {
