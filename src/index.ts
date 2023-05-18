@@ -252,19 +252,22 @@ class Marian {
   }
 
   private async fetchTaxonomy(url: string) {
-    if (!url) {
-      throw new Error('Taxonomy URL required');
-    }
-    try {
-      const res = await fetch(url);
-      const toml = await res.text();
-      return parse(toml);
-    } catch (e) {
-      // console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
-      // throw e;
-      console.log(`Returning test taxonomy with test toml`);
-      return parse(taxonomy);
-    }
+    // TODO: remove after taxonomy has been supplied. change env var
+    return parse(taxonomy);
+    
+    // if (!url) {
+    //   throw new Error('Taxonomy URL required');
+    // }
+    // try {
+    //   const res = await fetch(url);
+    //   const toml = await res.text();
+    //   return parse(toml);
+    // } catch (e) {
+    //   // console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
+    //   // throw e;
+    //   console.log(`Returning test taxonomy with test toml`);
+    //   return parse(taxonomy);
+    // }
   }
 }
 
