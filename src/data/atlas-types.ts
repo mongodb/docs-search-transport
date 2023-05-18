@@ -35,7 +35,7 @@ export interface SearchIndexResponse {
   analyzers?: customAnalyzer[];
   collectionName: string;
   database: string;
-  indexID?: string;
+  indexID: string;
   mappings?: IndexMappings['mappings'];
   name: string;
   searchAnalyzer?: string;

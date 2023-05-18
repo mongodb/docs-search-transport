@@ -42,7 +42,7 @@ export class AtlasAdminManager {
       if (!index) {
         return this.createSearchIndex(SearchIndex, taxonomy);
       }
-      return this.updateSearchindex(index['indexID']!, SearchIndex, taxonomy);
+      return this.updateSearchindex(index['indexID'], SearchIndex, taxonomy);
     } catch (e) {
       log.error(`Error while patching searching index: ${JSON.stringify(e)}`);
     }
