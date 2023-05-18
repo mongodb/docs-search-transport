@@ -254,7 +254,7 @@ class Marian {
   private async fetchTaxonomy(url: string) {
     // TODO: remove after taxonomy has been supplied. change env var
     return parse(taxonomy);
-    
+
     // if (!url) {
     //   throw new Error('Taxonomy URL required');
     // }
