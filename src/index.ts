@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 // dotenv.config() should be invoked immediately, before any other imports, to ensure config is present
 dotenv.config();
 
-import { MongoClient } from 'mongodb';
+import { Document, MongoClient } from 'mongodb';
 import assert from 'assert';
 import http from 'http';
 import fetch from 'node-fetch';
@@ -33,6 +33,9 @@ const MANIFEST_URI_KEY = 'MANIFEST_URI';
 const ATLAS_URI_KEY = 'ATLAS_URI';
 const DATABASE_NAME_KEY = 'ATLAS_DATABASE';
 const DEFAULT_DATABASE_NAME = 'search';
+const GROUP_KEY = 'GROUP_ID';
+const ADMIN_API_KEY = 'ATLAS_ADMIN_API_KEY';
+const ADMIN_PUB_KEY = 'ATLAS_ADMIN_PUB_KEY';
 
 const log = new Logger({
   showTimestamp: true,
@@ -142,7 +145,7 @@ class Marian {
 
     checkAllowedOrigin(req.headers.origin, headers);
 
-    let results;
+    let results: Document[];
     try {
       results = await this.fetchResults(parsedUrl);
     } catch (err) {
@@ -157,6 +160,25 @@ class Marian {
     let responseBody = JSON.stringify({ results: results });
     res.writeHead(200, headers);
     res.end(responseBody);
+  }
+
+  private async fetchResults(parsedUrl: URL) {
+    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
+    if (!rawQuery) {
+      throw new InvalidQuery();
+    }
+
+    if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
+      throw new InvalidQuery();
+    }
+
+    const query = new Query(rawQuery);
+
+    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
+    if (typeof searchProperty === 'string') {
+      searchProperty = [searchProperty];
+    }
+    return this.index.search(query, searchProperty);
   }
 
   async handleRefresh(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
@@ -224,6 +246,7 @@ class Marian {
   async load() {
     let taxonomy: Taxonomy;
     try {
+      // TODO: include taxonomy url in verifyEnvVars after it has been released
       taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
       const atlasAdminRes = await this.atlasAdmin.patchSearchIndex(taxonomy);
       const loadRes = await this.index.load(taxonomy);
@@ -287,19 +310,22 @@ class Marian {
   }
 
   private async fetchTaxonomy(url: string) {
-    try {
-      if (!url) {
-        throw new Error('Taxonomy URL required');
-      }
-      const res = await fetch(url);
-      const toml = await res.text();
-      return parse(toml);
-    } catch (e) {
-      // console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
-      // throw e;
-      console.log(`Returning test taxonomy with test toml`);
-      return parse(taxonomy);
-    }
+    // TODO: remove after taxonomy has been supplied. change env var
+    return parse(taxonomy);
+
+    // if (!url) {
+    //   throw new Error('Taxonomy URL required');
+    // }
+    // try {
+    //   const res = await fetch(url);
+    //   const toml = await res.text();
+    //   return parse(toml);
+    // } catch (e) {
+    //   // console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
+    //   // throw e;
+    //   console.log(`Returning test taxonomy with test toml`);
+    //   return parse(taxonomy);
+    // }
   }
 }
 
@@ -309,7 +335,48 @@ function help(): void {
 The following environment variables are used:
 * ${MANIFEST_URI_KEY}
 * ${ATLAS_URI_KEY}
-* ${DATABASE_NAME_KEY} (defaults to "search")`);
+* ${DATABASE_NAME_KEY} (defaults to "search")
+* ${GROUP_KEY}
+* ${ADMIN_API_KEY}
+* ${ADMIN_PUB_KEY}
+`);
+}
+
+function verifyAndGetEnvVars() {
+  const manifestUri = process.env[MANIFEST_URI_KEY];
+  const atlasUri = process.env[ATLAS_URI_KEY];
+  const groupId = process.env[GROUP_KEY];
+  const adminPubKey = process.env[ADMIN_PUB_KEY];
+  const adminPrivKey = process.env[ADMIN_API_KEY];
+
+  if (!manifestUri || !atlasUri || !groupId || !adminPrivKey || !adminPubKey) {
+    if (!manifestUri) {
+      console.error(`Missing ${MANIFEST_URI_KEY}`);
+    }
+    if (!atlasUri) {
+      console.error(`Missing ${ATLAS_URI_KEY}`);
+    }
+    if (!groupId) {
+      console.error(`Missing ${GROUP_KEY}`);
+    }
+    if (!adminPrivKey) {
+      console.error(`Missing ${ADMIN_API_KEY}`);
+    }
+    if (!adminPubKey) {
+      console.error(`Missing ${ADMIN_PUB_KEY}`);
+    }
+    // TODO: add taxonomy url
+    help();
+    process.exit(1);
+  }
+
+  return {
+    manifestUri,
+    atlasUri,
+    groupId,
+    adminPubKey,
+    adminPrivKey,
+  };
 }
 
 async function main() {
@@ -325,25 +392,12 @@ async function main() {
     process.exit(1);
   }
 
-  const manifestUri = process.env[MANIFEST_URI_KEY];
-  const atlasUri = process.env[ATLAS_URI_KEY];
+  const { manifestUri, atlasUri, groupId, adminPubKey, adminPrivKey } = verifyAndGetEnvVars();
 
   let databaseName = DEFAULT_DATABASE_NAME;
   const envDBName = process.env[DATABASE_NAME_KEY];
   if (envDBName) {
     databaseName = envDBName;
-  }
-
-  if (!manifestUri || !atlasUri) {
-    // TODO: add admin api keys
-    if (!manifestUri) {
-      console.error(`Missing ${MANIFEST_URI_KEY}`);
-    }
-    if (!atlasUri) {
-      console.error(`Missing ${ATLAS_URI_KEY}`);
-    }
-    help();
-    process.exit(1);
   }
 
   log.info(`Loading manifests from ${manifestUri}`);
@@ -355,7 +409,7 @@ async function main() {
     await searchIndex.createRecommendedIndexes();
   }
 
-  const atlasAdmin = new AtlasAdminManager(process.env['ATLAS_ADMIN_PUB_KEY']!, process.env['ATLAS_ADMIN_API_KEY']!);
+  const atlasAdmin = new AtlasAdminManager(adminPubKey, adminPrivKey, groupId);
   const server = new Marian(searchIndex, atlasAdmin);
 
   try {
