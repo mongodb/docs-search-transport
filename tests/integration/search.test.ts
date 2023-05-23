@@ -1,7 +1,6 @@
 import { strictEqual, deepStrictEqual, ok } from 'assert';
 import { Query } from '../../src/Query';
 import { SearchIndex } from '../../src/SearchIndex';
-import { env } from 'process';
 import { MongoClient } from 'mongodb';
 
 const TEST_DATABASE = 'search-test';
@@ -9,7 +8,7 @@ const TEST_DATABASE = 'search-test';
 describe('Searching', function () {
   this.slow(200);
 
-  const connectionString = env.ATLAS_URI;
+  const connectionString = process.env.ATLAS_URI;
   if (!connectionString) {
     return;
   }
