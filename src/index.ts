@@ -162,25 +162,6 @@ class Marian {
     res.end(responseBody);
   }
 
-  private async fetchResults(parsedUrl: URL) {
-    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
-    if (!rawQuery) {
-      throw new InvalidQuery();
-    }
-
-    if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
-      throw new InvalidQuery();
-    }
-
-    const query = new Query(rawQuery);
-
-    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
-    if (typeof searchProperty === 'string') {
-      searchProperty = [searchProperty];
-    }
-    return this.index.search(query, searchProperty);
-  }
-
   async handleRefresh(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     const headers: Record<string, string> = {
       Vary: 'Accept-Encoding',
@@ -312,11 +293,10 @@ class Marian {
   private async fetchTaxonomy(url: string) {
     // TODO: remove after taxonomy has been supplied. change env var
     return parse(taxonomy);
-
-    // if (!url) {
-    //   throw new Error('Taxonomy URL required');
-    // }
     // try {
+    //   if (!url) {
+    //     throw new Error('Taxonomy URL required');
+    //   }
     //   const res = await fetch(url);
     //   const toml = await res.text();
     //   return parse(toml);
