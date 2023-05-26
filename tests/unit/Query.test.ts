@@ -1,5 +1,5 @@
 import { deepStrictEqual } from 'assert';
-import { Query } from './Query';
+import { Query } from '../../src/Query';
 
 describe('Query', () => {
   it('should parse a single term', () => {

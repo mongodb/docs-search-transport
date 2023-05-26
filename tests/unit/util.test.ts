@@ -1,5 +1,5 @@
 import { strictEqual } from 'assert';
-import { isPermittedOrigin, arrayEquals } from './util';
+import { isPermittedOrigin, arrayEquals } from '../../src/util';
 
 describe('util', function () {
   it('arrayEquals()', function () {
