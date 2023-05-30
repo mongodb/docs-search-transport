@@ -7,7 +7,8 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 export function startServer(path: string, done: () => void): { child: child_process.ChildProcess; port: number } {
-  let isDone = false, isLoaded = false;
+  let isDone = false,
+    isLoaded = false;
   const child = child_process.spawn('./node_modules/.bin/ts-node', ['./src/index.ts'], {
     stdio: [0, 'pipe', 2],
     env: {
@@ -19,7 +20,7 @@ export function startServer(path: string, done: () => void): { child: child_proc
       CLUSTER_NAME: process.env.CLUSTER_NAME,
       COLLECTION_NAME: process.env.COLLECTION_NAME,
       ATLAS_ADMIN_API_KEY: process.env.ATLAS_ADMIN_API_KEY,
-      ATLAS_ADMIN_PUB_KEY: process.env.ATLAS_ADMIN_PUB_KEY
+      ATLAS_ADMIN_PUB_KEY: process.env.ATLAS_ADMIN_PUB_KEY,
     },
   });
 
@@ -35,7 +36,6 @@ export function startServer(path: string, done: () => void): { child: child_proc
   };
 
   rl.on('line', (line: string): void => {
-
     const match = line.match(/Listening on port ([0-9]+)/);
 
     if (match) {
@@ -97,7 +97,7 @@ describe('http interface', function () {
 
   let ctx: { child: child_process.ChildProcess; port: number } | null = null;
 
-  before('starting server', function (done) {    
+  before('starting server', function (done) {
     ctx = startServer('dir:tests/manifests/', done);
   });
 
