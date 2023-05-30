@@ -398,30 +398,39 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     // slug is possible to be empty string ''
     assert.ok(document.slug || document.slug === '');
 
-    // TODO: remove before merge.
-    // creating test data for facets
-    const facets: Record<string, string> = {};
+    const facets: Record<string, string[]> = {};
+    
+    // <-------- BEGIN TESTING PRE TAXONOMY -------->
+    // testing genres and target platform as part of faceted search
+    // TODO: update and revise after taxonomy v1 is finalized
     if (document.slug.includes('reference')) {
-      facets['genres'] = 'reference';
+      facets['genres'] = ['reference'];
     } else if (document.slug.includes('tutorial')) {
-      facets['genres'] = 'tutorial';
+      facets['genres'] = ['tutorial'];
     }
 
     // target_platform and target_platform->atlas<-versions acquired from manifest.searchProperty
     const parts = manifest.searchProperty.split('-');
-    const target = parts.slice(0, parts.length - 1).join('');
+    const target = parts.slice(0, parts.length - 1).join('-');
     const version = parts.slice(parts.length - 1).join('');
-    facets['target_platforms'] = target;
-    facets[`target_platforms←${target}→versions`] = version;
+    facets['target_platforms'] = [target];
+    facets[`target_platforms←${target}→versions`] = [version];
+
+    // <-------- END TESTING PRE TAXONOMY -------->
 
     const newDocument: DatabaseDocument = {
       ...document,
       url: joinUrl(manifest.manifest.url, document.slug),
       manifestRevisionId: manifest.manifestRevisionId,
       searchProperty: [manifest.searchProperty],
-      includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
-      facets: facets,
+      includeInGlobalSearch: manifest.manifest.includeInGlobalSearch
     };
+
+    let existingFacets = convertFacets(document.facets || {})
+    Object.assign(facets, existingFacets);
+    if (Object.keys(facets).length) {
+      newDocument.facets = facets;
+    }
 
     return {
       updateOne: {
@@ -431,4 +440,31 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
       },
     };
   });
+};
+
+
+
+const convertFacets = (facets: Record<string, any>) => {
+  let res: Record<string, string[]> = {};
+  const pushKeys = (currentFacets: Record<string, any>[], baseStr = '') => {
+    if (!res[baseStr]) {
+      res[baseStr] = []
+    }
+    for (const facet of currentFacets) {
+      res[baseStr].push(facet['name']);
+      if (!Object.keys(res).length) continue;
+      const newBaseStr = `${baseStr}←${facet['name']}`
+      for (const subFacetName in facet) {
+        if (subFacetName === 'name') continue;
+        pushKeys(facet[subFacetName], `${newBaseStr}`)
+      }
+
+    }
+  }
+
+  for (const key of Object.keys(facets)) {
+    pushKeys(facets[key], key)
+  }
+
+  return res;
 };
