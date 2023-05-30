@@ -456,7 +456,7 @@ const convertFacets = (facets: Record<string, any>) => {
       const newBaseStr = `${baseStr}←${facet['name']}`
       for (const subFacetName in facet) {
         if (subFacetName === 'name') continue;
-        pushKeys(facet[subFacetName], `${newBaseStr}`)
+        pushKeys(facet[subFacetName], `${newBaseStr}→${subFacetName}`)
       }
 
     }
@@ -468,3 +468,6 @@ const convertFacets = (facets: Record<string, any>) => {
 
   return res;
 };
+
+
+export const _convertFacets = convertFacets;
