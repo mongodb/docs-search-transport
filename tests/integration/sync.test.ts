@@ -1,11 +1,11 @@
 import { strictEqual, deepStrictEqual } from 'assert';
 import { Db, MongoClient } from 'mongodb';
-import { SearchIndex, DatabaseDocument } from '../src/SearchIndex';
+import { SearchIndex, DatabaseDocument } from '../../src/SearchIndex';
 
-const DB = 'search_testing';
+const DB = 'search-test';
 
-const PATH_STATE_1 = 'dir:tests/test_data/state-1';
-const PATH_STATE_2 = 'dir:tests/test_data/state-2';
+const PATH_STATE_1 = 'dir:tests/integration/test_data/state-1';
+const PATH_STATE_2 = 'dir:tests/integration/test_data/state-2';
 
 function sortDocuments(documents: DatabaseDocument[]): void {
   documents.sort((a, b) => {
@@ -17,12 +17,11 @@ function sortDocuments(documents: DatabaseDocument[]): void {
 
 describe('Synchronization', function () {
   this.slow(1000);
-  const client = new MongoClient('mongodb://localhost');
+  const client = new MongoClient(process.env.ATLAS_URI || '');
   let index: SearchIndex;
 
   before(function (done) {
     client.connect().then(async () => {
-      await client.db(DB).dropDatabase();
       index = new SearchIndex(PATH_STATE_1, client, DB);
       done();
     });
@@ -37,7 +36,6 @@ describe('Synchronization', function () {
     const documentsCursor = client.db(DB).collection<DatabaseDocument>('documents');
     const documents = await documentsCursor.find().toArray();
     sortDocuments(documents);
-
     // Ensure that the correct slugs exist for state #1
     deepStrictEqual(
       documents.map((doc) => {

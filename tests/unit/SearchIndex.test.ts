@@ -1,5 +1,5 @@
 import { strictEqual, deepStrictEqual, strict } from 'assert';
-import { joinUrl } from './SearchIndex';
+import { joinUrl } from '../../src/SearchIndex';
 
 describe('SearchIndex', function () {
   it('correctly joins base URLs with slugs', function () {
