@@ -1,6 +1,6 @@
 import { strictEqual, deepStrictEqual } from 'assert';
 import { Db, MongoClient } from 'mongodb';
-import { SearchIndex, DatabaseDocument } from '../../src/SearchIndex';
+import { SearchIndex, DatabaseDocument, Taxonomy } from '../../src/SearchIndex';
 
 const DB = 'search-test';
 
@@ -32,7 +32,7 @@ describe('Synchronization', function () {
   });
 
   const loadInitialState = async () => {
-    await index.load(PATH_STATE_1);
+    await index.load({} as Taxonomy, PATH_STATE_1);
     const documentsCursor = client.db(DB).collection<DatabaseDocument>('documents');
     const documents = await documentsCursor.find().toArray();
     sortDocuments(documents);
@@ -54,7 +54,7 @@ describe('Synchronization', function () {
   it('loads initial state', loadInitialState);
 
   it('loads disjoint state', async function () {
-    await index.load(PATH_STATE_2);
+    await index.load({} as Taxonomy, PATH_STATE_2);
     const documentsCursor = client.db(DB).collection<DatabaseDocument>('documents');
     const documents = await documentsCursor.find().toArray();
     sortDocuments(documents);
