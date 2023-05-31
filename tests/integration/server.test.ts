@@ -7,7 +7,8 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 export function startServer(path: string, done: () => void): { child: child_process.ChildProcess; port: number } {
-  let isDone = false;
+  let isDone = false,
+    isLoaded = false;
   const child = child_process.spawn('./node_modules/.bin/ts-node', ['./src/index.ts'], {
     stdio: [0, 'pipe', 2],
     env: {
@@ -15,6 +16,11 @@ export function startServer(path: string, done: () => void): { child: child_proc
       ATLAS_DATABASE: 'search-test',
       ATLAS_URI: process.env.ATLAS_URI,
       PATH: process.env.PATH,
+      GROUP_ID: process.env.GROUP_ID,
+      CLUSTER_NAME: process.env.CLUSTER_NAME,
+      COLLECTION_NAME: process.env.COLLECTION_NAME,
+      ATLAS_ADMIN_API_KEY: process.env.ATLAS_ADMIN_API_KEY,
+      ATLAS_ADMIN_PUB_KEY: process.env.ATLAS_ADMIN_PUB_KEY,
     },
   });
 
@@ -30,20 +36,22 @@ export function startServer(path: string, done: () => void): { child: child_proc
   };
 
   rl.on('line', (line: string): void => {
-    if (isDone) {
-      return;
-    }
-
     const match = line.match(/Listening on port ([0-9]+)/);
+
     if (match) {
+      isLoaded = true;
       ctx.port = parseInt(match[1]);
     }
 
     if (line.match(/Done!$/)) {
       isDone = true;
-      done();
     } else if (line.match(/Error/)) {
       throw new Error(line);
+    }
+
+    if (isDone && isLoaded) {
+      done();
+      return;
     }
   });
 
@@ -129,6 +137,6 @@ describe('http interface', function () {
 
   after('shutting down', function () {
     ok(ctx);
-    process.kill(ctx.child.pid, 'SIGINT');
+    process.kill(ctx.child.pid!, 'SIGINT');
   });
 });
