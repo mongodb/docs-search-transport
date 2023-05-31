@@ -441,16 +441,16 @@ const getFiltersFromSelections = (selectedFacets: string[]) => {
   }
 
   return filters;
-}
+};
 
 /**
  * Returns the facets required for 'facet' operator
  * within $search aggregation
  * https://www.mongodb.com/docs/atlas/atlas-search/facet/#syntax-1
- * 
+ *
  */
 const getFacets = (selectedFacets: string[], taxonomy: Taxonomy) => {
-  const [ selectedBaseFacetSet, facetStrings ] = getFacetKeysForSelections(selectedFacets, taxonomy);
+  const [selectedBaseFacetSet, facetStrings] = getFacetKeysForSelections(selectedFacets, taxonomy);
 
   // add the base facets from Taxonomy if not already selected
   for (const baseName in taxonomy) {
@@ -471,10 +471,10 @@ const getFacets = (selectedFacets: string[], taxonomy: Taxonomy) => {
 /**
  * return a set of base facets of Taxonomy that were used
  * also decompose selected facets to farther drilldown 'facet' keys (strings)
- * 
+ *
  * ie. selectedFacets = ['target_platforms←manual']
  * returns [['target_platforms'], ['target_platforms←manual→versions']]
- * 
+ *
  */
 const getFacetKeysForSelections = (selectedFacets: string[], taxonomy: Taxonomy): [Set<string>, string[]] => {
   const selectedBaseFacetSet: Set<string> = new Set();
@@ -506,5 +506,5 @@ const getFacetKeysForSelections = (selectedFacets: string[], taxonomy: Taxonomy)
     }
   }
 
-  return [ selectedBaseFacetSet, facetStrings ];
+  return [selectedBaseFacetSet, facetStrings];
 };
