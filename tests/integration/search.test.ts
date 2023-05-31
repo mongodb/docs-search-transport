@@ -1,6 +1,6 @@
 import { strictEqual } from 'assert';
 import { Query } from '../../src/Query';
-import { SearchIndex } from '../../src/SearchIndex';
+import { SearchIndex, Taxonomy } from '../../src/SearchIndex';
 import { MongoClient } from 'mongodb';
 
 const TEST_DATABASE = 'search-test';
@@ -19,7 +19,7 @@ describe('Searching', function () {
   before('Loading test data', async function () {
     await client.connect();
     index = new SearchIndex('dir:tests/integration/search_test_data/', client, TEST_DATABASE);
-    const result = await index.load();
+    const result = await index.load({} as Taxonomy);
     await index.createRecommendedIndexes();
 
     // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
