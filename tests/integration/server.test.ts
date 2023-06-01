@@ -3,6 +3,7 @@ import * as child_process from 'child_process';
 import * as http from 'http';
 import * as readline from 'readline';
 import * as dotenv from 'dotenv';
+import { request as urllibRequest, RequestOptions } from 'urllib';
 // dotenv.config() should be invoked immediately, before any other imports, to ensure config is present
 dotenv.config();
 
@@ -22,6 +23,15 @@ export function startServer(path: string, done: () => void): { child: child_proc
       ATLAS_ADMIN_API_KEY: process.env.ATLAS_ADMIN_API_KEY,
       ATLAS_ADMIN_PUB_KEY: process.env.ATLAS_ADMIN_PUB_KEY,
     },
+  });
+  child.stdout?.setEncoding('utf8');
+  child.stdout?.on('data', function(data) {
+      console.log('stdout: ' + data);
+  });
+
+  child.stderr?.setEncoding('utf8');
+  child.stderr?.on('data', function(data) {
+      console.log('stderr: ' + data);
   });
 
   ok(child.stdout);
@@ -99,6 +109,26 @@ describe('http interface', function () {
 
   before('starting server', function (done) {
     ctx = startServer('dir:tests/manifests/', done);
+  });
+
+  it('should create the Atlas Search Index', async () => {
+    const groupId = process.env.GROUP_ID;
+    const cluster = process.env.CLUSTER_NAME || 'Search';
+    const dbname = process.env.ATLAS_DATABASE;
+    const collection = process.env.COLLECTION_NAME;
+    const getUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${cluster}/fts/indexes/${dbname}/${collection}`;
+    const options: RequestOptions = {
+      method: 'GET',
+      headers: {
+        'content-type': 'application/json',
+      },
+      dataType: 'json',
+      digestAuth: `${process.env.ATLAS_ADMIN_PUB_KEY}:${process.env.ATLAS_ADMIN_API_KEY}`
+    }
+
+    const res = await urllibRequest(getUrl, options);
+    const target = res.data.find((searchIndex: any) => searchIndex.database === dbname && searchIndex.collectionName === collection);
+    ok(target);
   });
 
   it('should return proper Access-Control-Allow-Origin headers', async function () {
