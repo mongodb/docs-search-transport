@@ -7,7 +7,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, DOP-3713]
+    branches: [main]
 
 jobs:
   test:
