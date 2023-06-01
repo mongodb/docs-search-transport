@@ -25,13 +25,13 @@ export function startServer(path: string, done: () => void): { child: child_proc
     },
   });
   child.stdout?.setEncoding('utf8');
-  child.stdout?.on('data', function(data) {
-      console.log('stdout: ' + data);
+  child.stdout?.on('data', function (data) {
+    console.log('stdout: ' + data);
   });
 
   child.stderr?.setEncoding('utf8');
-  child.stderr?.on('data', function(data) {
-      console.log('stderr: ' + data);
+  child.stderr?.on('data', function (data) {
+    console.log('stderr: ' + data);
   });
 
   ok(child.stdout);
@@ -123,11 +123,13 @@ describe('http interface', function () {
         'content-type': 'application/json',
       },
       dataType: 'json',
-      digestAuth: `${process.env.ATLAS_ADMIN_PUB_KEY}:${process.env.ATLAS_ADMIN_API_KEY}`
-    }
+      digestAuth: `${process.env.ATLAS_ADMIN_PUB_KEY}:${process.env.ATLAS_ADMIN_API_KEY}`,
+    };
 
     const res = await urllibRequest(getUrl, options);
-    const target = res.data.find((searchIndex: any) => searchIndex.database === dbname && searchIndex.collectionName === collection);
+    const target = res.data.find(
+      (searchIndex: any) => searchIndex.database === dbname && searchIndex.collectionName === collection
+    );
     ok(target);
   });
 
