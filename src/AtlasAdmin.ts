@@ -166,3 +166,5 @@ const getFacetKeys = (taxonomy: Taxonomy) => {
   pushKeys(taxonomy);
   return keyList;
 };
+
+export const _getFacetKeys = getFacetKeys;
