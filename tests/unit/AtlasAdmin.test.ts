@@ -9,11 +9,10 @@ describe('Atlas Admin Manager', () => {
   // TODO: stub the urllib calls with sinon and add expected url/requestOptions
   describe('patchSearchIndex', () => {
     const pubKey = process.env.ATLAS_ADMIN_PUB_KEY || '',
-          privKey = process.env.ATLAS_ADMIN_API_KEY || '',
-          groupId = process.env.GROUP_ID || '',
-          dbName = process.env.ATLAS_DATABASE || '',
-          collection = process.env.COLLECTION_NAME || '';
-          
+      privKey = process.env.ATLAS_ADMIN_API_KEY || '',
+      groupId = process.env.GROUP_ID || '',
+      dbName = process.env.ATLAS_DATABASE || '',
+      collection = process.env.COLLECTION_NAME || '';
 
     const atlasAdmin = new AtlasAdminManager(pubKey, privKey, groupId);
     const taxonomy: Taxonomy = {};
@@ -23,7 +22,7 @@ describe('Atlas Admin Manager', () => {
       // create mock for url lib
       urllibStub = sinon.stub(urllib, 'request');
       done();
-    })
+    });
     afterEach((done) => {
       // reset mock for url lib
       urllibStub.restore();
@@ -35,35 +34,40 @@ describe('Atlas Admin Manager', () => {
         'content-type': 'application/json',
       },
       dataType: 'json',
-      digestAuth: `${pubKey}:${privKey}`
+      digestAuth: `${pubKey}:${privKey}`,
     };
     const expectedUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${'Search'}/fts/indexes`;
 
     it('makes a digest auth request to find Search Index', async () => {
-      urllibStub.onCall(0).resolves({data: [], res: {statusCode: 200}});
-      urllibStub.onCall(1).resolves({data: [], res: {statusCode: 200}});
-      const expectedOptions: urllib.RequestOptions = {...defaultOptions};
+      urllibStub.onCall(0).resolves({ data: [], res: { statusCode: 200 } });
+      urllibStub.onCall(1).resolves({ data: [], res: { statusCode: 200 } });
+      const expectedOptions: urllib.RequestOptions = { ...defaultOptions };
       expectedOptions['method'] = 'GET';
-      const url  = `${expectedUrl}/${dbName}/${collection}`;
+      const url = `${expectedUrl}/${dbName}/${collection}`;
       await atlasAdmin.patchSearchIndex(taxonomy);
       sinon.assert.calledWith(urllibStub.firstCall, url, expectedOptions);
     });
 
     it('makes a request to create search index if not found', async () => {
-      urllibStub.onCall(0).resolves({data: [], res: {statusCode: 200}});
-      urllibStub.onCall(1).resolves({data: [], res: {statusCode: 200}});
+      urllibStub.onCall(0).resolves({ data: [], res: { statusCode: 200 } });
+      urllibStub.onCall(1).resolves({ data: [], res: { statusCode: 200 } });
       await atlasAdmin.patchSearchIndex(taxonomy);
       strictEqual(urllibStub.secondCall.args[0], expectedUrl);
       strictEqual(urllibStub.secondCall.args[1].method, 'POST');
     });
 
     it('makes a request to update search index if found', async () => {
-      const expectedId = 'test-id'
-      urllibStub.onCall(0).resolves({data: [{
-        name: 'default',
-        indexID: expectedId
-      }], res: {statusCode: 200}});
-      urllibStub.onCall(1).resolves({data: [], res: {statusCode: 200}});
+      const expectedId = 'test-id';
+      urllibStub.onCall(0).resolves({
+        data: [
+          {
+            name: 'default',
+            indexID: expectedId,
+          },
+        ],
+        res: { statusCode: 200 },
+      });
+      urllibStub.onCall(1).resolves({ data: [], res: { statusCode: 200 } });
       await atlasAdmin.patchSearchIndex(taxonomy);
       strictEqual(urllibStub.secondCall.args[0], `${expectedUrl}/${expectedId}`);
       strictEqual(urllibStub.secondCall.args[1].method, 'PATCH');
