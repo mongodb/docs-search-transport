@@ -262,7 +262,7 @@ class Marian {
     res.end(responseBody);
   }
 
-  private async fetchResults(parsedUrl: URL, useFactedSearch: boolean = false): Promise<any[]> {
+  private async fetchResults(parsedUrl: URL, useFacetedSearch: boolean = false): Promise<any[]> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
 
     if (!rawQuery) {
@@ -281,7 +281,7 @@ class Marian {
       searchProperty = [searchProperty];
     }
 
-    if (useFactedSearch) {
+    if (useFacetedSearch) {
       // TODO: check for blank case to return all facets(?)
       const selectedFacets = parsedUrl.searchParams.getAll('facets[]') || [];
       return await this.index.factedSearch(query, searchProperty, selectedFacets);
