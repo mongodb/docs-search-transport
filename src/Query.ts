@@ -1,5 +1,7 @@
 'use strict';
 
+import { Taxonomy } from './SearchIndex';
+
 const CORRELATIONS = [
   ['regexp', 'regex', 0.8],
   ['regular expression', 'regex', 0.8],
@@ -322,4 +324,187 @@ export class Query {
     console.log('Executing ' + JSON.stringify(agg));
     return agg;
   }
+
+  getFacetedAggregationQuery(searchProperty: string[] | null, selectedFacets: string[], taxonomy: Taxonomy): any[] {
+    const parts: any[] = [];
+    const terms = Array.from(this.terms);
+
+    parts.push({
+      text: {
+        query: terms,
+        path: ['paragraphs', 'code.lang', 'code.value', 'text'],
+      },
+    });
+    parts.push({
+      text: {
+        query: terms,
+        path: 'headings',
+        score: { boost: { value: 5 } },
+      },
+    });
+    parts.push({
+      text: {
+        query: terms,
+        path: 'title',
+        score: { boost: { value: 10 } },
+      },
+    });
+    parts.push({
+      text: {
+        query: terms,
+        path: 'tags',
+        score: { boost: { value: 10 } },
+      },
+    });
+    const filter =
+      searchProperty !== null && searchProperty.length !== 0
+        ? { searchProperty: { $elemMatch: { $in: searchProperty } } }
+        : { includeInGlobalSearch: true };
+    const compound: { should: any[]; must?: any[]; filter?: any[]; minimumShouldMatch: number } = {
+      should: parts,
+      minimumShouldMatch: 1,
+    };
+
+    // if any selected facets. add to filter part of compound operator
+    compound.filter = getFiltersFromSelections(selectedFacets);
+
+    const facets = getFacets(selectedFacets, taxonomy);
+
+    const agg: any = [
+      {
+        $search: {
+          facet: {
+            operator: {
+              compound: compound,
+            },
+            facets: facets,
+          },
+        },
+      },
+      { $match: filter },
+    ];
+    agg.push({
+      $facet: {
+        docs: [
+          {
+            $project: {
+              _id: 0,
+              title: 1,
+              preview: 1,
+              url: 1,
+              searchProperty: 1,
+            },
+          },
+          {
+            $limit: 50,
+          },
+        ],
+        meta: [{ $replaceWith: '$$SEARCH_META' }, { $limit: 1 }],
+      },
+    });
+    agg.push({
+      $unwind: {
+        path: '$meta',
+      },
+    });
+    console.log('Executing ' + JSON.stringify(agg));
+    return agg;
+  }
 }
+
+/**
+ * gets filters required for compound operator
+ * https://www.mongodb.com/docs/atlas/atlas-search/compound/#filter-examples
+ */
+const getFiltersFromSelections = (selectedFacets: string[]) => {
+  const filters = [];
+  for (const selectedFacetKey of selectedFacets) {
+    // for each selected facet key ie. (languages←python→versions←3.7)
+    // split for the last ← key and left is key, right is value
+    const splitLet = [...selectedFacetKey];
+    let idx = splitLet.length - 1;
+    let targetIdx;
+    while (!targetIdx && idx > -1) {
+      if (splitLet[idx] === '←') {
+        targetIdx = idx;
+        break;
+      }
+      idx--;
+    }
+
+    filters.push({
+      text: {
+        query: selectedFacetKey.slice(idx + 1),
+        path: `facets.${selectedFacetKey.slice(0, idx)}`,
+      },
+    });
+  }
+
+  return filters;
+};
+
+/**
+ * Returns the facets required for 'facet' operator
+ * within $search aggregation
+ * https://www.mongodb.com/docs/atlas/atlas-search/facet/#syntax-1
+ *
+ */
+const getFacets = (selectedFacets: string[], taxonomy: Taxonomy) => {
+  const [selectedBaseFacetSet, facetStrings] = getFacetKeysForSelections(selectedFacets, taxonomy);
+
+  // add the base facets from Taxonomy if not already selected
+  for (const baseName in taxonomy) {
+    if (baseName === 'name' || selectedBaseFacetSet.has(baseName)) continue;
+    facetStrings.push(baseName);
+  }
+
+  const res: { [key: string]: { type: string; path: string } } = {};
+  for (const facetString of facetStrings) {
+    res[facetString] = {
+      type: 'string',
+      path: `facets.${facetString}`,
+    };
+  }
+  return res;
+};
+
+/**
+ * return a set of base facets of Taxonomy that were used
+ * also decompose selected facets to farther drilldown 'facet' keys (strings)
+ *
+ * ie. selectedFacets = ['target_platforms←manual']
+ * returns [['target_platforms'], ['target_platforms←manual→versions']]
+ *
+ */
+const getFacetKeysForSelections = (selectedFacets: string[], taxonomy: Taxonomy): [Set<string>, string[]] => {
+  const selectedBaseFacetSet: Set<string> = new Set();
+  const facetStrings: string[] = [];
+
+  for (const selectedFacet of selectedFacets) {
+    const chars = [...selectedFacet];
+    const baseIdx = chars.indexOf('←');
+    const baseFacet = chars.slice(0, baseIdx).join('');
+    selectedBaseFacetSet.add(baseFacet);
+
+    // gotta add the expansion
+    let ref: any = taxonomy[baseFacet],
+      startRef = baseIdx + 1;
+
+    for (let idx = baseIdx + 1; idx < chars.length; idx++) {
+      const char = chars[idx];
+      if (char === '→' || idx === chars.length - 1) {
+        const targetName = chars.slice(startRef, idx + 1).join('');
+        ref = ref.find((te: any) => te.name === targetName);
+      } else if (char === '←') {
+        ref = ref[chars.slice(startRef, idx).join('')];
+        startRef = idx + 1;
+      }
+    }
+
+    for (const key in ref) {
+      if (key !== 'name') facetStrings.push(`${selectedFacet}→${key}`);
+    }
+  }
+
+  return [selectedBaseFacetSet, facetStrings];
+};

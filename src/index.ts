@@ -125,6 +125,10 @@ class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatus(parsedUrl, req, res);
       }
+    } else if (pathname === '/v2/search') {
+      if (checkMethod(req, res, 'GET')) {
+        this.handleFacetSearch(parsedUrl, req, res);
+      }
     } else {
       res.writeHead(400, {});
       res.end('');
@@ -156,25 +160,6 @@ class Marian {
     let responseBody = JSON.stringify({ results: results });
     res.writeHead(200, headers);
     res.end(responseBody);
-  }
-
-  private async fetchResults(parsedUrl: URL) {
-    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
-    if (!rawQuery) {
-      throw new InvalidQuery();
-    }
-
-    if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
-      throw new InvalidQuery();
-    }
-
-    const query = new Query(rawQuery);
-
-    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
-    if (typeof searchProperty === 'string') {
-      searchProperty = [searchProperty];
-    }
-    return this.index.search(query, searchProperty);
   }
 
   async handleRefresh(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
@@ -251,14 +236,67 @@ class Marian {
     }
   }
 
+  private async handleFacetSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Vary: 'Accept-Encoding, Origin',
+      'Cache-Control': 'public,max-age=120,must-revalidate',
+    };
+    Object.assign(headers, STANDARD_HEADERS);
+    checkAllowedOrigin(req.headers.origin, headers);
+
+    let results;
+    try {
+      results = await this.fetchResults(parsedUrl, true);
+    } catch (err) {
+      if (err instanceof InvalidQuery) {
+        res.writeHead(400, headers);
+        res.end('[]');
+        return;
+      }
+
+      throw err;
+    }
+    let responseBody = JSON.stringify(results[0]);
+    res.writeHead(200, headers);
+    res.end(responseBody);
+  }
+
+  private async fetchResults(parsedUrl: URL, useFacetedSearch: boolean = false): Promise<any[]> {
+    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
+
+    if (!rawQuery) {
+      // allow blank query for facet data only
+      throw new InvalidQuery();
+    }
+
+    if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
+      throw new InvalidQuery();
+    }
+
+    const query = new Query(rawQuery);
+
+    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
+    if (typeof searchProperty === 'string') {
+      searchProperty = [searchProperty];
+    }
+
+    if (useFacetedSearch) {
+      // TODO: check for blank case to return all facets(?)
+      const selectedFacets = parsedUrl.searchParams.getAll('facets[]') || [];
+      return await this.index.factedSearch(query, searchProperty, selectedFacets);
+    }
+
+    return await this.index.search(query, searchProperty);
+  }
+
   private async fetchTaxonomy(url: string) {
     // TODO: remove after taxonomy has been supplied. change env var
     return parse(taxonomy);
-
-    // if (!url) {
-    //   throw new Error('Taxonomy URL required');
-    // }
     // try {
+    //   if (!url) {
+    //     throw new Error('Taxonomy URL required');
+    //   }
     //   const res = await fetch(url);
     //   const toml = await res.text();
     //   return parse(toml);
