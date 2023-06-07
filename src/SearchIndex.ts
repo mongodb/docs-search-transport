@@ -399,7 +399,7 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     assert.ok(document.slug || document.slug === '');
 
     const facets: Record<string, string[]> = {};
-    
+
     // <-------- BEGIN TESTING PRE TAXONOMY -------->
     // testing genres and target platform as part of faceted search
     // TODO: update and revise after taxonomy v1 is finalized
@@ -427,7 +427,7 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
       facets: facets,
     };
 
-    let existingFacets = convertFacets(document.facets || {})
+    let existingFacets = convertFacets(document.facets || {});
     Object.assign(facets, existingFacets);
     if (Object.keys(facets).length) {
       newDocument.facets = facets;
@@ -443,32 +443,28 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
   });
 };
 
-
-
 const convertFacets = (facets: Record<string, any>) => {
   let res: Record<string, string[]> = {};
   const pushKeys = (currentFacets: Record<string, any>[], baseStr = '') => {
     if (!res[baseStr]) {
-      res[baseStr] = []
+      res[baseStr] = [];
     }
     for (const facet of currentFacets) {
       res[baseStr].push(facet['name']);
       if (!Object.keys(res).length) continue;
-      const newBaseStr = `${baseStr}←${facet['name']}`
+      const newBaseStr = `${baseStr}←${facet['name']}`;
       for (const subFacetName in facet) {
         if (subFacetName === 'name') continue;
-        pushKeys(facet[subFacetName], `${newBaseStr}→${subFacetName}`)
+        pushKeys(facet[subFacetName], `${newBaseStr}→${subFacetName}`);
       }
-
     }
-  }
+  };
 
   for (const key of Object.keys(facets)) {
-    pushKeys(facets[key], key)
+    pushKeys(facets[key], key);
   }
 
   return res;
 };
-
 
 export const _convertFacets = convertFacets;

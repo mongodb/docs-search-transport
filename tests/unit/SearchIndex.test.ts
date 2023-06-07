@@ -10,31 +10,34 @@ describe('SearchIndex', function () {
   describe('convertFacets', () => {
     it('converts nested facets of json structure to unnested key values denoting hierarchy', () => {
       const inputFacets = {
-        "target_platforms": [
+        target_platforms: [
           {
-            "name": "atlas",
-            "versions": [{
-              "name": "v1.2"
-            }, {
-              "name": "v1.4"
-            }]
-          }
+            name: 'atlas',
+            versions: [
+              {
+                name: 'v1.2',
+              },
+              {
+                name: 'v1.4',
+              },
+            ],
+          },
         ],
-        "genres": [
+        genres: [
           {
-            "name": "reference"
-          }
-        ]
-      }
+            name: 'reference',
+          },
+        ],
+      };
 
       const expectedRes = {
-        'target_platforms': ['atlas'],
+        target_platforms: ['atlas'],
         'target_platforms←atlas→versions': ['v1.2', 'v1.4'],
-        'genres': ['reference'],
-      }
+        genres: ['reference'],
+      };
 
       const res = _convertFacets(inputFacets);
-      deepStrictEqual(res, expectedRes)
+      deepStrictEqual(res, expectedRes);
     });
   });
 });
