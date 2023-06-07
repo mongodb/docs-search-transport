@@ -17,6 +17,8 @@ jobs:
       GROUP_ID: ${{ vars.GROUP_ID }}
       ATLAS_ADMIN_API_KEY: ${{ secrets.ATLAS_ADMIN_API_KEY }}
       ATLAS_ADMIN_PUB_KEY: ${{ secrets.ATLAS_ADMIN_PUB_KEY }}
+      ATLAS_DATABASE: ${{ vars.ATLAS_DATABASE }}
+      COLLECTION_NAME: ${{ vars.COLLECTION_NAME }}
     strategy:
       matrix:
         node-version: [14.x]

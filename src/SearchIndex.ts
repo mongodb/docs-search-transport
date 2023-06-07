@@ -423,7 +423,8 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
       url: joinUrl(manifest.manifest.url, document.slug),
       manifestRevisionId: manifest.manifestRevisionId,
       searchProperty: [manifest.searchProperty],
-      includeInGlobalSearch: manifest.manifest.includeInGlobalSearch
+      includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
+      facets: facets,
     };
 
     let existingFacets = convertFacets(document.facets || {})
