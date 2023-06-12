@@ -2,6 +2,17 @@
 
 REST server that indexes search documents within an Atlas cluster and handles user search requests, deployed via Kanopy
 
+## Components
+
+### Marian Server
+REST server that exposes endpoints to run queries against A DB.
+
+### Atlas Admin Manager
+Module to invoke Atlas Admin commands via the Atlas Admin API.
+
+### Search Index
+Service to read and write from Atlas DB. Transports input manifest documents into Atlas DB. Also reads DB results for server requests and returns formatted responses.
+
 ## Installation
 
 ```shell
