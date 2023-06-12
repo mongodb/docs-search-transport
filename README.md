@@ -8,7 +8,7 @@ REST server that indexes search documents within an Atlas cluster and handles us
 REST server that exposes endpoints to run queries against A DB.
 
 ### Atlas Admin Manager
-Module to invoke Atlas Admin commands via the Atlas Admin API.
+Module to invoke Atlas Admin commands via the [Atlas Admin API](https://www.mongodb.com/docs/atlas/reference/api-resources-spec/), specifically manages the Atlas Search Index for Search DB.
 
 ### Search Index
 Service to read and write from Atlas DB. Transports input manifest documents into Atlas DB. Also reads DB results for server requests and returns formatted responses.
