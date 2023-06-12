@@ -5,7 +5,7 @@ REST server that indexes search documents within an Atlas cluster and handles us
 ## Components
 
 ### Marian Server
-REST server that exposes endpoints to run queries against A DB.
+REST server that exposes endpoints to run queries against Atlas DB.
 
 ### Atlas Admin Manager
 Module to invoke Atlas Admin commands via the [Atlas Admin API](https://www.mongodb.com/docs/atlas/reference/api-resources-spec/), specifically manages the Atlas Search Index for Search DB.
