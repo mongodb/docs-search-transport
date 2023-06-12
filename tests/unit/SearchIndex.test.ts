@@ -1,5 +1,5 @@
 import { strictEqual, deepStrictEqual, strict } from 'assert';
-import { joinUrl, _convertFacets } from '../../src/SearchIndex';
+import { joinUrl, _deserializeFacets } from '../../src/SearchIndex';
 
 describe('SearchIndex', function () {
   it('correctly joins base URLs with slugs', function () {
@@ -7,7 +7,7 @@ describe('SearchIndex', function () {
     strictEqual(joinUrl('https://example.com', 'foo'), 'https://example.com/foo');
   });
 
-  describe('convertFacets', () => {
+  describe('deserializeFacets', () => {
     it('converts nested facets of json structure to unnested key values denoting hierarchy', () => {
       const inputFacets = {
         target_platforms: [
@@ -36,7 +36,7 @@ describe('SearchIndex', function () {
         genres: ['reference'],
       };
 
-      const res = _convertFacets(inputFacets);
+      const res = _deserializeFacets(inputFacets);
       deepStrictEqual(res, expectedRes);
     });
   });

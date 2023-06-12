@@ -427,7 +427,7 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
       facets: facets,
     };
 
-    let existingFacets = convertFacets(document.facets || {});
+    let existingFacets = deserializeFacets(document.facets || {});
     Object.assign(facets, existingFacets);
     if (Object.keys(facets).length) {
       newDocument.facets = facets;
@@ -443,7 +443,7 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
   });
 };
 
-const convertFacets = (facets: Record<string, any>) => {
+const deserializeFacets = (facets: Record<string, any>) => {
   let res: Record<string, string[]> = {};
   const pushKeys = (currentFacets: Record<string, any>[], baseStr = '') => {
     if (!res[baseStr]) {
@@ -467,4 +467,4 @@ const convertFacets = (facets: Record<string, any>) => {
   return res;
 };
 
-export const _convertFacets = convertFacets;
+export const _deserializeFacets = deserializeFacets;
