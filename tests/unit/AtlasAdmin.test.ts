@@ -12,7 +12,8 @@ describe('Atlas Admin Manager', () => {
       privKey = process.env.ATLAS_ADMIN_API_KEY || '',
       groupId = process.env.GROUP_ID || '',
       dbName = process.env.ATLAS_DATABASE || '',
-      collection = process.env.COLLECTION_NAME || '';
+      collection = process.env.COLLECTION_NAME || '',
+      clusterName = process.env['CLUSTER_NAME'] || 'Search'; 
 
     const atlasAdmin = new AtlasAdminManager(pubKey, privKey, groupId);
     const taxonomy: Taxonomy = {};
@@ -36,7 +37,7 @@ describe('Atlas Admin Manager', () => {
       dataType: 'json',
       digestAuth: `${pubKey}:${privKey}`,
     };
-    const expectedUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${'Search'}/fts/indexes`;
+    const expectedUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${clusterName}/fts/indexes`;
 
     it('makes a digest auth request to find Search Index', async () => {
       urllibStub.onCall(0).resolves({ data: [], res: { statusCode: 200 } });
