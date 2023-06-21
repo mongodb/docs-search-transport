@@ -13,7 +13,7 @@ describe('Atlas Admin Manager', () => {
       groupId = process.env.GROUP_ID || '',
       dbName = process.env.ATLAS_DATABASE || '',
       collection = process.env.COLLECTION_NAME || '',
-      clusterName = process.env['CLUSTER_NAME'] || 'Search'; 
+      clusterName = process.env['CLUSTER_NAME'] || 'Search';
 
     const atlasAdmin = new AtlasAdminManager(pubKey, privKey, groupId);
     const taxonomy: Taxonomy = {};
