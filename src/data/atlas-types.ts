@@ -18,7 +18,6 @@ interface synonymMapping {
   analyzer: string;
   source: { collection: string };
 }
-
 export interface CreateBodySchema {
   analyzer?: string;
   analyzers?: customAnalyzer[];
@@ -41,4 +40,12 @@ export interface SearchIndexResponse {
   searchAnalyzer?: string;
   status?: string;
   synonyms?: IndexMappings['synonyms'];
+}
+
+type MappingType = 'equivalent' | 'explicit';
+export interface SynonymMap {
+  primary: string;
+  mappingType: MappingType;
+  synonyms: string[];
+  input?: string[];
 }

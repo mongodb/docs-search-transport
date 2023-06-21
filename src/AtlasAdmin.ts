@@ -1,9 +1,13 @@
 // @ts-ignore
 import Logger from 'basic-logger';
 import { request, RequestOptions } from 'urllib';
+import fs from 'fs';
+import path from 'path';
 import { SearchIndex } from './data/atlas-search-index';
 import { SearchIndexResponse, IndexMappings } from './data/atlas-types';
 import { Taxonomy } from './SearchIndex';
+import { MongoClient } from 'mongodb';
+import { parseSynonymCsv } from './util';
 
 const DEFAULT_ATLAS_API_OPTIONS: RequestOptions = {
   headers: {
@@ -18,6 +22,7 @@ const log = new Logger({
 
 const CLUSTER_NAME = process.env['CLUSTER_NAME'] || 'Search';
 const COLLECTION_NAME = process.env['COLLECTION_NAME'] || 'documents';
+const SYNONYM_COLLECTION_NAME = process.env['SYNONYM_COLLECTION_NAME'] || 'synonyms';
 const DB = process.env['ATLAS_DATABASE'] || 'search';
 const SEARCH_INDEX = 'default';
 
@@ -25,14 +30,15 @@ const SEARCH_INDEX = 'default';
  * Manager is intended to keep Atlas Search Index in sync across environments
  * Index should be edited in ../data directory and expect to be updated on deploy
  */
-
 export class AtlasAdminManager {
   private readonly baseUrl: string;
+  private readonly mongoClient: MongoClient;
 
-  constructor(publicApiKey: string, privApiKey: string, groupId: string) {
+  constructor(publicApiKey: string, privApiKey: string, groupId: string, mongoClient: MongoClient) {
     DEFAULT_ATLAS_API_OPTIONS['digestAuth'] = `${publicApiKey}:${privApiKey}`;
     // set base url
     this.baseUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${CLUSTER_NAME}/fts/indexes`;
+    this.mongoClient = mongoClient;
   }
 
   async patchSearchIndex(taxonomy: Taxonomy) {
@@ -46,6 +52,15 @@ export class AtlasAdminManager {
     } catch (e) {
       log.error(`Error while patching searching index: ${JSON.stringify(e)}`);
     }
+  }
+
+  async updateSynonyms() {
+    log.info('Updating synonyms');
+
+    const synonymsMap = parseSynonymCsv('../synonyms.csv');
+
+    log.info('uploading the following parsed synonyms records to Atlas: ', synonymsMap);
+    const synonymCollection = this.mongoClient.db(DB).collection(SYNONYM_COLLECTION_NAME);
   }
 
   private async findSearchIndex(dbName: string, collection: string, indexName: string) {
