@@ -45,13 +45,14 @@ export class AtlasAdminManager {
       return this.updateSearchindex(index['indexID'], SearchIndex, taxonomy);
     } catch (e) {
       log.error(`Error while patching searching index: ${JSON.stringify(e)}`);
+      throw e;
     }
   }
 
   private async findSearchIndex(dbName: string, collection: string, indexName: string) {
     log.info('finding Atlas search index');
     const url = `${this.baseUrl}/${dbName}/${collection}`;
-    const options = DEFAULT_ATLAS_API_OPTIONS;
+    const options = { ...DEFAULT_ATLAS_API_OPTIONS };
     options['method'] = 'GET';
 
     try {
@@ -110,7 +111,7 @@ export class AtlasAdminManager {
   }
 
   private getPostPatchOptions(searchIndex: IndexMappings, taxonomy: Taxonomy) {
-    const options = DEFAULT_ATLAS_API_OPTIONS;
+    const options = { ...DEFAULT_ATLAS_API_OPTIONS };
     options['data'] = this.insertTaxonomyIntoSearchIndex(searchIndex, taxonomy);
     options['data'] = Object.assign(options['data'], {
       collectionName: COLLECTION_NAME,
