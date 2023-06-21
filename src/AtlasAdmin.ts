@@ -4,10 +4,9 @@ import { request, RequestOptions } from 'urllib';
 import fs from 'fs';
 import path from 'path';
 import { SearchIndex } from './data/atlas-search-index';
-import { SearchIndexResponse, IndexMappings } from './data/atlas-types';
+import { SearchIndexResponse, IndexMappings, SynonymDocument } from './data/atlas-types';
 import { Taxonomy } from './SearchIndex';
-import { MongoClient } from 'mongodb';
-import { parseSynonymCsv } from './util';
+import { AnyBulkWriteOperation, MongoClient } from 'mongodb';
 
 const DEFAULT_ATLAS_API_OPTIONS: RequestOptions = {
   headers: {
@@ -33,6 +32,7 @@ const SEARCH_INDEX = 'default';
 export class AtlasAdminManager {
   private readonly baseUrl: string;
   private readonly mongoClient: MongoClient;
+  private synonymPrimaryIndexDefined = false;
 
   constructor(publicApiKey: string, privApiKey: string, groupId: string, mongoClient: MongoClient) {
     DEFAULT_ATLAS_API_OPTIONS['digestAuth'] = `${publicApiKey}:${privApiKey}`;
@@ -54,13 +54,54 @@ export class AtlasAdminManager {
     }
   }
 
-  async updateSynonyms() {
-    log.info('Updating synonyms');
+  parseSynonymCsv(filePath: string): Array<AnyBulkWriteOperation<SynonymDocument>> {
+    const csvPath = path.join(__dirname, filePath);
+    const csv = fs.readFileSync(csvPath);
 
-    const synonymsMap = parseSynonymCsv('../synonyms.csv');
+    const csvString = csv.toString();
 
-    log.info('uploading the following parsed synonyms records to Atlas: ', synonymsMap);
-    const synonymCollection = this.mongoClient.db(DB).collection(SYNONYM_COLLECTION_NAME);
+    const newLine = csvString.includes('\r') ? '\r\n' : '\n';
+
+    return csvString.split(newLine).map((csvRow) => {
+      // filtering empty strings since they can occur if CSV contains
+      // trailing comma
+      const synonyms = csvRow.split(',').filter((word) => word !== '');
+
+      // using this 'primary' property as a unique key so that we update an existing synonym
+      // record instead of creating a duplicate
+      const primary = csvRow[0];
+
+      const synonymDocument: SynonymDocument = { mappingType: 'equivalent', synonyms, primary };
+
+      return { updateOne: { filter: { primary }, update: { $set: synonymDocument } } };
+    });
+  }
+
+  async updateSynonyms(): Promise<void> {
+    console.log('Updating synonyms');
+
+    const synonymCollection = this.mongoClient.db(DB).collection<SynonymDocument>(SYNONYM_COLLECTION_NAME);
+
+    if (!this.synonymPrimaryIndexDefined) {
+      const synonymCollectionIndices = (await synonymCollection.indexes()).find(
+        (idxDocument) => idxDocument.name === 'primary'
+      );
+
+      if (!synonymCollectionIndices) {
+        synonymCollection.createIndex({ primary: 1 }, { unique: true });
+      }
+
+      this.synonymPrimaryIndexDefined = true;
+    }
+
+    const synonymDocuments = this.parseSynonymCsv('../synonyms.csv');
+
+    console.log('uploading the following parsed synonyms documents to Atlas: ', synonymDocuments);
+    try {
+      await synonymCollection.bulkWrite(synonymDocuments);
+    } catch (error) {
+      console.error('ERROR! Synonyms collection did not update successfully.', error);
+    }
   }
 
   private async findSearchIndex(dbName: string, collection: string, indexName: string) {

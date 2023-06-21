@@ -43,7 +43,7 @@ export interface SearchIndexResponse {
 }
 
 type MappingType = 'equivalent' | 'explicit';
-export interface SynonymMap {
+export interface SynonymDocument {
   primary: string;
   mappingType: MappingType;
   synonyms: string[];
