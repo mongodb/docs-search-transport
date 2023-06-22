@@ -6,7 +6,8 @@ import { AtlasAdminManager, _getFacetKeys, parseSynonymCsv } from '../..//src/At
 import { Taxonomy } from '../../src/SearchIndex';
 import path from 'path';
 import { readFileSync } from 'fs';
-import { MongoClient } from 'mongodb';
+import { MongoClient, UpdateFilter, UpdateOneModel } from 'mongodb';
+import { SynonymDocument } from '../../src/data/atlas-types';
 
 describe('Atlas Admin Manager', () => {
   // TODO: stub the urllib calls with sinon and add expected url/requestOptions
@@ -128,12 +129,16 @@ describe('Atlas Admin Manager', () => {
 
       for (let i = 0; i < expectedSynonyms.length; i++) {
         const expectedSynonymArray = expectedSynonyms[i];
-        const actualSynonymArray = synonymUpdateDocs[i]['updateOne']['update']['$set']['synonyms'];
+        const doc = synonymUpdateDocs[i] as { updateOne: UpdateOneModel<SynonymDocument> };
+
+        const update = doc.updateOne.update as UpdateFilter<SynonymDocument>;
+
+        const actualSynonymArray = update.$set?.synonyms;
 
         deepEqual(expectedSynonymArray, actualSynonymArray);
 
         const expectedPrimary = expectedSynonyms[i][0];
-        const actualPrimary = synonymUpdateDocs[i]['updateOne']['update']['$set']['primary'];
+        const actualPrimary = update.$set?.primary;
 
         deepEqual(expectedPrimary, actualPrimary);
       }
