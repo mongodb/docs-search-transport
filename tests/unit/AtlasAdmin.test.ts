@@ -1,7 +1,9 @@
 import { strictEqual, deepStrictEqual, ok, deepEqual } from 'assert';
 import { parse } from 'toml';
-import { AtlasAdminManager, _getFacetKeys } from '../..//src/AtlasAdmin';
+import { AtlasAdminManager, _getFacetKeys, parseSynonymCsv } from '../..//src/AtlasAdmin';
 import { Taxonomy } from '../../src/SearchIndex';
+import path from 'path';
+import { readFileSync } from 'fs';
 
 // import { request, RequestOptions } from 'urllib'; have to mock these
 
@@ -51,6 +53,29 @@ describe('Atlas Admin Manager', () => {
         'target_platforms',
       ];
       deepEqual(res, expected);
+    });
+  });
+
+  describe('parseSynonymCsv', () => {
+    it('returns an array of update operations with a properly parsed synonym array', () => {
+      const expectedFilePath = path.join(__dirname, '../resources/expected-synonyms.json');
+      const expectedSynonyms = JSON.parse(readFileSync(expectedFilePath).toString()) as Array<string[]>;
+
+      const synonymUpdateDocs = parseSynonymCsv('../tests/resources/synonyms.csv');
+
+      expect(expectedSynonyms.length).toEqual(synonymUpdateDocs.length);
+
+      for (let i = 0; i < expectedSynonyms.length; i++) {
+        const expectedSynonymArray = expectedSynonyms[i];
+        const actualSynonymArray = synonymUpdateDocs[i]['updateOne']['update']['$set']['synonyms'];
+
+        expect(expectedSynonymArray).toEqual(actualSynonymArray);
+
+        const expectedPrimary = expectedSynonyms[i][0];
+        const actualPrimary = synonymUpdateDocs[i]['updateOne']['update']['$set']['primary'];
+
+        expect(expectedPrimary).toEqual(actualPrimary);
+      }
     });
   });
 });

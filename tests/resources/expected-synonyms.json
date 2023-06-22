@@ -1,0 +1,20 @@
+[
+    [ "fsynclock", "fsync lock" ],
+    [ "fsyncunlock", "fsync unlock" ],
+    [ "maxofflinetime", "maximum offline time" ],
+    [ "max", "maximum" ],
+    [ "atlas search", "full text search" ],
+    [ "iam", "identify and access management" ],
+    [ "fim", "federated identity management" ],
+    [ "sso", "single sign-on" ],
+    [ "bool", "boolean" ],
+    [ "int", "integer" ],
+    [ "nested", "embedded" ],
+    [ "db", "database" ],
+    [ "regex", "regular expression" ],
+    [ "iot", "internet of things" ],
+    [ "python async", "motor" ],
+    [ "node", "nodejs", "node.js" ],
+    [ "shell", "mongosh" ],
+    [ "download", "descargar" ]
+]

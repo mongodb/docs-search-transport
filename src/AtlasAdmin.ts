@@ -54,34 +54,13 @@ export class AtlasAdminManager {
     }
   }
 
-  parseSynonymCsv(filePath: string): Array<AnyBulkWriteOperation<SynonymDocument>> {
-    const csvPath = path.join(__dirname, filePath);
-    const csv = fs.readFileSync(csvPath);
-
-    const csvString = csv.toString();
-
-    const newLine = csvString.includes('\r') ? '\r\n' : '\n';
-
-    return csvString.split(newLine).map((csvRow) => {
-      // filtering empty strings since they can occur if CSV contains
-      // trailing comma
-      const synonyms = csvRow.split(',').filter((word) => word !== '');
-
-      // using this 'primary' property as a unique key so that we update an existing synonym
-      // record instead of creating a duplicate
-      const primary = csvRow[0];
-
-      const synonymDocument: SynonymDocument = { mappingType: 'equivalent', synonyms, primary };
-
-      return { updateOne: { filter: { primary }, update: { $set: synonymDocument } } };
-    });
-  }
-
   async updateSynonyms(): Promise<void> {
     console.log('Updating synonyms');
 
     const synonymCollection = this.mongoClient.db(DB).collection<SynonymDocument>(SYNONYM_COLLECTION_NAME);
 
+    // This code is to handle the case when the collection is first created.
+    // We want to create the unique primary index first to prevent the creation of duplicate records.
     if (!this.synonymPrimaryIndexDefined) {
       const synonymCollectionIndices = (await synonymCollection.indexes()).find(
         (idxDocument) => idxDocument.name === 'primary'
@@ -94,7 +73,7 @@ export class AtlasAdminManager {
       this.synonymPrimaryIndexDefined = true;
     }
 
-    const synonymDocuments = this.parseSynonymCsv('../synonyms.csv');
+    const synonymDocuments = parseSynonymCsv('../synonyms.csv');
 
     console.log('uploading the following parsed synonyms documents to Atlas: ', synonymDocuments);
     try {
@@ -202,6 +181,28 @@ export class AtlasAdminManager {
     }
     return searchIndex;
   }
+}
+export function parseSynonymCsv(filePath: string): Array<AnyBulkWriteOperation<SynonymDocument>> {
+  const csvPath = path.join(__dirname, filePath);
+  const csv = fs.readFileSync(csvPath);
+
+  const csvString = csv.toString();
+
+  const newLine = csvString.includes('\r') ? '\r\n' : '\n';
+
+  return csvString.split(newLine).map((csvRow) => {
+    // filtering empty strings since they can occur if CSV contains
+    // trailing comma
+    const synonyms = csvRow.split(',').filter((word) => word !== '');
+
+    // using this 'primary' property as a unique key so that we update an existing synonym
+    // record instead of creating a duplicate
+    const primary = synonyms[0];
+
+    const synonymDocument: SynonymDocument = { mappingType: 'equivalent', synonyms, primary };
+
+    return { updateOne: { filter: { primary }, update: { $set: synonymDocument } } };
+  });
 }
 
 const getFacetKeys = (taxonomy: Taxonomy) => {
