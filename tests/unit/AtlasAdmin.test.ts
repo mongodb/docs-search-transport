@@ -1,12 +1,12 @@
-import { strictEqual, deepStrictEqual, ok, deepEqual } from 'assert';
+import { strictEqual, deepEqual } from 'assert';
 import * as sinon from 'sinon';
 import { parse } from 'toml';
 import * as urllib from 'urllib';
-
 import { AtlasAdminManager, _getFacetKeys, parseSynonymCsv } from '../..//src/AtlasAdmin';
 import { Taxonomy } from '../../src/SearchIndex';
 import path from 'path';
 import { readFileSync } from 'fs';
+import { MongoClient } from 'mongodb';
 
 describe('Atlas Admin Manager', () => {
   // TODO: stub the urllib calls with sinon and add expected url/requestOptions
@@ -18,7 +18,9 @@ describe('Atlas Admin Manager', () => {
       collection = process.env.COLLECTION_NAME || '',
       clusterName = process.env['CLUSTER_NAME'] || 'Search';
 
-    const atlasAdmin = new AtlasAdminManager(pubKey, privKey, groupId);
+    const mongoClient = sinon.mock(MongoClient) as any; // using any here to make typescript happy
+
+    const atlasAdmin = new AtlasAdminManager(pubKey, privKey, groupId, mongoClient);
     const taxonomy: Taxonomy = {};
 
     let urllibStub: sinon.SinonStub;
@@ -122,18 +124,18 @@ describe('Atlas Admin Manager', () => {
 
       const synonymUpdateDocs = parseSynonymCsv('../tests/resources/synonyms.csv');
 
-      expect(expectedSynonyms.length).toEqual(synonymUpdateDocs.length);
+      deepEqual(expectedSynonyms.length, synonymUpdateDocs.length);
 
       for (let i = 0; i < expectedSynonyms.length; i++) {
         const expectedSynonymArray = expectedSynonyms[i];
         const actualSynonymArray = synonymUpdateDocs[i]['updateOne']['update']['$set']['synonyms'];
 
-        expect(expectedSynonymArray).toEqual(actualSynonymArray);
+        deepEqual(expectedSynonymArray, actualSynonymArray);
 
         const expectedPrimary = expectedSynonyms[i][0];
         const actualPrimary = synonymUpdateDocs[i]['updateOne']['update']['$set']['primary'];
 
-        expect(expectedPrimary).toEqual(actualPrimary);
+        deepEqual(expectedPrimary, actualPrimary);
       }
     });
   });
