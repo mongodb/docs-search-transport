@@ -62,12 +62,12 @@ export class AtlasAdminManager {
 
     // This code is to handle the case when the collection is first created.
     // We want to create the unique primary index first to prevent the creation of duplicate records.
-    synonymCollection.createIndex({ primary: 1 }, { unique: true });
-
+    
     const synonymUpdates = getSynonymUpdateOperations('../synonyms.csv');
-
+    
     console.log('uploading the following parsed synonyms documents to Atlas: ', synonymUpdates);
     try {
+      await synonymCollection.createIndex({ primary: 1 }, { unique: true });
       await synonymCollection.bulkWrite(synonymUpdates);
     } catch (error) {
       console.error('ERROR! Synonyms collection did not update successfully.', error);
