@@ -229,10 +229,10 @@ class Marian {
     try {
       // TODO: include taxonomy url in verifyEnvVars after it has been released
       taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
+      await this.atlasAdmin.updateSynonyms();
 
       const [atlasAdminRes, loadRes] = await Promise.all([
         this.atlasAdmin.patchSearchIndex(taxonomy),
-        this.atlasAdmin.updateSynonyms(),
         this.index.load(taxonomy),
       ]);
     } catch (e) {
