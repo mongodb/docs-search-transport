@@ -62,23 +62,13 @@ export class AtlasAdminManager {
 
     // This code is to handle the case when the collection is first created.
     // We want to create the unique primary index first to prevent the creation of duplicate records.
-    if (!this.synonymPrimaryIndexDefined) {
-      const synonymCollectionIndices = (await synonymCollection.indexes()).find(
-        (idxDocument) => idxDocument.name === 'primary'
-      );
+    synonymCollection.createIndex({ primary: 1 }, { unique: true });
 
-      if (!synonymCollectionIndices) {
-        synonymCollection.createIndex({ primary: 1 }, { unique: true });
-      }
+    const synonymUpdates = getSynonymUpdateOperations('../synonyms.csv');
 
-      this.synonymPrimaryIndexDefined = true;
-    }
-
-    const synonymDocuments = parseSynonymCsv('../synonyms.csv');
-
-    console.log('uploading the following parsed synonyms documents to Atlas: ', synonymDocuments);
+    console.log('uploading the following parsed synonyms documents to Atlas: ', synonymUpdates);
     try {
-      await synonymCollection.bulkWrite(synonymDocuments);
+      await synonymCollection.bulkWrite(synonymUpdates);
     } catch (error) {
       console.error('ERROR! Synonyms collection did not update successfully.', error);
     }
@@ -183,7 +173,7 @@ export class AtlasAdminManager {
     return searchIndex;
   }
 }
-export function parseSynonymCsv(filePath: string): Array<AnyBulkWriteOperation<SynonymDocument>> {
+export function getSynonymUpdateOperations(filePath: string): Array<AnyBulkWriteOperation<SynonymDocument>> {
   const csvPath = path.join(__dirname, filePath);
   const csv = fs.readFileSync(csvPath);
 
@@ -202,7 +192,7 @@ export function parseSynonymCsv(filePath: string): Array<AnyBulkWriteOperation<S
 
     const synonymDocument: SynonymDocument = { mappingType: 'equivalent', synonyms, primary };
 
-    return { updateOne: { filter: { primary }, update: { $set: synonymDocument } } };
+    return { updateOne: { filter: { primary }, update: { $set: synonymDocument }, upsert: true } };
   });
 }
 

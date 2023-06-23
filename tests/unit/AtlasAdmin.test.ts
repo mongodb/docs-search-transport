@@ -2,7 +2,7 @@ import { strictEqual, deepEqual } from 'assert';
 import * as sinon from 'sinon';
 import { parse } from 'toml';
 import * as urllib from 'urllib';
-import { AtlasAdminManager, _getFacetKeys, parseSynonymCsv } from '../..//src/AtlasAdmin';
+import { AtlasAdminManager, _getFacetKeys, getSynonymUpdateOperations } from '../..//src/AtlasAdmin';
 import { Taxonomy } from '../../src/SearchIndex';
 import path from 'path';
 import { readFileSync } from 'fs';
@@ -123,7 +123,7 @@ describe('Atlas Admin Manager', () => {
       const expectedFilePath = path.join(__dirname, '../resources/expected-synonyms.json');
       const expectedSynonyms = JSON.parse(readFileSync(expectedFilePath).toString()) as Array<string[]>;
 
-      const synonymUpdateDocs = parseSynonymCsv('../tests/resources/synonyms.csv');
+      const synonymUpdateDocs = getSynonymUpdateOperations('../tests/resources/synonyms.csv');
 
       deepEqual(expectedSynonyms.length, synonymUpdateDocs.length);
 

@@ -237,6 +237,7 @@ class Marian {
       ]);
     } catch (e) {
       log.error(`Error while loading Marian server ${JSON.stringify(e)}`);
+      throw e;
     }
   }
 
@@ -400,6 +401,7 @@ async function main() {
     await server.load();
   } catch (e) {
     console.error(`Error while initializing server: ${JSON.stringify(e)}`);
+    throw e;
   }
   server.start(8080);
 }
