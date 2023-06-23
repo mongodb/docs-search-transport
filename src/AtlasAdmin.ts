@@ -32,7 +32,6 @@ const SEARCH_INDEX = 'default';
 export class AtlasAdminManager {
   private readonly baseUrl: string;
   private readonly mongoClient: MongoClient;
-  private synonymPrimaryIndexDefined = false;
 
   constructor(publicApiKey: string, privApiKey: string, groupId: string, mongoClient: MongoClient) {
     DEFAULT_ATLAS_API_OPTIONS['digestAuth'] = `${publicApiKey}:${privApiKey}`;
