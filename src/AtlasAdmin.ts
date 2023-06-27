@@ -59,13 +59,13 @@ export class AtlasAdminManager {
 
     const synonymCollection = this.mongoClient.db(DB).collection<SynonymDocument>(SYNONYM_COLLECTION_NAME);
 
-    // This code is to handle the case when the collection is first created.
-    // We want to create the unique primary index first to prevent the creation of duplicate records.
-
     const synonymUpdates = getSynonymUpdateOperations('../synonyms.csv');
 
     console.log('uploading the following parsed synonyms documents to Atlas: ', synonymUpdates);
     try {
+      // we want to ensure that the primary property is a unique index
+      // so that we prevent duplicate synonym records.
+      // the createIndex method is idempotent, so calling it repeatedly will not cause side effects.
       await synonymCollection.createIndex({ primary: 1 }, { unique: true });
       await synonymCollection.bulkWrite(synonymUpdates);
     } catch (error) {
