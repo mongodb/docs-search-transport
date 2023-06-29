@@ -1,12 +1,12 @@
 // @ts-ignore
 import Logger from 'basic-logger';
 import { request, RequestOptions } from 'urllib';
+import { AnyBulkWriteOperation, MongoClient } from 'mongodb';
 import fs from 'fs';
 import path from 'path';
 import { SearchIndex } from './data/atlas-search-index';
 import { SearchIndexResponse, IndexMappings, SynonymDocument } from './data/atlas-types';
 import { Taxonomy } from './SearchIndex';
-import { AnyBulkWriteOperation, MongoClient } from 'mongodb';
 
 const DEFAULT_ATLAS_API_OPTIONS: RequestOptions = {
   headers: {
@@ -67,7 +67,7 @@ export class AtlasAdminManager {
       // so that we prevent duplicate synonym records.
       // the createIndex method is idempotent, so calling it repeatedly will not cause side effects.
       await synonymCollection.createIndex({ primary: 1 }, { unique: true });
-      await synonymCollection.bulkWrite(synonymUpdates);
+      await synonymCollection.bulkWrite(synonymUpdates, { ordered: false });
     } catch (error) {
       console.error('ERROR! Synonyms collection did not update successfully.', error);
     }
