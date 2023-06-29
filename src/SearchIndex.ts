@@ -240,7 +240,7 @@ export class SearchIndex {
         searchProperty: 1,
       },
     });
-    const cursor = await this.documents.aggregate(aggregationQuery);
+    const cursor = this.documents.aggregate(aggregationQuery);
     return await cursor.toArray();
   }
 

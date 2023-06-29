@@ -1,5 +1,6 @@
 'use strict';
 
+import { InvalidQuery } from '.';
 import { Taxonomy } from './SearchIndex';
 
 const CORRELATIONS = [
@@ -229,6 +230,9 @@ export class Query {
         const phraseParts = processPart(phrase);
         this.addTerms(phraseParts);
       }
+    }
+    if (!this.terms.size) {
+      throw new InvalidQuery();
     }
   }
 

@@ -77,7 +77,7 @@ function checkMethod(req: http.IncomingMessage, res: http.ServerResponse, method
   return true;
 }
 
-class InvalidQuery extends Error {}
+export class InvalidQuery extends Error {}
 
 class Marian {
   index: SearchIndex;
