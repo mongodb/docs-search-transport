@@ -1,7 +1,8 @@
 'use strict';
 
-import { InvalidQuery } from '.';
 import { Taxonomy } from './SearchIndex';
+
+export class InvalidQuery extends Error {}
 
 const CORRELATIONS = [
   ['regexp', 'regex', 0.8],
