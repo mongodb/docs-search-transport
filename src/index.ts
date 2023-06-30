@@ -8,14 +8,13 @@ dotenv.config();
 import { Document, MongoClient } from 'mongodb';
 import assert from 'assert';
 import http from 'http';
-import fetch from 'node-fetch';
 import { parse } from 'toml';
 
 // @ts-ignore
 import Logger from 'basic-logger';
 
 import { taxonomy } from './data/sample-taxonomy';
-import { Query } from './Query';
+import { Query, InvalidQuery } from './Query';
 import { isPermittedOrigin } from './util';
 import { SearchIndex, RefreshInfo, Taxonomy } from './SearchIndex';
 import { AtlasAdminManager } from './AtlasAdmin';
@@ -76,8 +75,6 @@ function checkMethod(req: http.IncomingMessage, res: http.ServerResponse, method
 
   return true;
 }
-
-class InvalidQuery extends Error {}
 
 class Marian {
   index: SearchIndex;

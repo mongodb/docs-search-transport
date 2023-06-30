@@ -2,6 +2,8 @@
 
 import { Taxonomy } from './SearchIndex';
 
+export class InvalidQuery extends Error {}
+
 const CORRELATIONS = [
   ['regexp', 'regex', 0.8],
   ['regular expression', 'regex', 0.8],
@@ -229,6 +231,9 @@ export class Query {
         const phraseParts = processPart(phrase);
         this.addTerms(phraseParts);
       }
+    }
+    if (!this.terms.size) {
+      throw new InvalidQuery();
     }
   }
 
