@@ -1,5 +1,7 @@
 import { IndexMappings } from './atlas-types';
 
+const SYNONYM_COLLECTION_NAME = process.env['SYNONYM_COLLECTION_NAME'] || 'synonyms';
+
 export const SearchIndex: IndexMappings = {
   mappings: {
     dynamic: false,
@@ -79,6 +81,15 @@ export const SearchIndex: IndexMappings = {
       },
     },
   },
+  synonyms: [
+    {
+      name: 'synonym-mapping',
+      source: {
+        collection: SYNONYM_COLLECTION_NAME,
+      },
+      analyzer: 'lucene.keyword',
+    },
+  ],
   analyzers: [
     {
       charFilters: [],

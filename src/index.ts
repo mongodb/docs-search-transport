@@ -229,10 +229,12 @@ class Marian {
     try {
       // TODO: include taxonomy url in verifyEnvVars after it has been released
       taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
-      const atlasAdminRes = await this.atlasAdmin.patchSearchIndex(taxonomy);
-      const loadRes = await this.index.load(taxonomy);
+      await this.atlasAdmin.updateSynonyms();
+
+      await Promise.all([this.atlasAdmin.patchSearchIndex(taxonomy), this.index.load(taxonomy)]);
     } catch (e) {
       log.error(`Error while loading Marian server ${JSON.stringify(e)}`);
+      throw e;
     }
   }
 
@@ -389,13 +391,14 @@ async function main() {
     await searchIndex.createRecommendedIndexes();
   }
 
-  const atlasAdmin = new AtlasAdminManager(adminPubKey, adminPrivKey, groupId);
+  const atlasAdmin = new AtlasAdminManager(adminPubKey, adminPrivKey, groupId, client);
   const server = new Marian(searchIndex, atlasAdmin);
 
   try {
     await server.load();
   } catch (e) {
     console.error(`Error while initializing server: ${JSON.stringify(e)}`);
+    throw e;
   }
   server.start(8080);
 }

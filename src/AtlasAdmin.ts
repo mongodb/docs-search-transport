@@ -1,8 +1,11 @@
 // @ts-ignore
 import Logger from 'basic-logger';
 import { request, RequestOptions } from 'urllib';
+import { AnyBulkWriteOperation, MongoClient } from 'mongodb';
+import fs from 'fs';
+import path from 'path';
 import { SearchIndex } from './data/atlas-search-index';
-import { SearchIndexResponse, IndexMappings } from './data/atlas-types';
+import { SearchIndexResponse, IndexMappings, SynonymDocument } from './data/atlas-types';
 import { Taxonomy } from './SearchIndex';
 
 const DEFAULT_ATLAS_API_OPTIONS: RequestOptions = {
@@ -18,6 +21,7 @@ const log = new Logger({
 
 const CLUSTER_NAME = process.env['CLUSTER_NAME'] || 'Search';
 const COLLECTION_NAME = process.env['COLLECTION_NAME'] || 'documents';
+const SYNONYM_COLLECTION_NAME = process.env['SYNONYM_COLLECTION_NAME'] || 'synonyms';
 const DB = process.env['ATLAS_DATABASE'] || 'search';
 const SEARCH_INDEX = 'default';
 
@@ -25,14 +29,15 @@ const SEARCH_INDEX = 'default';
  * Manager is intended to keep Atlas Search Index in sync across environments
  * Index should be edited in ../data directory and expect to be updated on deploy
  */
-
 export class AtlasAdminManager {
   private readonly baseUrl: string;
+  private readonly mongoClient: MongoClient;
 
-  constructor(publicApiKey: string, privApiKey: string, groupId: string) {
+  constructor(publicApiKey: string, privApiKey: string, groupId: string, mongoClient: MongoClient) {
     DEFAULT_ATLAS_API_OPTIONS['digestAuth'] = `${publicApiKey}:${privApiKey}`;
     // set base url
     this.baseUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${groupId}/clusters/${CLUSTER_NAME}/fts/indexes`;
+    this.mongoClient = mongoClient;
   }
 
   async patchSearchIndex(taxonomy: Taxonomy) {
@@ -46,6 +51,24 @@ export class AtlasAdminManager {
     } catch (e) {
       log.error(`Error while patching searching index: ${JSON.stringify(e)}`);
       throw e;
+    }
+  }
+
+  async updateSynonyms(): Promise<void> {
+    console.log('Updating synonyms');
+
+    const synonymCollection = this.mongoClient.db(DB).collection<SynonymDocument>(SYNONYM_COLLECTION_NAME);
+
+    const synonymUpdates = getSynonymUpdateOperations('../synonyms.csv');
+
+    try {
+      // we want to ensure that the primary property is a unique index
+      // so that we prevent duplicate synonym records.
+      // the createIndex method is idempotent, so calling it repeatedly will not cause side effects.
+      await synonymCollection.createIndex({ primary: 1 }, { unique: true });
+      await synonymCollection.bulkWrite(synonymUpdates, { ordered: false });
+    } catch (error) {
+      console.error('ERROR! Synonyms collection did not update successfully.', error);
     }
   }
 
@@ -147,6 +170,28 @@ export class AtlasAdminManager {
     }
     return searchIndex;
   }
+}
+export function getSynonymUpdateOperations(filePath: string): Array<AnyBulkWriteOperation<SynonymDocument>> {
+  const csvPath = path.join(__dirname, filePath);
+  const csv = fs.readFileSync(csvPath);
+
+  const csvString = csv.toString();
+
+  const newLine = csvString.includes('\r') ? '\r\n' : '\n';
+
+  return csvString.split(newLine).map((csvRow) => {
+    // filtering empty strings since they can occur if CSV contains
+    // trailing comma
+    const synonyms = csvRow.split(',').filter((word) => word !== '');
+
+    // using this 'primary' property as a unique key so that we update an existing synonym
+    // record instead of creating a duplicate
+    const primary = synonyms[0];
+
+    const synonymDocument: SynonymDocument = { mappingType: 'equivalent', synonyms, primary };
+
+    return { updateOne: { filter: { primary }, update: { $set: synonymDocument }, upsert: true } };
+  });
 }
 
 const getFacetKeys = (taxonomy: Taxonomy) => {

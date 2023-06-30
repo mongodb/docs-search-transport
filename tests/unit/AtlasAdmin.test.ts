@@ -1,9 +1,13 @@
-import { strictEqual, deepStrictEqual, ok, deepEqual } from 'assert';
+import { strictEqual, deepEqual } from 'assert';
 import * as sinon from 'sinon';
 import { parse } from 'toml';
 import * as urllib from 'urllib';
-import { AtlasAdminManager, _getFacetKeys } from '../..//src/AtlasAdmin';
+import { AtlasAdminManager, _getFacetKeys, getSynonymUpdateOperations } from '../..//src/AtlasAdmin';
 import { Taxonomy } from '../../src/SearchIndex';
+import path from 'path';
+import { readFileSync } from 'fs';
+import { MongoClient, UpdateFilter, UpdateOneModel } from 'mongodb';
+import { SynonymDocument } from '../../src/data/atlas-types';
 
 describe('Atlas Admin Manager', () => {
   // TODO: stub the urllib calls with sinon and add expected url/requestOptions
@@ -15,7 +19,9 @@ describe('Atlas Admin Manager', () => {
       collection = process.env.COLLECTION_NAME || '',
       clusterName = process.env['CLUSTER_NAME'] || 'Search';
 
-    const atlasAdmin = new AtlasAdminManager(pubKey, privKey, groupId);
+    const mongoClient = sinon.mock(MongoClient) as any; // using any here to make typescript happy
+
+    const atlasAdmin = new AtlasAdminManager(pubKey, privKey, groupId, mongoClient);
     const taxonomy: Taxonomy = {};
 
     let urllibStub: sinon.SinonStub;
@@ -109,6 +115,33 @@ describe('Atlas Admin Manager', () => {
         'target_platforms',
       ];
       deepEqual(res, expected);
+    });
+  });
+
+  describe('parseSynonymCsv', () => {
+    it('returns an array of update operations with a properly parsed synonym array', () => {
+      const expectedFilePath = path.join(__dirname, '../resources/expected-synonyms.json');
+      const expectedSynonyms = JSON.parse(readFileSync(expectedFilePath).toString()) as Array<string[]>;
+
+      const synonymUpdateDocs = getSynonymUpdateOperations('../tests/resources/synonyms.csv');
+
+      deepEqual(expectedSynonyms.length, synonymUpdateDocs.length);
+
+      for (let i = 0; i < expectedSynonyms.length; i++) {
+        const expectedSynonymArray = expectedSynonyms[i];
+        const doc = synonymUpdateDocs[i] as { updateOne: UpdateOneModel<SynonymDocument> };
+
+        const update = doc.updateOne.update as UpdateFilter<SynonymDocument>;
+
+        const actualSynonymArray = update.$set?.synonyms;
+
+        deepEqual(expectedSynonymArray, actualSynonymArray);
+
+        const expectedPrimary = expectedSynonyms[i][0];
+        const actualPrimary = update.$set?.primary;
+
+        deepEqual(expectedPrimary, actualPrimary);
+      }
     });
   });
 });
