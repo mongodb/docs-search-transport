@@ -61,7 +61,6 @@ export class AtlasAdminManager {
 
     const synonymUpdates = getSynonymUpdateOperations('../synonyms.csv');
 
-    console.log('uploading the following parsed synonyms documents to Atlas: ', synonymUpdates);
     try {
       // we want to ensure that the primary property is a unique index
       // so that we prevent duplicate synonym records.
