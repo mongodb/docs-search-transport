@@ -59,7 +59,7 @@ export class AtlasAdminManager {
 
     const synonymCollection = this.mongoClient.db(DB).collection<SynonymDocument>(SYNONYM_COLLECTION_NAME);
 
-    const synonymUpdates = getSynonymUpdateOperations('../synonyms.csv');
+    const synonymUpdates = getSynonymUpdateOperations('./data/synonyms.csv');
 
     try {
       // we want to ensure that the primary property is a unique index
