@@ -198,7 +198,7 @@ const getFacetKeys = (taxonomy: Taxonomy) => {
   const keyList: string[] = [];
   const pushKeys = (currentRecord: Taxonomy, baseStr = '') => {
     for (const key in currentRecord) {
-      if (key === 'name') {
+      if (key === 'name' || key === 'display_name') {
         continue;
       }
       const res = baseStr ? `${baseStr}→${key}` : key;

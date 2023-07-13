@@ -21,6 +21,7 @@ export const taxonomy = `
 
   [[target_platforms]]
   name = "atlas-cli"
+  display_name = "Atlas CLI"
   [[target_platforms.versions]]
   name = "v1.2"
   [[target_platforms.versions]]
@@ -35,6 +36,7 @@ export const taxonomy = `
 
   [[target_platforms]]
   name = "spark-connector"
+  display_name = "Spark Connector"
   [[target_platforms.versions]]
   name = "v2.0"
   [[target_platforms.versions]]
