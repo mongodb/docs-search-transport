@@ -15,6 +15,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY --from=builder /app/build ./build
+COPY --from=builder /app/resources ./resources
 
 EXPOSE 8080
 ENTRYPOINT ["node", "build/index.js"]
