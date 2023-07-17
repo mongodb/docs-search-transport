@@ -49,6 +49,7 @@ export const taxonomy = `
 
   [[target_platforms]]
   name = "mongocli"
+  display_name = "Mongo CLI"
   [[target_platforms.versions]]
   name = "v1.0"
 

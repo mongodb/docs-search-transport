@@ -1,4 +1,4 @@
-import { Taxonomy, Facet, FacetNode, TaxonomyEntity } from "./SearchIndex";
+import { Taxonomy, TaxonomyEntity, FacetDisplayNames } from "./SearchIndex";
 
 export function arrayEquals<T>(arr1: Array<T>, arr2: Array<T>): boolean {
   if (arr1.length !== arr2.length) {
@@ -18,36 +18,39 @@ export function isPermittedOrigin(url: URL): boolean {
   return url.protocol == 'https:' && arrayEquals(url.hostname.split('.').slice(-2), ['mongodb', 'com']);
 }
 
-const recursiveInsertNodes = (facet: Facet, taxonomyEntities: TaxonomyEntity[]) => {    
-  for (const node of taxonomyEntities) {
-    const facetNode: FacetNode = {
-      name: node['name']
-    };
-    if (node['display_name']) { facetNode.displayName = node['display_name'] as string; }
-    for (const property in node) {
-      if (property === 'name' || property === 'display_name') {continue; }
-      facetNode.facets = facetNode.facets || [];
-      const newFacet:Facet = {
-        name: property,
-        nodes: []
-      };
-      facetNode.facets.push(newFacet);
-      recursiveInsertNodes(newFacet, node[property] as TaxonomyEntity[])
-    }
-    facet.nodes.push(facetNode)
-  }
-};
+function convertTitleCase(name: string): string {
+  return name.replace(/^[_-]*(.)|[_-]+(.)/g, (s, c, d) => c ? c.toUpperCase() : ' ' + d.toUpperCase())
+}
 
-export function convertTaxonomyResponse(taxonomy: Taxonomy): Facet[] {
-  const res: Facet[] = [];
+export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetDisplayNames {
+  const res: FacetDisplayNames = {};
+  // taxonomy = {
+    //   target_platforms: [{
+      //     name: 'mongocli',
+      //     versions: [{
+        //       name: 'v1.0'
+        //     }]
+        //   }]
+        // }
+        
+  function addToRes(entityList: TaxonomyEntity[], property?: string) {
+    // if this is a version, leave it alone, no conversion
+    const conversion = property === 'versions' ? (s: string) => (s) : convertTitleCase;
+    for (const entity of entityList) {
+      res[entity['name']] = entity['display_name'] || conversion(entity['name'])
+      for (const entityProperty in entity) {
+        const children = entity[entityProperty];
+        if (typeof children !== 'string' && children !== undefined) {
+          addToRes(entity[entityProperty] as TaxonomyEntity[], entityProperty)
+        }
+      }
+    }
+  }
+
   for (const stringKey in taxonomy) {
     if (stringKey === 'name') { continue; }
-    const facet: Facet = {
-      name: stringKey,
-      nodes: []
-    };
-    recursiveInsertNodes(facet, taxonomy[stringKey]);
-    res.push(facet);
+    res[stringKey] = convertTitleCase(stringKey);// convert snakecase to title case
+    addToRes(taxonomy[stringKey], stringKey)
   }
   return res;
 }

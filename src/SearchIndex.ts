@@ -60,19 +60,13 @@ export interface RefreshInfo {
 
 export interface TaxonomyEntity {
   name: string;
-  [x: string]: TaxonomyEntity[] | string;
+  display_name?: string;
+  [x: string]: TaxonomyEntity[] | string | undefined;
 }
 export type Taxonomy = Record<string, TaxonomyEntity[]>;
 
-export type FacetNode = {
-  name: string
-  facets?: Facet[]
-  displayName?: string
-};
-export type Facet = {
-  name: string
-  nodes: FacetNode[]
-  displayName?: string
+export type FacetDisplayNames = {
+  [key: string]: string
 };
 
 
@@ -227,7 +221,7 @@ export class SearchIndex {
   documents: Collection<DatabaseDocument>;
   unindexable: Collection<DatabaseDocument>;
   taxonomy: Taxonomy;
-  convertedTaxonomy: Facet[]
+  convertedTaxonomy: FacetDisplayNames
 
   constructor(manifestSource: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;
@@ -240,7 +234,7 @@ export class SearchIndex {
     this.unindexable = this.db.collection<DatabaseDocument>('unindexable');
     this.lastRefresh = null;
     this.taxonomy = {};
-    this.convertedTaxonomy = [];
+    this.convertedTaxonomy = {};
   }
 
   async search(query: Query, searchProperty: string[] | null) {

@@ -327,7 +327,6 @@ class Marian {
   }
 }
 
-
 function help(): void {
   console.error(`Usage: search-transport [--create-indexes]
 
