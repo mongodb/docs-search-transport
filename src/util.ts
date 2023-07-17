@@ -1,4 +1,4 @@
-import { Taxonomy, TaxonomyEntity, FacetDisplayNames } from "./SearchIndex";
+import { Taxonomy, TaxonomyEntity, FacetDisplayNames } from './SearchIndex';
 
 export function arrayEquals<T>(arr1: Array<T>, arr2: Array<T>): boolean {
   if (arr1.length !== arr2.length) {
@@ -19,38 +19,49 @@ export function isPermittedOrigin(url: URL): boolean {
 }
 
 function convertTitleCase(name: string): string {
-  return name.replace(/^[_-]*(.)|[_-]+(.)/g, (s, c, d) => c ? c.toUpperCase() : ' ' + d.toUpperCase())
+  return name.replace(/^[_-]*(.)|[_-]+(.)/g, (s, c, d) => (c ? c.toUpperCase() : ' ' + d.toUpperCase()));
 }
 
+
+/**
+ * 
+ * @param taxonomy 
+ * @returns a trie structure of taxonomy. 
+ * each node is denoted by a 'name' attribute.
+ * other attributes denotes a new node
+ * [versions have special boolean attribute of 'stable']
+ */
 export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetDisplayNames {
   const res: FacetDisplayNames = {};
-  // taxonomy = {
-    //   target_platforms: [{
-      //     name: 'mongocli',
-      //     versions: [{
-        //       name: 'v1.0'
-        //     }]
-        //   }]
-        // }
-        
-  function addToRes(entityList: TaxonomyEntity[], property?: string) {
-    // if this is a version, leave it alone, no conversion
-    const conversion = property === 'versions' ? (s: string) => (s) : convertTitleCase;
-    for (const entity of entityList) {
-      res[entity['name']] = entity['display_name'] || conversion(entity['name'])
-      for (const entityProperty in entity) {
-        const children = entity[entityProperty];
-        if (typeof children !== 'string' && children !== undefined) {
-          addToRes(entity[entityProperty] as TaxonomyEntity[], entityProperty)
-        }
+
+  function addToRes(entityList: TaxonomyEntity[], ref: { [key: string]: any }, property: string) {
+    const conversion = property === 'versions' ? (s: string) => s : convertTitleCase;
+    ref[property] = {
+      name: convertTitleCase(property), // convert snakecase to title case
+    };
+    ref = ref[property];
+    for (const taxEntity of entityList) {
+      const entity: Record<string, any> = {
+        name: taxEntity['display_name'] || conversion(taxEntity['name']),
+      };
+      if (property === 'versions' && taxEntity['stable']) {
+        entity['stable'] = true;
       }
+      for (const key in taxEntity) {
+        if (!Array.isArray(taxEntity[key])) {
+          continue;
+        }
+        addToRes(taxEntity[key] as TaxonomyEntity[], entity, key);
+      }
+      ref[taxEntity['name']] = entity;
     }
   }
 
   for (const stringKey in taxonomy) {
-    if (stringKey === 'name') { continue; }
-    res[stringKey] = convertTitleCase(stringKey);// convert snakecase to title case
-    addToRes(taxonomy[stringKey], stringKey)
+    if (stringKey === 'name') {
+      continue;
+    }
+    addToRes(taxonomy[stringKey], res as object, stringKey);
   }
   return res;
 }

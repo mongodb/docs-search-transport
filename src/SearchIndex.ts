@@ -66,7 +66,8 @@ export interface TaxonomyEntity {
 export type Taxonomy = Record<string, TaxonomyEntity[]>;
 
 export type FacetDisplayNames = {
-  [key: string]: string
+  name?: string;
+  [key: string]: object | string | undefined;
 };
 
 

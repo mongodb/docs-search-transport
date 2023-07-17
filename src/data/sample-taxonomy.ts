@@ -24,6 +24,7 @@ export const taxonomy = `
   display_name = "Atlas CLI"
   [[target_platforms.versions]]
   name = "v1.2"
+  stable = true
   [[target_platforms.versions]]
   name = "master"
 
