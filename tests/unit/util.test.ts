@@ -27,7 +27,7 @@ describe('util', function () {
     it('converts taxonomy object into a trie structure', () => {
       const input = sampleTaxonomy;
       const expected = sampleFacetTrie;
-      deepStrictEqual(convertTaxonomyResponse(input), expected)
+      deepStrictEqual(convertTaxonomyResponse(input), expected);
     });
   });
 });
