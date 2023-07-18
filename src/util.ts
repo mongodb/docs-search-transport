@@ -63,8 +63,5 @@ export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetDisplayNames {
     }
     addToRes(taxonomy[stringKey], res as object, stringKey);
   }
-
-  console.log(JSON.stringify(res));
-  
   return res;
 }
