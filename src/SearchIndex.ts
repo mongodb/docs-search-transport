@@ -70,7 +70,6 @@ export type FacetDisplayNames = {
   [key: string]: object | string | undefined;
 };
 
-
 export function joinUrl(base: string, path: string): string {
   return base.replace(/\/*$/, '/') + path.replace(/^\/*/, '');
 }
@@ -222,7 +221,7 @@ export class SearchIndex {
   documents: Collection<DatabaseDocument>;
   unindexable: Collection<DatabaseDocument>;
   taxonomy: Taxonomy;
-  convertedTaxonomy: FacetDisplayNames
+  convertedTaxonomy: FacetDisplayNames;
 
   constructor(manifestSource: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;

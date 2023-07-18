@@ -22,11 +22,10 @@ function convertTitleCase(name: string): string {
   return name.replace(/^[_-]*(.)|[_-]+(.)/g, (s, c, d) => (c ? c.toUpperCase() : ' ' + d.toUpperCase()));
 }
 
-
 /**
- * 
- * @param taxonomy 
- * @returns a trie structure of taxonomy. 
+ *
+ * @param taxonomy
+ * @returns a trie structure of taxonomy.
  * each node is denoted by a 'name' attribute.
  * other attributes denotes a new node
  * [versions have special boolean attribute of 'stable']

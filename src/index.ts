@@ -311,7 +311,7 @@ class Marian {
     // }
   }
 
-  private async handleStatusV2 (req: http.IncomingMessage, res: http.ServerResponse) {
+  private async handleStatusV2(req: http.IncomingMessage, res: http.ServerResponse) {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Vary: 'Accept-Encoding, Origin',
@@ -322,8 +322,6 @@ class Marian {
     let responseBody = JSON.stringify(this.index.convertedTaxonomy);
     res.writeHead(200, headers);
     res.end(responseBody);
-
-
   }
 }
 
@@ -423,5 +421,5 @@ try {
   main();
 } catch (err) {
   console.error(err);
-  process.exit(1)
+  process.exit(1);
 }
