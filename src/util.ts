@@ -28,6 +28,7 @@ function convertTitleCase(name: string): string {
  * @returns a trie structure of taxonomy.
  * each node is denoted by a 'name' attribute.
  * other attributes denotes a new node
+ * ['name' and 'display_name' attributes denote name(s) of facet]
  * [versions have special boolean attribute of 'stable']
  */
 export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetDisplayNames {
