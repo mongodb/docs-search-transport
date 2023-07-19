@@ -408,7 +408,7 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     // slug is possible to be empty string ''
     assert.ok(document.slug || document.slug === '');
 
-    const facets: Record<string, string[]> = {};
+    const facets: Record<string, object> = {};
 
     // <-------- BEGIN TESTING PRE TAXONOMY -------->
     // testing genres and target platform as part of faceted search
@@ -423,8 +423,15 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     const parts = manifest.searchProperty.split('-');
     const target = parts.slice(0, parts.length - 1).join('-');
     const version = parts.slice(parts.length - 1).join('');
-    facets['target_platforms'] = [target];
-    facets[`target_platforms←${target}→versions`] = [version];
+    const targetPlatformFacet = {
+      name: target,
+      versions: [
+        {
+          name: version,
+        },
+      ],
+    };
+    facets['target_platforms'] = [targetPlatformFacet];
 
     // <-------- END TESTING PRE TAXONOMY -------->
 
@@ -437,12 +444,6 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
       facets: facets,
     };
 
-    let existingFacets = deserializeFacets(document.facets || {});
-    Object.assign(facets, existingFacets);
-    if (Object.keys(facets).length) {
-      newDocument.facets = facets;
-    }
-
     return {
       updateOne: {
         filter: { searchProperty: newDocument.searchProperty, slug: newDocument.slug },
@@ -452,29 +453,3 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     };
   });
 };
-
-const deserializeFacets = (facets: Record<string, any>) => {
-  let res: Record<string, string[]> = {};
-  const pushKeys = (currentFacets: Record<string, any>[], baseStr = '') => {
-    if (!res[baseStr]) {
-      res[baseStr] = [];
-    }
-    for (const facet of currentFacets) {
-      res[baseStr].push(facet['name']);
-      if (!Object.keys(res).length) continue;
-      const newBaseStr = `${baseStr}←${facet['name']}`;
-      for (const subFacetName in facet) {
-        if (subFacetName === 'name') continue;
-        pushKeys(facet[subFacetName], `${newBaseStr}→${subFacetName}`);
-      }
-    }
-  };
-
-  for (const key of Object.keys(facets)) {
-    pushKeys(facets[key], key);
-  }
-
-  return res;
-};
-
-export const _deserializeFacets = deserializeFacets;
