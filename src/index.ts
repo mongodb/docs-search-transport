@@ -126,6 +126,10 @@ class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleFacetSearch(parsedUrl, req, res);
       }
+    } else if (pathname === '/v2/search/meta') {
+      if (checkMethod(req, res, 'GET')) {
+        this.handleMetaSearch(parsedUrl, req, res);
+      }
     } else if (pathname === '/v2/status') {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatusV2(req, res);
@@ -239,6 +243,7 @@ class Marian {
     }
   }
 
+  // TODO: remove. use old search and include facet in query.
   private async handleFacetSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -263,6 +268,36 @@ class Marian {
     let responseBody = JSON.stringify(results[0]);
     res.writeHead(200, headers);
     res.end(responseBody);
+  }
+
+  private async handleMetaSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    // TODO: wrap requests with header assignment, configure response types
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Vary: 'Accept-Encoding, Origin',
+      'Cache-Control': 'public,max-age=120,must-revalidate',
+    };
+    Object.assign(headers, STANDARD_HEADERS);
+    checkAllowedOrigin(req.headers.origin, headers);
+
+    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
+    if (!rawQuery) {
+      console.log('handle no query');
+    }
+    
+    let results;
+    try {
+      results = await this.fetchFacetMeta(rawQuery);
+      // handle meta search
+    } catch (err) {
+      if (err instanceof InvalidQuery) {
+        res.writeHead(400, headers);
+        res.end('[]');
+        return;
+      }
+
+      throw err;
+    }
   }
 
   private async fetchResults(parsedUrl: URL, useFacetedSearch: boolean = false): Promise<any[]> {
@@ -322,6 +357,16 @@ class Marian {
     let responseBody = JSON.stringify(this.index.convertedTaxonomy);
     res.writeHead(200, headers);
     res.end(responseBody);
+  }
+
+  private async fetchFacetMeta(rawQuery: string): Promise<any> {
+    try {
+      // return this.index.fetchFacets()
+      console.log('this.fetchFacetMeta')
+    } catch (e) {
+      console.error(`Error fetching facet metadata: ${JSON.stringify(e)}`)
+      throw e;
+    }
   }
 }
 

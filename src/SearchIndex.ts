@@ -414,9 +414,9 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     // testing genres and target platform as part of faceted search
     // TODO: update and revise after taxonomy v1 is finalized
     if (document.slug.includes('reference')) {
-      facets['genres'] = ['reference'];
+      facets['genres'] = [{name: 'reference'}];
     } else if (document.slug.includes('tutorial')) {
-      facets['genres'] = ['tutorial'];
+      facets['genres'] = [{name: 'tutorial'}];
     }
 
     // target_platform and target_platform->atlas<-versions acquired from manifest.searchProperty
