@@ -205,7 +205,7 @@ const getFacetKeys = (taxonomy: Taxonomy) => {
       for (const child of currentRecord[key]) {
         pushKeys(child as Taxonomy, newBase);
       }
-      keySet.add(`${newBase}.name`);
+      keySet.add(`${newBase}`);
     }
   };
   pushKeys(taxonomy);
