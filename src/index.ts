@@ -239,7 +239,6 @@ class Marian {
     }
   }
 
-
   private async handleMetaSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     // TODO: wrap requests with header assignment, configure response types
     const headers: Record<string, string> = {
@@ -250,14 +249,10 @@ class Marian {
     Object.assign(headers, STANDARD_HEADERS);
     checkAllowedOrigin(req.headers.origin, headers);
 
-    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
-    if (!rawQuery) {
-      console.log('handle no query');
-    }
-    
     let results;
     try {
-      results = await this.fetchFacetMeta(rawQuery);
+      const aggRes = await this.fetchFacetMeta(parsedUrl);
+      results = aggRes[0];
       // handle meta search
     } catch (err) {
       if (err instanceof InvalidQuery) {
@@ -268,6 +263,10 @@ class Marian {
 
       throw err;
     }
+
+    let responseBody = JSON.stringify(results);
+    res.writeHead(200, headers);
+    res.end(responseBody);
   }
 
   private async fetchResults(parsedUrl: URL): Promise<any[]> {
@@ -282,12 +281,8 @@ class Marian {
       throw new InvalidQuery();
     }
 
-    let filters: Filter<SearchDocument>;
-    // TODO: handle query parsing for facet selections and pass to query
-    // let filters: FacetFilters
-    filters = extractFacetFilters(parsedUrl.searchParams);
+    let filters = extractFacetFilters(parsedUrl.searchParams);
     const query = new Query(rawQuery, filters);
-    // const query = new Query(rawQuery, filters);
 
     let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
     if (typeof searchProperty === 'string') {
@@ -328,12 +323,21 @@ class Marian {
     res.end(responseBody);
   }
 
-  private async fetchFacetMeta(rawQuery: string): Promise<any> {
+  private async fetchFacetMeta(parsedUrl: URL): Promise<any> {
+    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
+    if (!rawQuery || !rawQuery.length) {
+      throw new InvalidQuery();
+    }
+
+    let filters = extractFacetFilters(parsedUrl.searchParams);
+    const query = new Query(rawQuery, filters);
+    // TODO. get filters and pass them so we can expansions
+
     try {
-      // return this.index.fetchFacets()
-      console.log('this.fetchFacetMeta')
+      return this.index.fetchFacets(query);
+      // console.log('this.fetchFacetMeta')
     } catch (e) {
-      console.error(`Error fetching facet metadata: ${JSON.stringify(e)}`)
+      console.error(`Error fetching facet metadata: ${JSON.stringify(e)}`);
       throw e;
     }
   }

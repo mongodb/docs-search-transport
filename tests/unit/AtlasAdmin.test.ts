@@ -108,7 +108,7 @@ describe('Atlas Admin Manager', () => {
       `;
 
       const res = _getFacetKeys(parse(sample) as Taxonomy);
-      const expected = ['genres.name', 'target_platforms.versions.name', 'target_platforms.name'];
+      const expected = ['genres', 'target_platforms.versions', 'target_platforms'];
       deepEqual(res, expected);
     });
   });

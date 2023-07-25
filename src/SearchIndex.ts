@@ -1,7 +1,6 @@
 import assert from 'assert';
 import crypto from 'crypto';
 import fs from 'fs';
-import { Document as MongoDocument } from 'mongodb';
 import util from 'util';
 import S3 from 'aws-sdk/clients/s3';
 import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession } from 'mongodb';
@@ -253,6 +252,13 @@ export class SearchIndex {
     return await cursor.toArray();
   }
 
+  async fetchFacets(query: Query) {
+    // TODO: pass in query params for expansions
+    const metaAggregationQuery = query.getMetaQuery(this.convertedTaxonomy);
+    const cursor = this.documents.aggregate(metaAggregationQuery);
+    return await cursor.toArray();
+  }
+
   async load(taxonomy: Taxonomy, manifestSource?: string): Promise<RefreshInfo> {
     this.taxonomy = taxonomy;
     this.convertedTaxonomy = convertTaxonomyResponse(taxonomy);
@@ -424,11 +430,10 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     if (target === 'drivers') {
       // get sub_platform
       const sub_platform = document.slug.split(/[\/ | \-]/)[0];
-      if (['index.html', 'community', 'specs', 'reactive','driver'].indexOf(sub_platform) === -1) {
+      if (['index.html', 'community', 'specs', 'reactive', 'driver'].indexOf(sub_platform) === -1) {
         facets[`target_platforms.sub_platform`] = [sub_platform];
       }
     }
-
 
     // <-------- END TESTING PRE TAXONOMY -------->
 
