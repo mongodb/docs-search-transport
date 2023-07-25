@@ -18,7 +18,11 @@ export function isPermittedOrigin(url: URL): boolean {
   return url.protocol == 'https:' && arrayEquals(url.hostname.split('.').slice(-2), ['mongodb', 'com']);
 }
 
-function convertTitleCase(name: string): string {
+function convertTitleCase(name: string, property: string): string {
+  const UNCHANGED_PROPS = ['versions'];
+  if (UNCHANGED_PROPS.indexOf(property) > -1) {
+    return name;
+  }
   return name.replace(/^[_-]*(.)|[_-]+(.)/g, (s, c, d) => (c ? c.toUpperCase() : ' ' + d.toUpperCase()));
 }
 
@@ -35,14 +39,13 @@ export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetDisplayNames {
   const res: FacetDisplayNames = {};
 
   function addToRes(entityList: TaxonomyEntity[], ref: { [key: string]: any }, property: string) {
-    const conversion = property === 'versions' ? (s: string) => s : convertTitleCase;
     ref[property] = {
-      name: convertTitleCase(property), // convert snakecase to title case
+      name: convertTitleCase(property, property), // convert snakecase to title case
     };
     ref = ref[property];
     for (const taxEntity of entityList) {
       const entity: Record<string, any> = {
-        name: taxEntity['display_name'] || conversion(taxEntity['name']),
+        name: taxEntity['display_name'] || convertTitleCase(taxEntity['name'], property),
       };
       if (property === 'versions' && taxEntity['stable']) {
         entity['stable'] = true;
@@ -63,5 +66,9 @@ export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetDisplayNames {
     }
     addToRes(taxonomy[stringKey], res as object, stringKey);
   }
+
+  console.log('check res');
+  console.log(JSON.stringify(res));
+
   return res;
 }
