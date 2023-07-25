@@ -41,7 +41,7 @@ export const sampleFacetTrie = {
     atlas: {
       name: 'Atlas',
       versions: {
-        name: 'Versions',
+        name: 'versions',
         'v1.2': { name: 'v1.2' },
         master: { name: 'master' },
       },
@@ -49,7 +49,7 @@ export const sampleFacetTrie = {
     'atlas-cli': {
       name: 'Atlas CLI',
       versions: {
-        name: 'Versions',
+        name: 'versions',
         'v1.2': { name: 'v1.2', stable: true },
         master: { name: 'master' },
       },
@@ -57,7 +57,7 @@ export const sampleFacetTrie = {
     manual: {
       name: 'Manual',
       versions: {
-        name: 'Versions',
+        name: 'versions',
         'v1.0': { name: 'v1.0' },
         master: { name: 'master' },
       },
@@ -65,30 +65,30 @@ export const sampleFacetTrie = {
     'spark-connector': {
       name: 'Spark Connector',
       versions: {
-        name: 'Versions',
+        name: 'versions',
         'v2.0': { name: 'v2.0' },
         'v2.1': { name: 'v2.1' },
       },
     },
     node: {
       name: 'Node',
-      versions: { name: 'Versions', 'v4.9': { name: 'v4.9' } },
+      versions: { name: 'versions', 'v4.9': { name: 'v4.9' } },
     },
     mongocli: {
       name: 'Mongo CLI',
-      versions: { name: 'Versions', 'v1.0': { name: 'v1.0' } },
+      versions: { name: 'versions', 'v1.0': { name: 'v1.0' } },
     },
     'visual-studio-extension': {
       name: 'Visual Studio Extension',
-      versions: { name: 'Versions', current: { name: 'current' } },
+      versions: { name: 'versions', current: { name: 'current' } },
     },
     golang: {
       name: 'Golang',
-      versions: { name: 'Versions', 'v1.7': { name: 'v1.7' } },
+      versions: { name: 'versions', 'v1.7': { name: 'v1.7' } },
     },
     java: {
       name: 'Java',
-      versions: { name: 'Versions', 'v4.3': { name: 'v4.3' } },
+      versions: { name: 'versions', 'v4.3': { name: 'v4.3' } },
     },
   },
 } as FacetDisplayNames;
