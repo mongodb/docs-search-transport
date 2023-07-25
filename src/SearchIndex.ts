@@ -253,12 +253,6 @@ export class SearchIndex {
     return await cursor.toArray();
   }
 
-  async factedSearch(query: Query, searchProperty: string[] | null, facetKeys: string[]): Promise<MongoDocument[]> {
-    const aggregationQuery = query.getFacetedAggregationQuery(searchProperty, facetKeys, this.taxonomy);
-    const cursor = this.documents.aggregate(aggregationQuery);
-    return await cursor.toArray();
-  }
-
   async load(taxonomy: Taxonomy, manifestSource?: string): Promise<RefreshInfo> {
     this.taxonomy = taxonomy;
     this.convertedTaxonomy = convertTaxonomyResponse(taxonomy);

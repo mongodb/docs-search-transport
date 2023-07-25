@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 // dotenv.config() should be invoked immediately, before any other imports, to ensure config is present
 dotenv.config();
 
-import { Document, MongoClient } from 'mongodb';
+import { Document, Filter, MongoClient } from 'mongodb';
 import assert from 'assert';
 import http from 'http';
 import { parse } from 'toml';
@@ -14,9 +14,9 @@ import { parse } from 'toml';
 import Logger from 'basic-logger';
 
 import { taxonomy } from './data/sample-taxonomy';
-import { Query, InvalidQuery } from './Query';
+import { Query, InvalidQuery, extractFacetFilters } from './Query';
 import { isPermittedOrigin } from './util';
-import { SearchIndex, RefreshInfo, Taxonomy } from './SearchIndex';
+import { SearchIndex, RefreshInfo, Taxonomy, Document as SearchDocument } from './SearchIndex';
 import { AtlasAdminManager } from './AtlasAdmin';
 
 process.title = 'search-transport';
@@ -121,10 +121,6 @@ class Marian {
     } else if (pathname === '/status') {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatus(parsedUrl, req, res);
-      }
-    } else if (pathname === '/v2/search') {
-      if (checkMethod(req, res, 'GET')) {
-        this.handleFacetSearch(parsedUrl, req, res);
       }
     } else if (pathname === '/v2/search/meta') {
       if (checkMethod(req, res, 'GET')) {
@@ -243,32 +239,6 @@ class Marian {
     }
   }
 
-  // TODO: remove. use old search and include facet in query.
-  private async handleFacetSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Vary: 'Accept-Encoding, Origin',
-      'Cache-Control': 'public,max-age=120,must-revalidate',
-    };
-    Object.assign(headers, STANDARD_HEADERS);
-    checkAllowedOrigin(req.headers.origin, headers);
-
-    let results;
-    try {
-      results = await this.fetchResults(parsedUrl, true);
-    } catch (err) {
-      if (err instanceof InvalidQuery) {
-        res.writeHead(400, headers);
-        res.end('[]');
-        return;
-      }
-
-      throw err;
-    }
-    let responseBody = JSON.stringify(results[0]);
-    res.writeHead(200, headers);
-    res.end(responseBody);
-  }
 
   private async handleMetaSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
     // TODO: wrap requests with header assignment, configure response types
@@ -300,7 +270,7 @@ class Marian {
     }
   }
 
-  private async fetchResults(parsedUrl: URL, useFacetedSearch: boolean = false): Promise<any[]> {
+  private async fetchResults(parsedUrl: URL): Promise<any[]> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
 
     if (!rawQuery) {
@@ -312,17 +282,16 @@ class Marian {
       throw new InvalidQuery();
     }
 
-    const query = new Query(rawQuery);
+    let filters: Filter<SearchDocument>;
+    // TODO: handle query parsing for facet selections and pass to query
+    // let filters: FacetFilters
+    filters = extractFacetFilters(parsedUrl.searchParams);
+    const query = new Query(rawQuery, filters);
+    // const query = new Query(rawQuery, filters);
 
     let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
-    }
-
-    if (useFacetedSearch) {
-      // TODO: check for blank case to return all facets(?)
-      const selectedFacets = parsedUrl.searchParams.getAll('facets[]') || [];
-      return await this.index.factedSearch(query, searchProperty, selectedFacets);
     }
 
     return await this.index.search(query, searchProperty);

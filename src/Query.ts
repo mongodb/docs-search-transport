@@ -1,6 +1,7 @@
 'use strict';
 
-import { Taxonomy } from './SearchIndex';
+import { Filter } from 'mongodb';
+import { Document, Taxonomy } from './SearchIndex';
 
 export class InvalidQuery extends Error {}
 
@@ -199,16 +200,18 @@ export class Query {
   terms: Set<string>;
   phrases: string[];
   rawQuery: string;
+  filters: Filter<Document>;
 
   /**
    * Create a new query.
    * @param {string} queryString The query to parse
    */
-  constructor(queryString: string) {
+  constructor(queryString: string, filters?: Filter<Document>) {
     console.log('Query parsing: ' + queryString);
     this.terms = new Set();
     this.phrases = [];
     this.rawQuery = queryString;
+    this.filters = filters || {};
 
     const parts = queryString.split(/((?:\s+|^)"[^"]+"(?:\s+|$))/);
     let inQuotes = false;
@@ -244,6 +247,7 @@ export class Query {
   }
 
   getAggregationQuery(searchProperty: string[] | null): any[] {
+  // getAggregationQuery(searchProperty: string[] | null, facetFilters: FacetFilters): any[] {
     const parts: any[] = [];
     const terms = Array.from(this.terms);
 
@@ -304,6 +308,21 @@ export class Query {
       minimumShouldMatch: 1,
     };
 
+    const filterObject = {
+      ...this.filters
+    }
+    if (Object.keys(filterObject).length){
+      compound["must"] = [];
+      for ( const key in filterObject ) {
+        compound["must"].push({
+          phrase: {
+            path: key,
+            query: filterObject[key]
+          }
+        })
+      }
+    }
+
     if (this.phrases.length > 0) {
       compound.must = this.phrases.map((phrase) => {
         return {
@@ -326,92 +345,6 @@ export class Query {
       },
       { $match: filter },
     ];
-    console.log('Executing ' + JSON.stringify(agg));
-    return agg;
-  }
-
-  getFacetedAggregationQuery(searchProperty: string[] | null, selectedFacets: string[], taxonomy: Taxonomy): any[] {
-    const parts: any[] = [];
-    const terms = Array.from(this.terms);
-
-    parts.push({
-      text: {
-        query: terms,
-        path: ['paragraphs', 'code.lang', 'code.value', 'text'],
-      },
-    });
-    parts.push({
-      text: {
-        query: terms,
-        path: 'headings',
-        score: { boost: { value: 5 } },
-      },
-    });
-    parts.push({
-      text: {
-        query: terms,
-        path: 'title',
-        score: { boost: { value: 10 } },
-      },
-    });
-    parts.push({
-      text: {
-        query: terms,
-        path: 'tags',
-        score: { boost: { value: 10 } },
-      },
-    });
-    const filter =
-      searchProperty !== null && searchProperty.length !== 0
-        ? { searchProperty: { $elemMatch: { $in: searchProperty } } }
-        : { includeInGlobalSearch: true };
-    const compound: { should: any[]; must?: any[]; filter?: any[]; minimumShouldMatch: number } = {
-      should: parts,
-      minimumShouldMatch: 1,
-    };
-
-    // if any selected facets. add to filter part of compound operator
-    compound.filter = getFiltersFromSelections(selectedFacets);
-
-    const facets = getFacets(selectedFacets, taxonomy);
-
-    const agg: any = [
-      {
-        $search: {
-          facet: {
-            operator: {
-              compound: compound,
-            },
-            facets: facets,
-          },
-        },
-      },
-      { $match: filter },
-    ];
-    agg.push({
-      $facet: {
-        docs: [
-          {
-            $project: {
-              _id: 0,
-              title: 1,
-              preview: 1,
-              url: 1,
-              searchProperty: 1,
-            },
-          },
-          {
-            $limit: 50,
-          },
-        ],
-        meta: [{ $replaceWith: '$$SEARCH_META' }, { $limit: 1 }],
-      },
-    });
-    agg.push({
-      $unwind: {
-        path: '$meta',
-      },
-    });
     console.log('Executing ' + JSON.stringify(agg));
     return agg;
   }
@@ -513,3 +446,13 @@ const getFacetKeysForSelections = (selectedFacets: string[], taxonomy: Taxonomy)
 
   return [selectedBaseFacetSet, facetStrings];
 };
+
+export const extractFacetFilters = (searchParams: URL["searchParams"]): Filter<Document> => {
+  const filter: Filter<Document> = {};
+  for (const [key, value] of searchParams) {
+    if (key.startsWith('facets.')) {
+      filter[key] = value;
+    }
+  }
+  return filter;
+}
