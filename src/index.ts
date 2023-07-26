@@ -253,7 +253,7 @@ class Marian {
     try {
       const aggRes = await this.fetchFacetMeta(parsedUrl);
       results = aggRes[0];
-      // handle meta search
+      // TODO: format results as same as /v2/manifest
     } catch (err) {
       if (err instanceof InvalidQuery) {
         res.writeHead(400, headers);

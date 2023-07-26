@@ -302,19 +302,34 @@ export class Query {
       minimumShouldMatch: 1,
     };
 
-    const filterObject = {
-      ...this.filters,
-    };
-    if (Object.keys(filterObject).length) {
-      compound['must'] = [];
-      for (const key in filterObject) {
+    console.log('check this.filters');
+    console.log(JSON.stringify(this.filters));
+
+    if (Object.keys(this.filters).length) {
+      compound['must'] = compound['must'] || [];
+      for (const key in this.filters) {
         compound['must'].push({
           phrase: {
             path: key,
-            query: filterObject[key],
+            query: this.filters[key],
           },
         });
       }
+    }
+
+    // if there are any phrases in quotes
+    if (this.phrases.length > 0) {
+      compound['must'] = compound['must'] || [];
+      compound.must = compound.must.concat(
+        this.phrases.map((phrase) => {
+          return {
+            phrase: {
+              query: phrase,
+              path: ['paragraphs', 'text', 'headings', 'code.value', 'title'],
+            },
+          };
+        })
+      );
     }
 
     return compound;
@@ -348,20 +363,6 @@ export class Query {
         : { includeInGlobalSearch: true };
 
     const compound = this.getCompound();
-
-    if (this.phrases.length > 0) {
-      compound.must = [
-        ...(compound.must || []),
-        ...this.phrases.map((phrase) => {
-          return {
-            phrase: {
-              query: phrase,
-              path: ['paragraphs', 'text', 'headings', 'code.value', 'title'],
-            },
-          };
-        }),
-      ];
-    }
 
     const agg = [
       {
