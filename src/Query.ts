@@ -350,14 +350,17 @@ export class Query {
     const compound = this.getCompound();
 
     if (this.phrases.length > 0) {
-      compound.must = this.phrases.map((phrase) => {
-        return {
-          phrase: {
-            query: phrase,
-            path: ['paragraphs', 'text', 'headings', 'code.value', 'title'],
-          },
-        };
-      });
+      compound.must = [
+        ...(compound.must || []),
+        ...this.phrases.map((phrase) => {
+          return {
+            phrase: {
+              query: phrase,
+              path: ['paragraphs', 'text', 'headings', 'code.value', 'title'],
+            },
+          };
+        }),
+      ];
     }
 
     const agg = [

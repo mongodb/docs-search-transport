@@ -253,7 +253,6 @@ export class SearchIndex {
   }
 
   async fetchFacets(query: Query) {
-    // TODO: pass in query params for expansions
     const metaAggregationQuery = query.getMetaQuery(this.convertedTaxonomy);
     const cursor = this.documents.aggregate(metaAggregationQuery);
     return await cursor.toArray();
