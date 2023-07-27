@@ -162,6 +162,7 @@ export class AtlasAdminManager {
       searchIndex['mappings']['fields']['facets']['fields'][facetKey] = [
         {
           type: 'string',
+          analyzer: 'lucene.keyword',
         },
         {
           type: 'stringFacet',
@@ -201,7 +202,7 @@ const getFacetKeys = (taxonomy: Taxonomy) => {
       if (!Array.isArray(currentRecord[key])) {
         continue;
       }
-      const newBase = baseStr ? `${baseStr}.${key}` : key;
+      const newBase = baseStr ? `${baseStr}>${currentRecord['name']}>${key}` : key;
       for (const child of currentRecord[key]) {
         pushKeys(child as Taxonomy, newBase);
       }

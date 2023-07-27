@@ -423,14 +423,14 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     const target = parts.slice(0, parts.length - 1).join('-');
     const version = parts.slice(parts.length - 1).join('');
     facets['target_platforms'] = [target];
-    facets[`target_platforms.versions`] = [version];
+    facets[`target_platforms>${target}>versions`] = [version];
 
     // test driver hierarchy
     if (target === 'drivers') {
       // get sub_platform
       const sub_platform = document.slug.split(/[\/ | \-]/)[0];
       if (['index.html', 'community', 'specs', 'reactive', 'driver'].indexOf(sub_platform) === -1) {
-        facets[`target_platforms.sub_platform`] = [sub_platform];
+        facets[`target_platforms>drivers>sub_platforms`] = [sub_platform];
       }
     }
 

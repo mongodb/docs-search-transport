@@ -302,9 +302,6 @@ export class Query {
       minimumShouldMatch: 1,
     };
 
-    console.log('check this.filters');
-    console.log(JSON.stringify(this.filters));
-
     if (Object.keys(this.filters).length) {
       compound['must'] = compound['must'] || [];
       for (const key in this.filters) {
@@ -381,10 +378,13 @@ export class Query {
 }
 
 export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<Document> => {
+  // query should be in form of:
+  // q=test&facets.target_platforms=manual&facets.target_platforms=atlas
   const filter: Filter<Document> = {};
   for (const [key, value] of searchParams) {
     if (key.startsWith('facets.')) {
-      filter[key] = value;
+      filter[key] = filter[key] || [];
+      filter[key].push(value);
     }
   }
   return filter;
@@ -392,9 +392,6 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
 
 const _getFacetsForMeta = (filter: Filter<Document>, taxonomy: FacetDisplayNames) => {
   const facets: { [key: string]: { type: 'string'; path: string } } = {};
-  // const shallowCopyTax = {...taxonomy};
-  // can be used to pass to lookup to mark top levels to not include in facet aggregation
-  // if we don't want to expand already selected facet drilldowns
 
   // add original base filters to list
   // can remove if filters already contains
@@ -405,18 +402,23 @@ const _getFacetsForMeta = (filter: Filter<Document>, taxonomy: FacetDisplayNames
     };
   }
 
-  for (const [key, value] of Object.entries(filter)) {
-    const entry = _lookup(taxonomy, key, value);
-
-    if (typeof entry === 'object') {
-      for (const entryKey in entry) {
-        if (['name', 'displayName'].indexOf(entryKey) > -1) {
-          continue;
+  // CURRENTLY IN PROGRESS: drilldown facets
+  for (const [key, values] of Object.entries(filter)) {
+    // values = ['manual', 'atlas']
+    // key = 'facets.target_platforms'
+    const facetKey = key.replace('facets.', '');
+    for (const value of values) {
+      const entry = _lookup(taxonomy, facetKey, value);
+      if (typeof entry === 'object') {
+        for (const entryKey in entry) {
+          if (['name', 'displayName'].indexOf(entryKey) > -1) {
+            continue;
+          }
+          facets[`${facetKey}>${value}>${entryKey}`] = {
+            type: 'string',
+            path: `${key}>${value}>${entryKey}`,
+          };
         }
-        facets[`${key}.${entryKey}`] = {
-          type: 'string',
-          path: `${key}.${entryKey}`,
-        };
       }
     }
   }
@@ -427,19 +429,12 @@ const _getFacetsForMeta = (filter: Filter<Document>, taxonomy: FacetDisplayNames
 const _lookup = (taxonomy: FacetDisplayNames, facetKey: string, value: string) => {
   let ref: { [key: string]: any } = taxonomy;
 
-  const parts = facetKey.split('.');
-  for (let idx = 1; idx < parts.length; idx++) {
+  const parts = facetKey.split('>');
+  for (let idx = 0; idx < parts.length; idx++) {
     const part = parts[idx];
-    const partNext = parts[idx + 1];
     if (ref[part]) {
       ref = ref[part];
     }
-    // allow for one period (within versions)
-    if (ref[`${part}.${partNext}`]) {
-      ref = ref[`${part}.${partNext}`];
-      idx++;
-    }
   }
-
   return ref[value];
 };
