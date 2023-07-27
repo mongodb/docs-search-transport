@@ -29,8 +29,17 @@ export const taxonomy = `
     [[target_platforms.versions]]
     name = "master"
 
+    [[target_platforms.versions]]
+    name = "upcoming"
+
   [[target_platforms]]
   name = "manual"
+
+    [[target_platforms.versions]]
+    name = "v5.0"
+
+    [[target_platforms.versions]]
+    name = "v6.0"
 
     [[target_platforms.versions]]
     name = "v1.0"
@@ -83,6 +92,7 @@ export const taxonomy = `
   [[target_platforms]]
   name = "drivers"
   display_name = "Drivers and Libraries"
+  versions = ["master"]
 
     [[target_platforms.sub_platforms]]
     name = "C Driver"

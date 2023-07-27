@@ -9,7 +9,7 @@ import dive from 'dive';
 // @ts-ignore
 import Logger from 'basic-logger';
 import { Query } from './Query';
-import { convertTaxonomyResponse } from './util';
+import { convertTaxonomyResponse, formatFacetMetaResponse } from './util';
 
 const log = new Logger({
   showTimestamp: true,
@@ -66,7 +66,23 @@ export type Taxonomy = Record<string, TaxonomyEntity[]>;
 
 export type FacetDisplayNames = {
   name?: string;
-  [key: string]: object | string | undefined;
+  [key: string]: FacetDisplayNames | string | boolean | undefined;
+};
+
+export type FacetBucket = {
+  buckets: {
+    _id: string;
+    count: number;
+  }[];
+};
+export type FacetAggRes = {
+  count: {
+    lowerBound: number;
+  };
+  facet: {
+    [key: string]: FacetBucket;
+    // key is split by '>' key
+  };
 };
 
 export function joinUrl(base: string, path: string): string {
@@ -255,7 +271,14 @@ export class SearchIndex {
   async fetchFacets(query: Query) {
     const metaAggregationQuery = query.getMetaQuery(this.convertedTaxonomy);
     const cursor = this.documents.aggregate(metaAggregationQuery);
-    return await cursor.toArray();
+    try {
+      const aggRes = await cursor.toArray();
+      const res = formatFacetMetaResponse(aggRes[0] as FacetAggRes, this.convertedTaxonomy);
+      return res;
+    } catch (e) {
+      log.error(`Error while fetching facets: ${JSON.stringify(e)}`);
+      throw e;
+    }
   }
 
   async load(taxonomy: Taxonomy, manifestSource?: string): Promise<RefreshInfo> {

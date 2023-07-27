@@ -251,8 +251,7 @@ class Marian {
 
     let results;
     try {
-      const aggRes = await this.fetchFacetMeta(parsedUrl);
-      results = aggRes[0];
+      results = await this.fetchFacetMeta(parsedUrl);
       // TODO: format results as same as /v2/manifest
     } catch (err) {
       if (err instanceof InvalidQuery) {
