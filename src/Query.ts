@@ -393,8 +393,6 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
 const _getFacetsForMeta = (filter: Filter<Document>, taxonomy: FacetDisplayNames) => {
   const facets: { [key: string]: { type: 'string'; path: string } } = {};
 
-  // add original base filters to list
-  // can remove if filters already contains
   for (const baseFacet in taxonomy) {
     facets[baseFacet] = {
       type: 'string',
@@ -402,10 +400,7 @@ const _getFacetsForMeta = (filter: Filter<Document>, taxonomy: FacetDisplayNames
     };
   }
 
-  // CURRENTLY IN PROGRESS: drilldown facets
   for (const [key, values] of Object.entries(filter)) {
-    // values = ['manual', 'atlas']
-    // key = 'facets.target_platforms'
     const facetKey = key.replace('facets.', '');
     for (const value of values) {
       const entry = _lookup(taxonomy, facetKey, value);
