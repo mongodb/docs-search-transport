@@ -379,12 +379,32 @@ export class Query {
 
 export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<Document> => {
   // query should be in form of:
-  // q=test&facets.target_platforms=manual&facets.target_platforms=atlas
+  // q=test&facets.target_platforms>manual>versions=v6.0&facets.target_platforms=atlas
+  // where each query param starting with 'facets.' denotes a filter and possible expansion
+  // {
+  //   "facets.target_platforms": ["manual", "atlas"],
+  //   "facets.target_platforms>manual>versions": ["v6.0"]
+  // }
   const filter: Filter<Document> = {};
   for (const [key, value] of searchParams) {
-    if (key.startsWith('facets.')) {
-      filter[key] = filter[key] || [];
-      filter[key].push(value);
+    if (!key.startsWith('facets.')) {
+      continue;
+    }
+    const facetNames = key.replace('facets.', '').split('>');
+    for (let facetIdx = 0; facetIdx < facetNames.length; facetIdx++) {
+      // hierarchy facets denoted by >
+      // each facet node requires a facet property, at every even level
+      if (facetIdx % 2 === 1) continue;
+      const facetName = facetNames[facetIdx];
+      // construct partial facet name
+      const prefix = facetIdx === 0 ? '' : facetNames.slice(0, facetIdx).join('>') + '>';
+      const facetKey = `facets.${prefix}${facetName}`
+      // const facetKey = `facets.${facetName}`;
+      if (!filter[facetKey]) { filter[facetKey] = []}
+
+      // the value is the next key in query param, or if there is no next key, the value itself
+      const facetValue = facetIdx === facetNames.length - 1 ? value : facetNames[facetIdx+1];
+      filter[facetKey].push(facetValue)
     }
   }
   return filter;

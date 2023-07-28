@@ -108,6 +108,10 @@ function _constructFacetResponse(
   try {
     for (const facetName of facetKey.split('>')) {
       const taxEntity = taxRef[facetName] as FacetDisplayNames;
+      if (!taxEntity) {
+        console.error(`Facet filter does not exist: ${facetKey}`)
+        continue;
+      }
       responseRef[facetName] = responseRef[facetName] || {
         name: taxEntity['name'],
       };
@@ -117,6 +121,15 @@ function _constructFacetResponse(
 
     for (const bucket of facetBucket['buckets']) {
       const childFacet = taxRef[bucket._id] as FacetDisplayNames;
+      if (!childFacet) {
+        console.error(`
+          Error: Facets.bucket: 
+          \n${JSON.stringify(bucket)} 
+          \nDoes not match taxonomy: 
+          \n${JSON.stringify(taxRef)}
+        `)
+        continue;
+      }
       responseRef[bucket._id] = {
         ...Object(responseRef[bucket._id]),
         name: childFacet.name,
