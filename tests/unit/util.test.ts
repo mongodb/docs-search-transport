@@ -1,6 +1,5 @@
 import { strictEqual, deepStrictEqual } from 'assert';
 import { isPermittedOrigin, arrayEquals, convertTaxonomyResponse } from '../../src/util';
-import { Taxonomy } from '../../src/SearchIndex';
 import { sampleFacetTrie, sampleTaxonomy } from '../resources/utils-data';
 
 describe('util', function () {
