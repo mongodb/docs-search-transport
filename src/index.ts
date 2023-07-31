@@ -317,7 +317,7 @@ class Marian {
     };
     Object.assign(headers, STANDARD_HEADERS);
     checkAllowedOrigin(req.headers.origin, headers);
-    let responseBody = JSON.stringify(this.index.convertedTaxonomy);
+    const responseBody = JSON.stringify(this.index.convertedTaxonomy);
     res.writeHead(200, headers);
     res.end(responseBody);
   }
@@ -434,9 +434,7 @@ async function main() {
   server.start(8080);
 }
 
-try {
-  main();
-} catch (err) {
+main().catch((err) => {
   console.error(err);
   process.exit(1);
-}
+});
