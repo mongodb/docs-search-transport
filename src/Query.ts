@@ -346,7 +346,6 @@ export class Query {
   }
 
   getAggregationQuery(searchProperty: string[] | null): any[] {
-    // getAggregationQuery(searchProperty: string[] | null, facetFilters: FacetFilters): any[] {
     const filter =
       searchProperty !== null && searchProperty.length !== 0
         ? { searchProperty: { $elemMatch: { $in: searchProperty } } }
@@ -384,15 +383,13 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
       continue;
     }
     const facetNames = key.replace('facets.', '').split('>');
-    for (let facetIdx = 0; facetIdx < facetNames.length; facetIdx++) {
-      // hierarchy facets denoted by >
-      // each facet node requires a facet property, at every even level
-      if (facetIdx % 2 === 1) continue;
+    // hierarchy facets denoted by >
+    // each facet node requires a facet property, at every even level
+    for (let facetIdx = 0; facetIdx < facetNames.length; facetIdx += 2) {
       const facetName = facetNames[facetIdx];
       // construct partial facet name
       const prefix = facetIdx === 0 ? '' : facetNames.slice(0, facetIdx).join('>') + '>';
       const facetKey = `facets.${prefix}${facetName}`;
-      // const facetKey = `facets.${facetName}`;
       if (!filter[facetKey]) {
         filter[facetKey] = [];
       }

@@ -263,7 +263,7 @@ class Marian {
       throw err;
     }
 
-    let responseBody = JSON.stringify(results);
+    const responseBody = JSON.stringify(results);
     res.writeHead(200, headers);
     res.end(responseBody);
   }
@@ -280,7 +280,7 @@ class Marian {
       throw new InvalidQuery();
     }
 
-    let filters = extractFacetFilters(parsedUrl.searchParams);
+    const filters = extractFacetFilters(parsedUrl.searchParams);
     const query = new Query(rawQuery, filters);
 
     let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
@@ -328,9 +328,8 @@ class Marian {
       throw new InvalidQuery();
     }
 
-    let filters = extractFacetFilters(parsedUrl.searchParams);
+    const filters = extractFacetFilters(parsedUrl.searchParams);
     const query = new Query(rawQuery, filters);
-    // TODO. get filters and pass them so we can expansions
 
     try {
       return this.index.fetchFacets(query);
