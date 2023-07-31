@@ -297,21 +297,14 @@ export class Query {
       },
     });
 
-    const compound: { should: any[]; must?: any[]; minimumShouldMatch: number } = {
+    const compound: { should: any[]; must?: any[]; filter?: any[]; minimumShouldMatch: number } = {
       should: parts,
       minimumShouldMatch: 1,
     };
 
     if (Object.keys(this.filters).length) {
-      compound['must'] = compound['must'] || [];
-      for (const key in this.filters) {
-        compound['must'].push({
-          phrase: {
-            path: key,
-            query: this.filters[key],
-          },
-        });
-      }
+      compound['filter'] = compound['filter'] || [];
+      constructAggFilters(compound['filter'], this.filters);
     }
 
     // if there are any phrases in quotes
@@ -398,13 +391,15 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
       const facetName = facetNames[facetIdx];
       // construct partial facet name
       const prefix = facetIdx === 0 ? '' : facetNames.slice(0, facetIdx).join('>') + '>';
-      const facetKey = `facets.${prefix}${facetName}`
+      const facetKey = `facets.${prefix}${facetName}`;
       // const facetKey = `facets.${facetName}`;
-      if (!filter[facetKey]) { filter[facetKey] = []}
+      if (!filter[facetKey]) {
+        filter[facetKey] = [];
+      }
 
       // the value is the next key in query param, or if there is no next key, the value itself
-      const facetValue = facetIdx === facetNames.length - 1 ? value : facetNames[facetIdx+1];
-      filter[facetKey].push(facetValue)
+      const facetValue = facetIdx === facetNames.length - 1 ? value : facetNames[facetIdx + 1];
+      filter[facetKey].push(facetValue);
     }
   }
   return filter;
@@ -452,4 +447,53 @@ const _lookup = (taxonomy: FacetDisplayNames, facetKey: string, value: string) =
     }
   }
   return ref[value];
+};
+
+// constructs 'filter' portion of aggregation query.
+// pushes a compound of equals or dne if any parent level facet is selected
+// to allow multi level faceting
+// pushes a phrase query if no parent level facet is selected to ensure filtering
+const constructAggFilters = (filterOperators: any[], queryFilters: Filter<Document>) => {
+  const filterSet = new Set();
+  for (const key in queryFilters) {
+    const parts = key.split('>');
+    let parentSelected = false;
+    for (let idx = 0; idx < parts.length; idx += 2) {
+      if (filterSet.has(parts.slice(0, idx + 1).join('>'))) {
+        parentSelected = true;
+      }
+    }
+
+    const filterOperator = parentSelected
+      ? {
+          compound: {
+            should: [
+              {
+                phrase: {
+                  path: key,
+                  query: queryFilters[key],
+                },
+              },
+              {
+                compound: {
+                  mustNot: {
+                    exists: {
+                      path: key,
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        }
+      : {
+          phrase: {
+            path: key,
+            query: queryFilters[key],
+          },
+        };
+
+    filterOperators.push(filterOperator);
+    filterSet.add(key);
+  }
 };

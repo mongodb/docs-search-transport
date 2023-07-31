@@ -109,7 +109,7 @@ function _constructFacetResponse(
     for (const facetName of facetKey.split('>')) {
       const taxEntity = taxRef[facetName] as FacetDisplayNames;
       if (!taxEntity) {
-        console.error(`Facet filter does not exist: ${facetKey}`)
+        console.error(`Facet filter does not exist: ${facetKey}`);
         continue;
       }
       responseRef[facetName] = responseRef[facetName] || {
@@ -127,7 +127,7 @@ function _constructFacetResponse(
           \n${JSON.stringify(bucket)} 
           \nDoes not match taxonomy: 
           \n${JSON.stringify(taxRef)}
-        `)
+        `);
         continue;
       }
       responseRef[bucket._id] = {
