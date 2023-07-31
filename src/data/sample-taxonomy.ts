@@ -21,8 +21,10 @@ export const taxonomy = `
 
   [[target_platforms]]
   name = "atlas-cli"
+  display_name = "Atlas CLI"
   [[target_platforms.versions]]
   name = "v1.2"
+  stable = true
   [[target_platforms.versions]]
   name = "master"
 
@@ -35,6 +37,7 @@ export const taxonomy = `
 
   [[target_platforms]]
   name = "spark-connector"
+  display_name = "Spark Connector"
   [[target_platforms.versions]]
   name = "v2.0"
   [[target_platforms.versions]]
@@ -47,6 +50,7 @@ export const taxonomy = `
 
   [[target_platforms]]
   name = "mongocli"
+  display_name = "Mongo CLI"
   [[target_platforms.versions]]
   name = "v1.0"
 

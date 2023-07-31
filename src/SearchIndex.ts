@@ -10,6 +10,7 @@ import dive from 'dive';
 // @ts-ignore
 import Logger from 'basic-logger';
 import { Query } from './Query';
+import { convertTaxonomyResponse } from './util';
 
 const log = new Logger({
   showTimestamp: true,
@@ -57,11 +58,17 @@ export interface RefreshInfo {
   elapsedMS: number | null;
 }
 
-interface TaxonomyEntity {
+export interface TaxonomyEntity {
   name: string;
-  [x: string]: TaxonomyEntity[] | string;
+  display_name?: string;
+  [x: string]: TaxonomyEntity[] | string | undefined;
 }
 export type Taxonomy = Record<string, TaxonomyEntity[]>;
+
+export type FacetDisplayNames = {
+  name?: string;
+  [key: string]: object | string | undefined;
+};
 
 export function joinUrl(base: string, path: string): string {
   return base.replace(/\/*$/, '/') + path.replace(/^\/*/, '');
@@ -214,6 +221,7 @@ export class SearchIndex {
   documents: Collection<DatabaseDocument>;
   unindexable: Collection<DatabaseDocument>;
   taxonomy: Taxonomy;
+  convertedTaxonomy: FacetDisplayNames;
 
   constructor(manifestSource: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;
@@ -226,6 +234,7 @@ export class SearchIndex {
     this.unindexable = this.db.collection<DatabaseDocument>('unindexable');
     this.lastRefresh = null;
     this.taxonomy = {};
+    this.convertedTaxonomy = {};
   }
 
   async search(query: Query, searchProperty: string[] | null) {
@@ -252,6 +261,7 @@ export class SearchIndex {
 
   async load(taxonomy: Taxonomy, manifestSource?: string): Promise<RefreshInfo> {
     this.taxonomy = taxonomy;
+    this.convertedTaxonomy = convertTaxonomyResponse(taxonomy);
 
     log.info('Starting fetch');
     if (this.currentlyIndexing) {

@@ -126,6 +126,10 @@ class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleFacetSearch(parsedUrl, req, res);
       }
+    } else if (pathname === '/v2/status') {
+      if (checkMethod(req, res, 'GET')) {
+        this.handleStatusV2(req, res);
+      }
     } else {
       res.writeHead(400, {});
       res.end('');
@@ -306,6 +310,19 @@ class Marian {
     //   return parse(taxonomy);
     // }
   }
+
+  private async handleStatusV2(req: http.IncomingMessage, res: http.ServerResponse) {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Vary: 'Accept-Encoding, Origin',
+      'Cache-Control': 'public,max-age=120,must-revalidate',
+    };
+    Object.assign(headers, STANDARD_HEADERS);
+    checkAllowedOrigin(req.headers.origin, headers);
+    const responseBody = JSON.stringify(this.index.convertedTaxonomy);
+    res.writeHead(200, headers);
+    res.end(responseBody);
+  }
 }
 
 function help(): void {
@@ -400,8 +417,7 @@ async function main() {
   server.start(8080);
 }
 
-try {
-  main();
-} catch (err) {
+main().catch((err) => {
   console.error(err);
-}
+  process.exit(1);
+});

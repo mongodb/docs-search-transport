@@ -1,5 +1,6 @@
-import { strictEqual } from 'assert';
-import { isPermittedOrigin, arrayEquals } from '../../src/util';
+import { strictEqual, deepStrictEqual } from 'assert';
+import { isPermittedOrigin, arrayEquals, convertTaxonomyResponse } from '../../src/util';
+import { sampleFacetTrie, sampleTaxonomy } from '../resources/utils-data';
 
 describe('util', function () {
   it('arrayEquals()', function () {
@@ -19,5 +20,13 @@ describe('util', function () {
     strictEqual(isPermittedOrigin(new URL('https://docs.atlas.mongodb.com/reference/atlas-limits/')), true);
     strictEqual(isPermittedOrigin(new URL('https://mongodb.com')), true);
     strictEqual(isPermittedOrigin(new URL('http://docs.mongodb.com/')), false);
+  });
+
+  describe('convertTaxonomyResponse', () => {
+    it('converts taxonomy object into a trie structure', () => {
+      const input = sampleTaxonomy;
+      const expected = sampleFacetTrie;
+      deepStrictEqual(convertTaxonomyResponse(input), expected);
+    });
   });
 });
