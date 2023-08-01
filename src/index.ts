@@ -130,6 +130,10 @@ class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatusV2(req, res);
       }
+    } else if (pathname === '/v2/status') {
+      if (checkMethod(req, res, 'GET')) {
+        this.handleStatusV2(req, res);
+      }
     } else {
       res.writeHead(400, {});
       res.end('');
@@ -333,7 +337,6 @@ class Marian {
 
     try {
       return this.index.fetchFacets(query);
-      // console.log('this.fetchFacetMeta')
     } catch (e) {
       console.error(`Error fetching facet metadata: ${JSON.stringify(e)}`);
       throw e;

@@ -6,6 +6,7 @@ ingress:
 env:
   MANIFEST_URI: 's3://docs-search-indexes-test/search-indexes/prd/'
   ATLAS_DATABASE: 'search'
+  ATLAS_ADMIN_PUB_KEY: 'cbkapemu'
 
 resources:
   limits:
