@@ -162,6 +162,7 @@ export class AtlasAdminManager {
       searchIndex['mappings']['fields']['facets']['fields'][facetKey] = [
         {
           type: 'string',
+          analyzer: 'lucene.keyword',
         },
         {
           type: 'stringFacet',
@@ -195,22 +196,22 @@ export function getSynonymUpdateOperations(filePath: string): Array<AnyBulkWrite
 }
 
 const getFacetKeys = (taxonomy: Taxonomy) => {
-  const keyList: string[] = [];
+  const keySet: Set<string> = new Set();
   const pushKeys = (currentRecord: Taxonomy, baseStr = '') => {
     for (const key in currentRecord) {
       if (!Array.isArray(currentRecord[key])) {
         continue;
       }
-      const res = baseStr ? `${baseStr}→${key}` : key;
+      const newBase = baseStr ? `${baseStr}>${currentRecord['name']}>${key}` : key;
       for (const child of currentRecord[key]) {
-        const name = child['name'];
-        pushKeys(child as Taxonomy, `${res}←${name}`);
+        pushKeys(child as Taxonomy, newBase);
       }
-      keyList.push(res);
+      keySet.add(`${newBase}`);
     }
   };
   pushKeys(taxonomy);
-  return keyList;
+
+  return Array.from(keySet);
 };
 
 export const _getFacetKeys = getFacetKeys;

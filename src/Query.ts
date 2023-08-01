@@ -1,6 +1,7 @@
 'use strict';
 
-import { Taxonomy } from './SearchIndex';
+import { Filter } from 'mongodb';
+import { Document, FacetDisplayNames, Taxonomy } from './SearchIndex';
 
 export class InvalidQuery extends Error {}
 
@@ -199,16 +200,18 @@ export class Query {
   terms: Set<string>;
   phrases: string[];
   rawQuery: string;
+  filters: Filter<Document>;
 
   /**
    * Create a new query.
    * @param {string} queryString The query to parse
    */
-  constructor(queryString: string) {
+  constructor(queryString: string, filters?: Filter<Document>) {
     console.log('Query parsing: ' + queryString);
     this.terms = new Set();
     this.phrases = [];
     this.rawQuery = queryString;
+    this.filters = filters || {};
 
     const parts = queryString.split(/((?:\s+|^)"[^"]+"(?:\s+|$))/);
     let inQuotes = false;
@@ -243,9 +246,9 @@ export class Query {
     }
   }
 
-  getAggregationQuery(searchProperty: string[] | null): any[] {
-    const parts: any[] = [];
+  getCompound() {
     const terms = Array.from(this.terms);
+    const parts: any[] = [];
 
     parts.push({
       text: {
@@ -294,26 +297,61 @@ export class Query {
       },
     });
 
+    const compound: { should: any[]; must?: any[]; filter?: any[]; minimumShouldMatch: number } = {
+      should: parts,
+      minimumShouldMatch: 1,
+    };
+
+    // if (Object.keys(this.filters).length) {
+    //   compound['filter'] = compound['filter'] || [];
+    //   constructAggFilters(compound['filter'], this.filters);
+    // }
+
+    // if there are any phrases in quotes
+    if (this.phrases.length > 0) {
+      compound['must'] = compound['must'] || [];
+      compound.must = compound.must.concat(
+        this.phrases.map((phrase) => {
+          return {
+            phrase: {
+              query: phrase,
+              path: ['paragraphs', 'text', 'headings', 'code.value', 'title'],
+            },
+          };
+        })
+      );
+    }
+
+    return compound;
+  }
+
+  getMetaQuery(taxonomyTrie: FacetDisplayNames) {
+    const compound = this.getCompound();
+
+    const facets = _getFacetsForMeta(this.filters, taxonomyTrie);
+
+    const agg = [
+      {
+        $searchMeta: {
+          facet: {
+            operator: { compound },
+            facets: facets,
+          },
+        },
+      },
+    ];
+
+    console.log('Executing ' + JSON.stringify(agg));
+    return agg;
+  }
+
+  getAggregationQuery(searchProperty: string[] | null): any[] {
     const filter =
       searchProperty !== null && searchProperty.length !== 0
         ? { searchProperty: { $elemMatch: { $in: searchProperty } } }
         : { includeInGlobalSearch: true };
 
-    const compound: { should: any[]; must?: any[]; minimumShouldMatch: number } = {
-      should: parts,
-      minimumShouldMatch: 1,
-    };
-
-    if (this.phrases.length > 0) {
-      compound.must = this.phrases.map((phrase) => {
-        return {
-          phrase: {
-            query: phrase,
-            path: ['paragraphs', 'text', 'headings', 'code.value', 'title'],
-          },
-        };
-      });
-    }
+    const compound = this.getCompound();
 
     const agg = [
       {
@@ -329,187 +367,130 @@ export class Query {
     console.log('Executing ' + JSON.stringify(agg));
     return agg;
   }
-
-  getFacetedAggregationQuery(searchProperty: string[] | null, selectedFacets: string[], taxonomy: Taxonomy): any[] {
-    const parts: any[] = [];
-    const terms = Array.from(this.terms);
-
-    parts.push({
-      text: {
-        query: terms,
-        path: ['paragraphs', 'code.lang', 'code.value', 'text'],
-      },
-    });
-    parts.push({
-      text: {
-        query: terms,
-        path: 'headings',
-        score: { boost: { value: 5 } },
-      },
-    });
-    parts.push({
-      text: {
-        query: terms,
-        path: 'title',
-        score: { boost: { value: 10 } },
-      },
-    });
-    parts.push({
-      text: {
-        query: terms,
-        path: 'tags',
-        score: { boost: { value: 10 } },
-      },
-    });
-    const filter =
-      searchProperty !== null && searchProperty.length !== 0
-        ? { searchProperty: { $elemMatch: { $in: searchProperty } } }
-        : { includeInGlobalSearch: true };
-    const compound: { should: any[]; must?: any[]; filter?: any[]; minimumShouldMatch: number } = {
-      should: parts,
-      minimumShouldMatch: 1,
-    };
-
-    // if any selected facets. add to filter part of compound operator
-    compound.filter = getFiltersFromSelections(selectedFacets);
-
-    const facets = getFacets(selectedFacets, taxonomy);
-
-    const agg: any = [
-      {
-        $search: {
-          facet: {
-            operator: {
-              compound: compound,
-            },
-            facets: facets,
-          },
-        },
-      },
-      { $match: filter },
-    ];
-    agg.push({
-      $facet: {
-        docs: [
-          {
-            $project: {
-              _id: 0,
-              title: 1,
-              preview: 1,
-              url: 1,
-              searchProperty: 1,
-            },
-          },
-          {
-            $limit: 50,
-          },
-        ],
-        meta: [{ $replaceWith: '$$SEARCH_META' }, { $limit: 1 }],
-      },
-    });
-    agg.push({
-      $unwind: {
-        path: '$meta',
-      },
-    });
-    console.log('Executing ' + JSON.stringify(agg));
-    return agg;
-  }
 }
 
-/**
- * gets filters required for compound operator
- * https://www.mongodb.com/docs/atlas/atlas-search/compound/#filter-examples
- */
-const getFiltersFromSelections = (selectedFacets: string[]) => {
-  const filters = [];
-  for (const selectedFacetKey of selectedFacets) {
-    // for each selected facet key ie. (languages←python→versions←3.7)
-    // split for the last ← key and left is key, right is value
-    const splitLet = [...selectedFacetKey];
-    let idx = splitLet.length - 1;
-    let targetIdx;
-    while (!targetIdx && idx > -1) {
-      if (splitLet[idx] === '←') {
-        targetIdx = idx;
-        break;
-      }
-      idx--;
+export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<Document> => {
+  // query should be in form of:
+  // q=test&facets.target_platforms>manual>versions=v6.0&facets.target_platforms=atlas
+  // where each query param starting with 'facets.' denotes a filter and possible expansion
+  // {
+  //   "facets.target_platforms": ["manual", "atlas"],
+  //   "facets.target_platforms>manual>versions": ["v6.0"]
+  // }
+  const filter: Filter<Document> = {};
+  for (const [key, value] of searchParams) {
+    if (!key.startsWith('facets.')) {
+      continue;
     }
+    const facetNames = key.replace('facets.', '').split('>');
+    // hierarchy facets denoted by >
+    // each facet node requires a facet property, at every even level
+    for (let facetIdx = 0; facetIdx < facetNames.length; facetIdx += 2) {
+      const facetName = facetNames[facetIdx];
+      // construct partial facet name
+      const prefix = facetIdx === 0 ? '' : facetNames.slice(0, facetIdx).join('>') + '>';
+      const facetKey = `facets.${prefix}${facetName}`;
+      if (!filter[facetKey]) {
+        filter[facetKey] = [];
+      }
 
-    filters.push({
-      text: {
-        query: selectedFacetKey.slice(idx + 1),
-        path: `facets.${selectedFacetKey.slice(0, idx)}`,
-      },
-    });
+      // the value is the next key in query param, or if there is no next key, the value itself
+      const facetValue = facetIdx === facetNames.length - 1 ? value : facetNames[facetIdx + 1];
+      filter[facetKey].push(facetValue);
+    }
   }
-
-  return filters;
+  return filter;
 };
 
-/**
- * Returns the facets required for 'facet' operator
- * within $search aggregation
- * https://www.mongodb.com/docs/atlas/atlas-search/facet/#syntax-1
- *
- */
-const getFacets = (selectedFacets: string[], taxonomy: Taxonomy) => {
-  const [selectedBaseFacetSet, facetStrings] = getFacetKeysForSelections(selectedFacets, taxonomy);
+const _getFacetsForMeta = (filter: Filter<Document>, taxonomy: FacetDisplayNames) => {
+  const facets: { [key: string]: { type: 'string'; path: string } } = {};
 
-  // add the base facets from Taxonomy if not already selected
-  for (const baseName in taxonomy) {
-    if (baseName === 'name' || selectedBaseFacetSet.has(baseName)) continue;
-    facetStrings.push(baseName);
-  }
-
-  const res: { [key: string]: { type: string; path: string } } = {};
-  for (const facetString of facetStrings) {
-    res[facetString] = {
+  for (const baseFacet in taxonomy) {
+    facets[baseFacet] = {
       type: 'string',
-      path: `facets.${facetString}`,
+      path: `facets.${baseFacet}`,
     };
   }
-  return res;
-};
 
-/**
- * return a set of base facets of Taxonomy that were used
- * also decompose selected facets to farther drilldown 'facet' keys (strings)
- *
- * ie. selectedFacets = ['target_platforms←manual']
- * returns [['target_platforms'], ['target_platforms←manual→versions']]
- *
- */
-const getFacetKeysForSelections = (selectedFacets: string[], taxonomy: Taxonomy): [Set<string>, string[]] => {
-  const selectedBaseFacetSet: Set<string> = new Set();
-  const facetStrings: string[] = [];
-
-  for (const selectedFacet of selectedFacets) {
-    const chars = [...selectedFacet];
-    const baseIdx = chars.indexOf('←');
-    const baseFacet = chars.slice(0, baseIdx).join('');
-    selectedBaseFacetSet.add(baseFacet);
-
-    // gotta add the expansion
-    let ref: any = taxonomy[baseFacet],
-      startRef = baseIdx + 1;
-
-    for (let idx = baseIdx + 1; idx < chars.length; idx++) {
-      const char = chars[idx];
-      if (char === '→' || idx === chars.length - 1) {
-        const targetName = chars.slice(startRef, idx + 1).join('');
-        ref = ref.find((te: any) => te.name === targetName);
-      } else if (char === '←') {
-        ref = ref[chars.slice(startRef, idx).join('')];
-        startRef = idx + 1;
+  for (const [key, values] of Object.entries(filter)) {
+    const facetKey = key.replace('facets.', '');
+    for (const value of values) {
+      const entry = _lookup(taxonomy, facetKey, value);
+      if (typeof entry === 'object') {
+        for (const entryKey in entry) {
+          if (['name', 'displayName'].indexOf(entryKey) > -1) {
+            continue;
+          }
+          facets[`${facetKey}>${value}>${entryKey}`] = {
+            type: 'string',
+            path: `${key}>${value}>${entryKey}`,
+          };
+        }
       }
-    }
-
-    for (const key in ref) {
-      if (key !== 'name') facetStrings.push(`${selectedFacet}→${key}`);
     }
   }
 
-  return [selectedBaseFacetSet, facetStrings];
+  return facets;
+};
+
+const _lookup = (taxonomy: FacetDisplayNames, facetKey: string, value: string) => {
+  let ref: { [key: string]: any } = taxonomy;
+
+  const parts = facetKey.split('>');
+  for (let idx = 0; idx < parts.length; idx++) {
+    const part = parts[idx];
+    if (ref[part]) {
+      ref = ref[part];
+    }
+  }
+  return ref[value];
+};
+
+// constructs 'filter' portion of aggregation query.
+// pushes a compound of equals or dne if any parent level facet is selected
+// to allow multi level faceting
+// pushes a phrase query if no parent level facet is selected to ensure filtering
+const constructAggFilters = (filterOperators: any[], queryFilters: Filter<Document>) => {
+  const filterSet = new Set();
+  for (const key in queryFilters) {
+    const parts = key.split('>');
+    let parentSelected = false;
+    for (let idx = 0; idx < parts.length; idx += 2) {
+      if (filterSet.has(parts.slice(0, idx + 1).join('>'))) {
+        parentSelected = true;
+      }
+    }
+
+    const filterOperator = parentSelected
+      ? {
+          compound: {
+            should: [
+              {
+                phrase: {
+                  path: key,
+                  query: queryFilters[key],
+                },
+              },
+              {
+                compound: {
+                  mustNot: {
+                    exists: {
+                      path: key,
+                    },
+                  },
+                },
+              },
+            ],
+          },
+        }
+      : {
+          phrase: {
+            path: key,
+            query: queryFilters[key],
+          },
+        };
+
+    filterOperators.push(filterOperator);
+    filterSet.add(key);
+  }
 };

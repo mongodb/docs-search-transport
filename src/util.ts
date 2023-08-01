@@ -1,4 +1,5 @@
-import { Taxonomy, TaxonomyEntity, FacetDisplayNames } from './SearchIndex';
+import { InvalidQuery } from './Query';
+import { Taxonomy, TaxonomyEntity, FacetDisplayNames, FacetBucket, FacetAggRes } from './SearchIndex';
 
 export function arrayEquals<T>(arr1: Array<T>, arr2: Array<T>): boolean {
   if (arr1.length !== arr2.length) {
@@ -67,4 +68,74 @@ export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetDisplayNames {
     addToRes(taxonomy[stringKey], res as object, stringKey);
   }
   return res;
+}
+
+interface FacetRes {
+  count?: number;
+  name?: string;
+  [key: string]: FacetRes | string | number | undefined;
+}
+
+export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: FacetDisplayNames) {
+  const res: {
+    count: number;
+    facets: FacetRes;
+  } = {
+    count: facetAggRes['count']['lowerBound'],
+    facets: {},
+  };
+
+  for (const [facetKey, facetBucket] of Object.entries(facetAggRes['facet'])) {
+    _constructFacetResponse(res.facets, facetKey, facetBucket, taxonomyTrie);
+  }
+  // for each facetAggRes
+  // split the key into parts
+  // and lookup each bucket of aggres
+  return res;
+}
+
+// generates same response structure as /v2/manifest
+// for facet aggregation results
+// mutates and formats resultsFacet
+function _constructFacetResponse(
+  responseFacets: FacetRes,
+  facetKey: string,
+  facetBucket: FacetBucket,
+  taxonomy: FacetDisplayNames
+) {
+  let responseRef = responseFacets;
+  let taxRef = taxonomy;
+  try {
+    for (const facetName of facetKey.split('>')) {
+      const taxEntity = taxRef[facetName] as FacetDisplayNames;
+      if (!taxEntity) {
+        console.error(`Facet filter does not exist: ${facetKey}`);
+        continue;
+      }
+      responseRef[facetName] = responseRef[facetName] || {
+        name: taxEntity['name'],
+      };
+      responseRef = responseRef[facetName] as FacetRes;
+      taxRef = taxRef[facetName] as FacetDisplayNames;
+    }
+
+    for (const bucket of facetBucket['buckets']) {
+      const childFacet = taxRef[bucket._id] as FacetDisplayNames;
+      if (!childFacet) {
+        console.error(
+          `Error: Facets.bucket:  \n ${JSON.stringify(bucket)} \n` +
+            `Does not match taxonomy: \n${JSON.stringify(taxRef)}`
+        );
+        continue;
+      }
+      responseRef[bucket._id] = {
+        ...Object(responseRef[bucket._id]),
+        name: childFacet.name,
+        count: bucket.count,
+      };
+    }
+  } catch (e) {
+    console.error(`Error while constructing facet response: ${e}`);
+    throw new InvalidQuery();
+  }
 }

@@ -1,7 +1,6 @@
 import assert from 'assert';
 import crypto from 'crypto';
 import fs from 'fs';
-import { Document as MongoDocument } from 'mongodb';
 import util from 'util';
 import S3 from 'aws-sdk/clients/s3';
 import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession } from 'mongodb';
@@ -10,7 +9,7 @@ import dive from 'dive';
 // @ts-ignore
 import Logger from 'basic-logger';
 import { Query } from './Query';
-import { convertTaxonomyResponse } from './util';
+import { convertTaxonomyResponse, formatFacetMetaResponse } from './util';
 
 const log = new Logger({
   showTimestamp: true,
@@ -67,7 +66,23 @@ export type Taxonomy = Record<string, TaxonomyEntity[]>;
 
 export type FacetDisplayNames = {
   name?: string;
-  [key: string]: object | string | undefined;
+  [key: string]: FacetDisplayNames | string | boolean | undefined;
+};
+
+export type FacetBucket = {
+  buckets: {
+    _id: string;
+    count: number;
+  }[];
+};
+export type FacetAggRes = {
+  count: {
+    lowerBound: number;
+  };
+  facet: {
+    [key: string]: FacetBucket;
+    // key is split by '>' key
+  };
 };
 
 export function joinUrl(base: string, path: string): string {
@@ -253,10 +268,17 @@ export class SearchIndex {
     return await cursor.toArray();
   }
 
-  async factedSearch(query: Query, searchProperty: string[] | null, facetKeys: string[]): Promise<MongoDocument[]> {
-    const aggregationQuery = query.getFacetedAggregationQuery(searchProperty, facetKeys, this.taxonomy);
-    const cursor = this.documents.aggregate(aggregationQuery);
-    return await cursor.toArray();
+  async fetchFacets(query: Query) {
+    const metaAggregationQuery = query.getMetaQuery(this.convertedTaxonomy);
+    const cursor = this.documents.aggregate(metaAggregationQuery);
+    try {
+      const aggRes = await cursor.toArray();
+      const res = formatFacetMetaResponse(aggRes[0] as FacetAggRes, this.convertedTaxonomy);
+      return res;
+    } catch (e) {
+      log.error(`Error while fetching facets: ${JSON.stringify(e)}`);
+      throw e;
+    }
   }
 
   async load(taxonomy: Taxonomy, manifestSource?: string): Promise<RefreshInfo> {
@@ -408,7 +430,7 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     // slug is possible to be empty string ''
     assert.ok(document.slug || document.slug === '');
 
-    const facets: Record<string, string[]> = {};
+    const facets: Record<string, string | string[]> = {};
 
     // <-------- BEGIN TESTING PRE TAXONOMY -------->
     // testing genres and target platform as part of faceted search
@@ -424,7 +446,16 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     const target = parts.slice(0, parts.length - 1).join('-');
     const version = parts.slice(parts.length - 1).join('');
     facets['target_platforms'] = [target];
-    facets[`target_platforms←${target}→versions`] = [version];
+    facets[`target_platforms>${target}>versions`] = [version];
+
+    // test driver hierarchy
+    if (target === 'drivers') {
+      // get sub_platform
+      const sub_platform = document.slug.split(/[\/ | \-]/)[0];
+      if (['index.html', 'community', 'specs', 'reactive', 'driver'].indexOf(sub_platform) === -1) {
+        facets[`target_platforms>drivers>sub_platforms`] = [sub_platform];
+      }
+    }
 
     // <-------- END TESTING PRE TAXONOMY -------->
 
@@ -437,12 +468,6 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
       facets: facets,
     };
 
-    let existingFacets = deserializeFacets(document.facets || {});
-    Object.assign(facets, existingFacets);
-    if (Object.keys(facets).length) {
-      newDocument.facets = facets;
-    }
-
     return {
       updateOne: {
         filter: { searchProperty: newDocument.searchProperty, slug: newDocument.slug },
@@ -452,29 +477,3 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     };
   });
 };
-
-const deserializeFacets = (facets: Record<string, any>) => {
-  let res: Record<string, string[]> = {};
-  const pushKeys = (currentFacets: Record<string, any>[], baseStr = '') => {
-    if (!res[baseStr]) {
-      res[baseStr] = [];
-    }
-    for (const facet of currentFacets) {
-      res[baseStr].push(facet['name']);
-      if (!Object.keys(res).length) continue;
-      const newBaseStr = `${baseStr}←${facet['name']}`;
-      for (const subFacetName in facet) {
-        if (subFacetName === 'name') continue;
-        pushKeys(facet[subFacetName], `${newBaseStr}→${subFacetName}`);
-      }
-    }
-  };
-
-  for (const key of Object.keys(facets)) {
-    pushKeys(facets[key], key);
-  }
-
-  return res;
-};
-
-export const _deserializeFacets = deserializeFacets;

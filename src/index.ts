@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 // dotenv.config() should be invoked immediately, before any other imports, to ensure config is present
 dotenv.config();
 
-import { Document, MongoClient } from 'mongodb';
+import { Document, Filter, MongoClient } from 'mongodb';
 import assert from 'assert';
 import http from 'http';
 import { parse } from 'toml';
@@ -14,9 +14,9 @@ import { parse } from 'toml';
 import Logger from 'basic-logger';
 
 import { taxonomy } from './data/sample-taxonomy';
-import { Query, InvalidQuery } from './Query';
+import { Query, InvalidQuery, extractFacetFilters } from './Query';
 import { isPermittedOrigin } from './util';
-import { SearchIndex, RefreshInfo, Taxonomy } from './SearchIndex';
+import { SearchIndex, RefreshInfo, Taxonomy, Document as SearchDocument } from './SearchIndex';
 import { AtlasAdminManager } from './AtlasAdmin';
 
 process.title = 'search-transport';
@@ -122,9 +122,13 @@ class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatus(parsedUrl, req, res);
       }
-    } else if (pathname === '/v2/search') {
+    } else if (pathname === '/v2/search/meta') {
       if (checkMethod(req, res, 'GET')) {
-        this.handleFacetSearch(parsedUrl, req, res);
+        this.handleMetaSearch(parsedUrl, req, res);
+      }
+    } else if (pathname === '/v2/status') {
+      if (checkMethod(req, res, 'GET')) {
+        this.handleStatusV2(req, res);
       }
     } else if (pathname === '/v2/status') {
       if (checkMethod(req, res, 'GET')) {
@@ -239,7 +243,8 @@ class Marian {
     }
   }
 
-  private async handleFacetSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+  private async handleMetaSearch(parsedUrl: URL, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+    // TODO: wrap requests with header assignment, configure response types
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Vary: 'Accept-Encoding, Origin',
@@ -250,7 +255,8 @@ class Marian {
 
     let results;
     try {
-      results = await this.fetchResults(parsedUrl, true);
+      results = await this.fetchFacetMeta(parsedUrl);
+      // TODO: format results as same as /v2/manifest
     } catch (err) {
       if (err instanceof InvalidQuery) {
         res.writeHead(400, headers);
@@ -260,12 +266,13 @@ class Marian {
 
       throw err;
     }
-    let responseBody = JSON.stringify(results[0]);
+
+    const responseBody = JSON.stringify(results);
     res.writeHead(200, headers);
     res.end(responseBody);
   }
 
-  private async fetchResults(parsedUrl: URL, useFacetedSearch: boolean = false): Promise<any[]> {
+  private async fetchResults(parsedUrl: URL): Promise<any[]> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
 
     if (!rawQuery) {
@@ -277,17 +284,12 @@ class Marian {
       throw new InvalidQuery();
     }
 
-    const query = new Query(rawQuery);
+    const filters = extractFacetFilters(parsedUrl.searchParams);
+    const query = new Query(rawQuery, filters);
 
     let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
-    }
-
-    if (useFacetedSearch) {
-      // TODO: check for blank case to return all facets(?)
-      const selectedFacets = parsedUrl.searchParams.getAll('facets[]') || [];
-      return await this.index.factedSearch(query, searchProperty, selectedFacets);
     }
 
     return await this.index.search(query, searchProperty);
@@ -322,6 +324,23 @@ class Marian {
     const responseBody = JSON.stringify(this.index.convertedTaxonomy);
     res.writeHead(200, headers);
     res.end(responseBody);
+  }
+
+  private async fetchFacetMeta(parsedUrl: URL): Promise<any> {
+    const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
+    if (!rawQuery || !rawQuery.length) {
+      throw new InvalidQuery();
+    }
+
+    const filters = extractFacetFilters(parsedUrl.searchParams);
+    const query = new Query(rawQuery, filters);
+
+    try {
+      return this.index.fetchFacets(query);
+    } catch (e) {
+      console.error(`Error fetching facet metadata: ${JSON.stringify(e)}`);
+      throw e;
+    }
   }
 }
 
