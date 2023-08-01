@@ -302,10 +302,10 @@ export class Query {
       minimumShouldMatch: 1,
     };
 
-    if (Object.keys(this.filters).length) {
-      compound['filter'] = compound['filter'] || [];
-      constructAggFilters(compound['filter'], this.filters);
-    }
+    // if (Object.keys(this.filters).length) {
+    //   compound['filter'] = compound['filter'] || [];
+    //   constructAggFilters(compound['filter'], this.filters);
+    // }
 
     // if there are any phrases in quotes
     if (this.phrases.length > 0) {

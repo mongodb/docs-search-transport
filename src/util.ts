@@ -122,12 +122,10 @@ function _constructFacetResponse(
     for (const bucket of facetBucket['buckets']) {
       const childFacet = taxRef[bucket._id] as FacetDisplayNames;
       if (!childFacet) {
-        console.error(`
-          Error: Facets.bucket: 
-          \n${JSON.stringify(bucket)} 
-          \nDoes not match taxonomy: 
-          \n${JSON.stringify(taxRef)}
-        `);
+        console.error(
+          `Error: Facets.bucket:  \n ${JSON.stringify(bucket)} \n` +
+            `Does not match taxonomy: \n${JSON.stringify(taxRef)}`
+        );
         continue;
       }
       responseRef[bucket._id] = {
