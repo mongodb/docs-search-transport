@@ -118,6 +118,10 @@ export class AtlasAdminManager {
 
     const options = this.getPostPatchOptions(searchIndex, taxonomy);
     options['method'] = 'PATCH';
+    console.log('check options');
+    console.log(JSON.stringify(options));
+    
+    
 
     try {
       const { data, res } = await request<SearchIndexResponse>(url, options);
