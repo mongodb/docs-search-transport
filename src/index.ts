@@ -235,8 +235,8 @@ class Marian {
       // TODO: include taxonomy url in verifyEnvVars after it has been released
       taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
       await this.atlasAdmin.updateSynonyms();
-
-      await Promise.all([this.atlasAdmin.patchSearchIndex(taxonomy), this.index.load(taxonomy)]);
+      await this.atlasAdmin.patchSearchIndex(taxonomy);
+      await this.index.load(taxonomy);
     } catch (e) {
       log.error(`Error while loading Marian server ${JSON.stringify(e)}`);
       throw e;
