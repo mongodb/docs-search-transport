@@ -260,11 +260,10 @@ class Marian {
     } catch (err) {
       if (err instanceof InvalidQuery) {
         res.writeHead(400, headers);
-        res.end('[]');
-        return;
+      } else {
+        res.writeHead(500, headers);
       }
-
-      throw err;
+      res.end('[]');
     }
 
     const responseBody = JSON.stringify(results);
