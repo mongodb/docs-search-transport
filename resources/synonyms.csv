@@ -17,7 +17,6 @@ node,nodejs,node.js
 shell,mongosh,mongo shell,mongodb shell,
 download,descargar,
 operator,$,$$,dollar sign,
-
 $ne,$neq,not equal,ne,not equal,
 operator,$,
 $elemMatch,$elementMatch,elementMatch,match element,
