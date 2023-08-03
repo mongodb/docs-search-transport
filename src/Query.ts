@@ -261,7 +261,7 @@ export class Query {
       text: {
         query: terms,
         path: 'headings',
-        score: { boost: { value: 5 } },
+        score: { boost: { value: 6 } },
       },
     });
 
@@ -277,7 +277,7 @@ export class Query {
       text: {
         query: terms,
         path: 'title',
-        score: { boost: { value: 10 } },
+        score: { boost: { value: 15 } },
       },
     });
 
