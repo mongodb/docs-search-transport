@@ -16,7 +16,8 @@ python async,motor,
 node,nodejs,node.js
 shell,mongosh,
 download,descargar,
-operator,$$,dollar sign,
+operator,$,$$,dollar sign,
+
 $ne,$neq,not equal,
 operator,$,
 $elemMatch,$elementMatch,elementMatch,match element,
