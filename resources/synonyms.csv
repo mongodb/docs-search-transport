@@ -18,7 +18,7 @@ shell,mongosh,
 download,descargar,
 operator,$,$$,dollar sign,
 
-$ne,$neq,not equal,
+$ne,$neq,not equal,ne,not equal,
 operator,$,
 $elemMatch,$elementMatch,elementMatch,match element,
 $arrayElemAt,$arrayElementAt,arrayElementAt,$elemAt,
