@@ -302,11 +302,6 @@ export class Query {
       minimumShouldMatch: 1,
     };
 
-    // if (Object.keys(this.filters).length) {
-    //   compound['filter'] = compound['filter'] || [];
-    //   constructAggFilters(compound['filter'], this.filters);
-    // }
-
     // if there are any phrases in quotes
     if (this.phrases.length > 0) {
       compound['must'] = compound['must'] || [];
@@ -444,53 +439,4 @@ const _lookup = (taxonomy: FacetDisplayNames, facetKey: string, value: string) =
     }
   }
   return ref[value];
-};
-
-// constructs 'filter' portion of aggregation query.
-// pushes a compound of equals or dne if any parent level facet is selected
-// to allow multi level faceting
-// pushes a phrase query if no parent level facet is selected to ensure filtering
-const constructAggFilters = (filterOperators: any[], queryFilters: Filter<Document>) => {
-  const filterSet = new Set();
-  for (const key in queryFilters) {
-    const parts = key.split('>');
-    let parentSelected = false;
-    for (let idx = 0; idx < parts.length; idx += 2) {
-      if (filterSet.has(parts.slice(0, idx + 1).join('>'))) {
-        parentSelected = true;
-      }
-    }
-
-    const filterOperator = parentSelected
-      ? {
-          compound: {
-            should: [
-              {
-                phrase: {
-                  path: key,
-                  query: queryFilters[key],
-                },
-              },
-              {
-                compound: {
-                  mustNot: {
-                    exists: {
-                      path: key,
-                    },
-                  },
-                },
-              },
-            ],
-          },
-        }
-      : {
-          phrase: {
-            path: key,
-            query: queryFilters[key],
-          },
-        };
-
-    filterOperators.push(filterOperator);
-    filterSet.add(key);
-  }
 };
