@@ -229,11 +229,15 @@ class Marian {
     res.end(JSON.stringify(response));
   }
 
-  async load() {
+  async load(initLoad = true) {
     let taxonomy: Taxonomy;
     try {
       // TODO: include taxonomy url in verifyEnvVars after it has been released
       taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
+      if (!initLoad) {
+        await this.index.load(taxonomy, undefined, false);
+        return;
+      }
       await this.atlasAdmin.updateSynonyms();
       await this.atlasAdmin.patchSearchIndex(taxonomy);
       await this.index.load(taxonomy);
@@ -344,7 +348,7 @@ class Marian {
 }
 
 function help(): void {
-  console.error(`Usage: search-transport [--create-indexes]
+  console.error(`Usage: search-transport [--create-indexes] [--load-manifests]
 
 The following environment variables are used:
 * ${MANIFEST_URI_KEY}
@@ -398,7 +402,7 @@ async function main() {
 
   if (
     process.argv.length < 2 ||
-    process.argv.length > 3 ||
+    process.argv.length > 4 ||
     process.argv.includes('--help') ||
     process.argv.includes('-h')
   ) {
@@ -414,12 +418,10 @@ async function main() {
     databaseName = envDBName;
   }
 
-  log.info(`Loading manifests from ${manifestUri}`);
-
   const client = await MongoClient.connect(atlasUri);
   const searchIndex = new SearchIndex(manifestUri, client, databaseName);
 
-  if (process.argv[2] === '--create-indexes') {
+  if (process.argv.includes('--create-indexes')) {
     await searchIndex.createRecommendedIndexes();
   }
 
@@ -427,7 +429,7 @@ async function main() {
   const server = new Marian(searchIndex, atlasAdmin);
 
   try {
-    await server.load();
+    await server.load(process.argv.includes('--load-manifests'));
   } catch (e) {
     console.error(`Error while initializing server: ${JSON.stringify(e)}`);
     throw e;

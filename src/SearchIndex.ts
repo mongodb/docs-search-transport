@@ -199,6 +199,7 @@ function getManifestsFromDirectory(prefix: string): Promise<Manifest[]> {
 /// dir:<path> to load manifests from a local directory.
 /// s3://<bucketName>/<prefix> to load manifests from an S3 location.
 async function getManifests(manifestSource: string): Promise<Manifest[]> {
+  log.info(`Loading manifests from ${manifestSource}`);
   const parsed = new URL(manifestSource);
 
   let manifests;
@@ -281,9 +282,13 @@ export class SearchIndex {
     }
   }
 
-  async load(taxonomy: Taxonomy, manifestSource?: string): Promise<RefreshInfo> {
+  async load(taxonomy: Taxonomy, manifestSource?: string, refreshManifests = true): Promise<RefreshInfo | undefined> {
     this.taxonomy = taxonomy;
     this.convertedTaxonomy = convertTaxonomyResponse(taxonomy);
+
+    if (!refreshManifests) {
+      return;
+    }
 
     log.info('Starting fetch');
     if (this.currentlyIndexing) {
