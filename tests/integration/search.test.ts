@@ -23,7 +23,7 @@ describe('Searching', function () {
     await index.createRecommendedIndexes();
 
     // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
-    if (result.deleted || result.updated.length > 0) {
+    if (result && (result.deleted || result.updated.length > 0)) {
       this.timeout(8000);
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }

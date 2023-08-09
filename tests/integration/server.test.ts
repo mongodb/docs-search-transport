@@ -10,7 +10,7 @@ dotenv.config();
 export function startServer(path: string, done: () => void): { child: child_process.ChildProcess; port: number } {
   let isDone = false,
     isLoaded = false;
-  const child = child_process.spawn('./node_modules/.bin/ts-node', ['./src/index.ts'], {
+  const child = child_process.spawn('./node_modules/.bin/ts-node', ['./src/index.ts', '--load-manifests'], {
     stdio: [0, 'pipe', 2],
     env: {
       MANIFEST_URI: 'dir:tests/integration/search_test_data/',
