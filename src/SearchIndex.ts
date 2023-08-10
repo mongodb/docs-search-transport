@@ -228,9 +228,9 @@ export class SearchIndex {
     this.taxonomy = {};
   }
 
-  async search(query: Query, searchProperty: string[] | null) {
-    const aggregationQuery = query.getAggregationQuery(searchProperty);
-    aggregationQuery.push({ $limit: 50 });
+  async search(query: Query, searchProperty: string[]| null, pageNumber: number ) {
+    const aggregationQuery = query.getAggregationQuery(searchProperty, pageNumber);
+
     aggregationQuery.push({
       $project: {
         _id: 0,
@@ -240,6 +240,42 @@ export class SearchIndex {
         searchProperty: 1,
       },
     });
+    if (pageNumber < 1) { /////////////////////////////////////// if the feature flag is off
+      aggregationQuery.push({ $limit: 50 });
+    } else {
+      /////////////////////////////////////////////////////////// VERSION 1: without the total count
+      aggregationQuery.push({ $skip: (10*(pageNumber-1))});
+      aggregationQuery.push({ $limit: 10 });
+      /////////////////////////////////////////////////////////// VERSION 2: returns total count 
+      // aggregationQuery.push({
+      //   $facet: {
+      //     "rows": [
+      //       {
+      //         "$skip": (10*(pageNumber-1))
+      //       },
+      //       {
+      //         "$limit": 10
+      //       }
+      //     ],
+      //     "totalRows": [
+      //       {
+      //         "$replaceWith": "$$SEARCH_META"
+      //       },
+      //       {
+      //         "$limit": 1
+      //       }
+      //     ]}
+      // });
+      // aggregationQuery.push({
+      //   "$set": {
+      //     "totalRows": {
+      //       "$arrayElemAt": [
+      //         "$totalRows", 0
+      //       ]
+      //     }
+      //   }
+      // });
+    }
     const cursor = this.documents.aggregate(aggregationQuery);
     return await cursor.toArray();
   }

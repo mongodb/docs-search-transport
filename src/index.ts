@@ -18,6 +18,7 @@ import { Query, InvalidQuery } from './Query';
 import { isPermittedOrigin } from './util';
 import { SearchIndex, RefreshInfo, Taxonomy } from './SearchIndex';
 import { AtlasAdminManager } from './AtlasAdmin';
+import {setPropertyMapping, getPropertyMapping} from './SearchPropertyMapping'
 
 process.title = 'search-transport';
 
@@ -280,13 +281,15 @@ class Marian {
       searchProperty = [searchProperty];
     }
 
+    let pageNumber = Number(parsedUrl.searchParams.get('page'));
+
     if (useFacetedSearch) {
       // TODO: check for blank case to return all facets(?)
       const selectedFacets = parsedUrl.searchParams.getAll('facets[]') || [];
       return await this.index.factedSearch(query, searchProperty, selectedFacets);
     }
-
-    return await this.index.search(query, searchProperty);
+    const searchPropertyMapping = getPropertyMapping();
+    return await this.index.search(query, searchProperty, pageNumber);
   }
 
   private async fetchTaxonomy(url: string) {
@@ -390,6 +393,8 @@ async function main() {
 
   const atlasAdmin = new AtlasAdminManager(adminPubKey, adminPrivKey, groupId, client);
   const server = new Marian(searchIndex, atlasAdmin);
+  // TODO: this should not be development it should be the current env variable
+  await setPropertyMapping('development');
 
   try {
     await server.load();

@@ -1,6 +1,7 @@
 'use strict';
 
 import { Taxonomy } from './SearchIndex';
+import { getPropertyMapping } from './SearchPropertyMapping';
 
 export class InvalidQuery extends Error {}
 
@@ -243,9 +244,10 @@ export class Query {
     }
   }
 
-  getAggregationQuery(searchProperty: string[] | null): any[] {
+  getAggregationQuery(searchProperty: string[] | null, pageNumber: number): any[] {
     const parts: any[] = [];
     const terms = Array.from(this.terms);
+    const searchPropertyMapping = getPropertyMapping();
 
     parts.push({
       text: {
@@ -294,15 +296,23 @@ export class Query {
       },
     });
 
-    const filter =
+    let filter;
+    if (pageNumber < 1) {
+      filter = 
       searchProperty !== null && searchProperty.length !== 0
         ? { searchProperty: { $elemMatch: { $in: searchProperty } } }
         : { includeInGlobalSearch: true };
+    } else {
+      filter =
+      searchProperty !== null && searchProperty.length !== 0
+        ? { searchProperty: {$elemMatch: { $in: searchProperty },$in: Object.keys(searchPropertyMapping), $not: {  $regex: /-$/ }}}
+        : { searchProperty: { $in: Object.keys(searchPropertyMapping), $not: {  $regex: /-$/ }} };
+    }
 
     const compound: { should: any[]; must?: any[]; minimumShouldMatch: number } = {
       should: parts,
       minimumShouldMatch: 1,
-    };
+    }; 
 
     if (this.phrases.length > 0) {
       compound.must = this.phrases.map((phrase) => {
