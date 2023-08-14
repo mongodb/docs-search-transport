@@ -1,6 +1,5 @@
-import { strictEqual, deepStrictEqual } from 'assert';
-import { isPermittedOrigin, arrayEquals, convertTaxonomyResponse } from '../../src/util';
-import { sampleFacetTrie, sampleTaxonomy } from '../resources/utils-data';
+import { strictEqual } from 'assert';
+import { isPermittedOrigin, arrayEquals } from '../../src/Marian/util';
 
 describe('util', function () {
   it('arrayEquals()', function () {
@@ -22,11 +21,4 @@ describe('util', function () {
     strictEqual(isPermittedOrigin(new URL('http://docs.mongodb.com/')), false);
   });
 
-  describe('convertTaxonomyResponse', () => {
-    it('converts taxonomy object into a trie structure', () => {
-      const input = sampleTaxonomy;
-      const expected = sampleFacetTrie;
-      deepStrictEqual(convertTaxonomyResponse(input), expected);
-    });
-  });
 });

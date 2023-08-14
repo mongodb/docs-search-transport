@@ -1,4 +1,4 @@
-import { FacetDisplayNames, Taxonomy } from '../../src/SearchIndex';
+import { FacetDisplayNames, Taxonomy } from '../../src/SearchIndex/types';
 
 export const sampleTaxonomy = {
   genres: [{ name: 'reference' }, { name: 'tutorial' }],

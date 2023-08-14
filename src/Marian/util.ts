@@ -1,6 +1,6 @@
 import http from 'http';
 
-function arrayEquals<T>(arr1: Array<T>, arr2: Array<T>): boolean {
+export function arrayEquals<T>(arr1: Array<T>, arr2: Array<T>): boolean {
   if (arr1.length !== arr2.length) {
     return false;
   }
@@ -14,7 +14,7 @@ function arrayEquals<T>(arr1: Array<T>, arr2: Array<T>): boolean {
   return true;
 }
 
-function isPermittedOrigin(url: URL): boolean {
+export function isPermittedOrigin(url: URL): boolean {
   return url.protocol == 'https:' && arrayEquals(url.hostname.split('.').slice(-2), ['mongodb', 'com']);
 }
 
