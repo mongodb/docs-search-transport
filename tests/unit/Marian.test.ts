@@ -20,5 +20,4 @@ describe('util', function () {
     strictEqual(isPermittedOrigin(new URL('https://mongodb.com')), true);
     strictEqual(isPermittedOrigin(new URL('http://docs.mongodb.com/')), false);
   });
-
 });

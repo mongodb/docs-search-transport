@@ -7,7 +7,7 @@ import { parse } from 'toml';
 import * as urllib from 'urllib';
 
 import { SynonymDocument } from '../../src/data/atlas-types';
-import { AtlasAdminManager, } from '../../src/AtlasAdmin';
+import { AtlasAdminManager } from '../../src/AtlasAdmin';
 import { _getFacetKeys, getSynonymUpdateOperations } from '../../src/AtlasAdmin/utils';
 import { Taxonomy } from '../../src/SearchIndex/types';
 
