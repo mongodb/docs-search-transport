@@ -13,6 +13,9 @@ Module to invoke Atlas Admin commands via the [Atlas Admin API](https://www.mong
 ### Search Index
 Service to read and write from Atlas DB. Transports input manifest documents into Atlas DB. Also reads DB results for server requests and returns formatted responses.
 
+### Query
+Query class that builds aggregation operations based off request query parameters.
+
 ## Installation
 
 ```shell

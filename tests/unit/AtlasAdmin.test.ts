@@ -1,13 +1,15 @@
 import { strictEqual, deepEqual } from 'assert';
+import { readFileSync } from 'fs';
+import { MongoClient, UpdateFilter, UpdateOneModel } from 'mongodb';
+import path from 'path';
 import * as sinon from 'sinon';
 import { parse } from 'toml';
 import * as urllib from 'urllib';
-import { AtlasAdminManager, _getFacetKeys, getSynonymUpdateOperations } from '../..//src/AtlasAdmin';
-import { Taxonomy } from '../../src/SearchIndex';
-import path from 'path';
-import { readFileSync } from 'fs';
-import { MongoClient, UpdateFilter, UpdateOneModel } from 'mongodb';
+
 import { SynonymDocument } from '../../src/data/atlas-types';
+import { AtlasAdminManager } from '../../src/AtlasAdmin';
+import { _getFacetKeys, getSynonymUpdateOperations } from '../../src/AtlasAdmin/utils';
+import { Taxonomy } from '../../src/SearchIndex/types';
 
 describe('Atlas Admin Manager', () => {
   // TODO: stub the urllib calls with sinon and add expected url/requestOptions
@@ -123,7 +125,7 @@ describe('Atlas Admin Manager', () => {
       const expectedFilePath = path.join(__dirname, '../resources/expected-synonyms.json');
       const expectedSynonyms = JSON.parse(readFileSync(expectedFilePath).toString()) as Array<string[]>;
 
-      const synonymUpdateDocs = getSynonymUpdateOperations('../tests/resources/synonyms.csv');
+      const synonymUpdateDocs = getSynonymUpdateOperations('../../tests/resources/synonyms.csv');
 
       deepEqual(expectedSynonyms.length, synonymUpdateDocs.length);
 

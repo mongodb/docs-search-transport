@@ -1,12 +1,12 @@
 // @ts-ignore
 import Logger from 'basic-logger';
+import { MongoClient } from 'mongodb';
 import { request, RequestOptions } from 'urllib';
-import { AnyBulkWriteOperation, MongoClient } from 'mongodb';
-import fs from 'fs';
-import path from 'path';
-import { SearchIndex } from './data/atlas-search-index';
-import { SearchIndexResponse, IndexMappings, SynonymDocument } from './data/atlas-types';
-import { Taxonomy } from './SearchIndex';
+
+import { getSynonymUpdateOperations, getFacetKeys } from './utils';
+import { SearchIndex } from '../data/atlas-search-index';
+import { SearchIndexResponse, IndexMappings, SynonymDocument } from '../data/atlas-types';
+import { Taxonomy } from '../SearchIndex/types';
 
 const DEFAULT_ATLAS_API_OPTIONS: RequestOptions = {
   headers: {
@@ -59,7 +59,7 @@ export class AtlasAdminManager {
 
     const synonymCollection = this.mongoClient.db(DB).collection<SynonymDocument>(SYNONYM_COLLECTION_NAME);
 
-    const synonymUpdates = getSynonymUpdateOperations('../resources/synonyms.csv');
+    const synonymUpdates = getSynonymUpdateOperations('../../resources/synonyms.csv');
 
     try {
       // we want to ensure that the primary property is a unique index
@@ -172,46 +172,3 @@ export class AtlasAdminManager {
     return searchIndex;
   }
 }
-export function getSynonymUpdateOperations(filePath: string): Array<AnyBulkWriteOperation<SynonymDocument>> {
-  const csvPath = path.join(__dirname, filePath);
-  const csv = fs.readFileSync(csvPath);
-
-  const csvString = csv.toString();
-
-  const newLine = csvString.includes('\r') ? '\r\n' : '\n';
-
-  return csvString.split(newLine).map((csvRow) => {
-    // filtering empty strings since they can occur if CSV contains
-    // trailing comma
-    const synonyms = csvRow.split(',').filter((word) => word !== '');
-
-    // using this 'primary' property as a unique key so that we update an existing synonym
-    // record instead of creating a duplicate
-    const primary = synonyms[0];
-
-    const synonymDocument: SynonymDocument = { mappingType: 'equivalent', synonyms, primary };
-
-    return { updateOne: { filter: { primary }, update: { $set: synonymDocument }, upsert: true } };
-  });
-}
-
-const getFacetKeys = (taxonomy: Taxonomy) => {
-  const keySet: Set<string> = new Set();
-  const pushKeys = (currentRecord: Taxonomy, baseStr = '') => {
-    for (const key in currentRecord) {
-      if (!Array.isArray(currentRecord[key])) {
-        continue;
-      }
-      const newBase = baseStr ? `${baseStr}>${currentRecord['name']}>${key}` : key;
-      for (const child of currentRecord[key]) {
-        pushKeys(child as Taxonomy, newBase);
-      }
-      keySet.add(`${newBase}`);
-    }
-  };
-  pushKeys(taxonomy);
-
-  return Array.from(keySet);
-};
-
-export const _getFacetKeys = getFacetKeys;
