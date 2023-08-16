@@ -173,27 +173,27 @@ export const setPropertyMapping = async function () {
       parseRepoForSearchProperties(searchPropertyMapping, repo);
     });
 
-    await collection
-      .find(query)
-      .toArray()
-      .then((repos) => {
-        repos.forEach((r) => {
-          console.log('check repo in collection');
-          console.log(JSON.stringify(r));
+    const repos = await collection.find(query).toArray();
 
-          const repo = {
-            project: r.project,
-            search: !r.search
-              ? null
-              : {
-                  categoryTitle: r.search.categoryTitle,
-                  categoryName: r.search.categoryName ? r.search.categoryName : null,
-                },
-            branches: r.branches,
-          };
-          parseRepoForSearchProperties(searchPropertyMapping, repo);
-        });
-      });
+    console.log('Check repos');
+    console.log(JSON.stringify(repos));
+
+    repos.forEach((r) => {
+      console.log('check repo in collection');
+      console.log(JSON.stringify(r));
+
+      const repo = {
+        project: r.project,
+        search: !r.search
+          ? null
+          : {
+              categoryTitle: r.search.categoryTitle,
+              categoryName: r.search.categoryName ? r.search.categoryName : null,
+            },
+        branches: r.branches,
+      };
+      parseRepoForSearchProperties(searchPropertyMapping, repo);
+    });
 
     console.log('the search property is ', searchPropertyMapping);
   } catch (e) {
