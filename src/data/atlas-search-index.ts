@@ -101,6 +101,10 @@ export const SearchIndex: IndexMappings = {
           replacement: '',
           type: 'regex',
         },
+        {
+          "type": "stopword",
+          "tokens": [""]
+        }
       ],
       tokenizer: {
         type: 'whitespace',
