@@ -5,7 +5,7 @@ import { MongoClient } from 'mongodb';
 // look like in the repos_branches collection.
 const oldGenDocs = [
   {
-    project: "cloud",
+    project: 'cloud',
     branches: [
       {
         name: 'master',
@@ -19,7 +19,7 @@ const oldGenDocs = [
     },
   },
   {
-    project: "onprem",
+    project: 'onprem',
     branches: [
       {
         name: 'master',
@@ -44,53 +44,58 @@ const oldGenDocs = [
     },
   },
 ];
-const POOL_ATLAS_URI = 'POOL_ATLAS_URI'
+const POOL_ATLAS_URI = 'POOL_ATLAS_URI';
 
 function verifyAndGetEnvVars() {
-    const poolAtlasUri = process.env[POOL_ATLAS_URI];
+  const poolAtlasUri = process.env[POOL_ATLAS_URI];
 
-    if (!poolAtlasUri) {
+  if (!poolAtlasUri) {
     console.error(`Missing ${POOL_ATLAS_URI}`);
     process.exit(1);
-    }
-  
-    return poolAtlasUri;
   }
 
-interface SearchObj {
-    categoryName?: string;
-    categoryTitle: string;
+  return poolAtlasUri;
 }
-  
+
+interface SearchObj {
+  categoryName?: string;
+  categoryTitle: string;
+}
+
 interface Branches {
-    name: string;
-    active: boolean;
-    versionSelectorLabel: string;
-    urlSlug?: string | undefined;
-    gitBranchName?: string; 
+  name: string;
+  active: boolean;
+  versionSelectorLabel: string;
+  urlSlug?: string | undefined;
+  gitBranchName?: string;
 }
 
 interface Repo {
-    project: string;
-    branches: Branches[];
-    search: SearchObj | null;
+  project: string;
+  branches: Branches[];
+  search: SearchObj | null;
 }
 
 interface ProjectSearch {
-    // projectToSearchMap?:  Record<string, string>;
-    // [x: string]: Record<string, string> | string | undefined;
-    [x: string]: {};
+  // projectToSearchMap?:  Record<string, string>;
+  // [x: string]: Record<string, string> | string | undefined;
+  [x: string]: {};
 }
 
 const internals = {
-    "searchPropertyMapping": {}
-  };
+  searchPropertyMapping: {},
+};
 
 export type SearchPropertyMapping = Record<string, ProjectSearch>;
 
 // Add search properties for each branch of a category.
 // A search property is typically in the form of "<category>-<version>"
-const addSearchProperties = (searchPropertyMapping: SearchPropertyMapping, categoryName: string, categoryTitle: string, branches: Branches[]) => {
+const addSearchProperties = (
+  searchPropertyMapping: SearchPropertyMapping,
+  categoryName: string,
+  categoryTitle: string,
+  branches: Branches[]
+) => {
   if (!branches) {
     return;
   }
@@ -118,7 +123,7 @@ const addSearchProperties = (searchPropertyMapping: SearchPropertyMapping, categ
     };
   });
 };
-  
+
 // Look at document of a repo to create search properties for the mapping
 const parseRepoForSearchProperties = (searchPropertyMapping: SearchPropertyMapping, repo: Repo) => {
   let categoryName = repo.project;
@@ -132,7 +137,7 @@ const parseRepoForSearchProperties = (searchPropertyMapping: SearchPropertyMappi
      * does not equal the search manifest name
      */
     if (repo.search.categoryName) {
-      searchPropertyMapping.projectToSearchMap[(repo.project).toString()] = repo.search.categoryName;
+      searchPropertyMapping.projectToSearchMap[repo.project.toString()] = repo.search.categoryName;
       categoryName = repo.search.categoryName;
     }
   }
@@ -140,66 +145,68 @@ const parseRepoForSearchProperties = (searchPropertyMapping: SearchPropertyMappi
   addSearchProperties(searchPropertyMapping, categoryName, categoryTitle, repo.branches);
 };
 
+export const setPropertyMapping = async function (env: string) {
+  let dbName;
+  const collectionName = 'repos_branches';
 
-  export const setPropertyMapping = async function (env: string) {
-    let dbName;
-    const collectionName = 'repos_branches';
-
-    switch (env) {
+  switch (env) {
     case 'production':
-        dbName = 'pool';
-        break;
+      dbName = 'pool';
+      break;
     case 'staging':
-        dbName = 'pool_test';
-        break;
+      dbName = 'pool_test';
+      break;
     default:
-        dbName = 'pool';
-    }
+      dbName = 'pool';
+  }
 
-    const poolAtlasUri = verifyAndGetEnvVars();
-    const client= await MongoClient.connect(poolAtlasUri);
-    const db = client.db(dbName)
-    const collection = db.collection(collectionName);
-    const query = {
-        search: { $exists: true },
-        };
-    const searchPropertyMapping = {
-      "projectToSearchMap":{},
-    };
-    
-    try {
-        // Populate mapping with oldgen docs repos that we might not currently have documents for in the repos_branches collection.
-        oldGenDocs.forEach((repo) => {
-        parseRepoForSearchProperties(searchPropertyMapping, repo);
-        });
-
-        await collection
-        .find(query)
-        .toArray()
-        .then((repos) => {
-            repos.forEach((r) => {
-              const repo = {
-                project: r.project, 
-                search: (!r.search ? null : {
-                  categoryTitle: r.search.categoryTitle,
-                  categoryName:(r.search.categoryName ? r.search.categoryName : null),
-                }),
-                branches: r.branches,
-                }
-              parseRepoForSearchProperties(searchPropertyMapping, repo);
-            });
-        });
-       
-        console.log("the search property is ", searchPropertyMapping);
-        
-
-      } catch (e) {
-        console.error(`Error while create search property mapping: ${e}`);
-      } 
-      internals.searchPropertyMapping = searchPropertyMapping;
-      return searchPropertyMapping;
+  const poolAtlasUri = verifyAndGetEnvVars();
+  const client = await MongoClient.connect(poolAtlasUri);
+  const db = client.db(dbName);
+  const collection = db.collection(collectionName);
+  const query = {
+    search: { $exists: true },
+  };
+  const searchPropertyMapping = {
+    projectToSearchMap: {},
   };
 
-  export const getPropertyMapping = () => {
-    return internals['searchPropertyMapping'];
+  try {
+    // Populate mapping with oldgen docs repos that we might not currently have documents for in the repos_branches collection.
+    oldGenDocs.forEach((repo) => {
+      parseRepoForSearchProperties(searchPropertyMapping, repo);
+    });
+
+    await collection
+      .find(query)
+      .toArray()
+      .then((repos) => {
+        repos.forEach((r) => {
+          const repo = {
+            project: r.project,
+            search: !r.search
+              ? null
+              : {
+                  categoryTitle: r.search.categoryTitle,
+                  categoryName: r.search.categoryName ? r.search.categoryName : null,
+                },
+            branches: r.branches,
+          };
+          parseRepoForSearchProperties(searchPropertyMapping, repo);
+        });
+      });
+
+    console.log('the search property is ', searchPropertyMapping);
+  } catch (e) {
+    console.error(`Error while create search property mapping: ${e}`);
+  } finally {
+    client.close();
   }
+
+  internals.searchPropertyMapping = searchPropertyMapping;
+  return searchPropertyMapping;
+};
+
+export const getPropertyMapping = () => {
+  return internals['searchPropertyMapping'];
+};

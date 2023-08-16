@@ -6,9 +6,10 @@ ingress:
 env:
   MANIFEST_URI: 's3://docs-search-indexes-test/search-indexes/preprd/'
   ATLAS_DATABASE: 'search-staging'
+  ATLAS_ADMIN_PUB_KEY: 'dgrhrxpv'
 
 resources:
   limits:
-    memory: 550Mi
+    memory: 800Mi
   requests:
-    memory: 400Mi
+    memory: 600Mi
