@@ -50,8 +50,9 @@ function verifyAndGetEnvVars() {
   const poolAtlasUri = process.env[POOL_ATLAS_URI];
 
   if (!poolAtlasUri) {
-    console.error(`Missing ${POOL_ATLAS_URI}`);
-    process.exit(1);
+    const msg = `Missing ${POOL_ATLAS_URI}`;
+    console.error(msg);
+    throw new Error(msg);
   }
 
   return poolAtlasUri;
@@ -142,19 +143,8 @@ const parseRepoForSearchProperties = (searchPropertyMapping: SearchPropertyMappi
 };
 
 export const setPropertyMapping = async function () {
-  let dbName;
   const collectionName = 'repos_branches';
-
-  switch (process.env['env']) {
-    case 'production':
-      dbName = 'pool';
-      break;
-    case 'staging':
-      dbName = 'pool_test';
-      break;
-    default:
-      dbName = 'pool';
-  }
+  const dbName = process.env['POOL_DB'] ?? 'pool_test';
 
   const poolAtlasUri = verifyAndGetEnvVars();
   const client = await MongoClient.connect(poolAtlasUri);
