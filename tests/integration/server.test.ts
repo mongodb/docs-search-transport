@@ -22,7 +22,7 @@ export function startServer(path: string, done: () => void): { child: child_proc
       COLLECTION_NAME: process.env.COLLECTION_NAME,
       ATLAS_ADMIN_API_KEY: process.env.ATLAS_ADMIN_API_KEY,
       ATLAS_ADMIN_PUB_KEY: process.env.ATLAS_ADMIN_PUB_KEY,
-      POOL_ATLAS_URI: process.env.ATLAS_URI
+      POOL_ATLAS_URI: process.env.ATLAS_URI,
     },
   });
   child.stdout?.setEncoding('utf8');
