@@ -1,5 +1,7 @@
 import { MongoClient } from 'mongodb';
 
+import { Branches, Repo, SearchPropertyMapping } from './types';
+
 // Other oldgen sites should have documents in the repos_branches collection as well, even if they're not on snooty yet.
 // Special case for mms-docs, which have editions and it's unclear how their document(s) will
 // look like in the repos_branches collection.
@@ -58,34 +60,9 @@ function verifyAndGetEnvVars() {
   return poolAtlasUri;
 }
 
-interface SearchObj {
-  categoryName?: string;
-  categoryTitle: string;
-}
-
-interface Branches {
-  name: string;
-  active: boolean;
-  versionSelectorLabel: string;
-  urlSlug?: string | undefined;
-  gitBranchName?: string;
-}
-
-interface Repo {
-  project: string;
-  branches: Branches[];
-  search: SearchObj | null;
-}
-
-interface ProjectSearch {
-  [x: string]: {};
-}
-
 const internals = {
   searchPropertyMapping: {},
 };
-
-export type SearchPropertyMapping = Record<string, ProjectSearch>;
 
 // Add search properties for each branch of a category.
 // A search property is typically in the form of "<category>-<version>"
