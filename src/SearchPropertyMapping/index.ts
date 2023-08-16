@@ -78,8 +78,6 @@ interface Repo {
 }
 
 interface ProjectSearch {
-  // projectToSearchMap?:  Record<string, string>;
-  // [x: string]: Record<string, string> | string | undefined;
   [x: string]: {};
 }
 
@@ -105,7 +103,7 @@ const addSearchProperties = (
     const { urlSlug, name, gitBranchName, versionSelectorLabel } = branch;
     const version = urlSlug || gitBranchName || name;
 
-    const searchProperty: string = `${categoryName}-${version}`;
+    const searchProperty = `${categoryName}-${version}`;
 
     let versionLabel = versionSelectorLabel;
     // We've typically always labeled non-versioned repos as having the "Latest" version in the search dropdown.
@@ -123,21 +121,8 @@ const addSearchProperties = (
 
 // Look at document of a repo to create search properties for the mapping
 const parseRepoForSearchProperties = (searchPropertyMapping: SearchPropertyMapping, repo: Repo) => {
-  let categoryName = repo.project;
-  let categoryTitle = '';
-
-  if (repo.search) {
-    categoryTitle = repo.search.categoryTitle;
-
-    /**
-     * This mapping property is used for projects where the project name
-     * does not equal the search manifest name
-     */
-    if (repo.search.categoryName) {
-      searchPropertyMapping.projectToSearchMap[repo.project.toString()] = repo.search.categoryName;
-      categoryName = repo.search.categoryName;
-    }
-  }
+  let categoryName = repo.search?.categoryName ?? repo.project;
+  let categoryTitle = repo.search?.categoryTitle ?? '';
 
   addSearchProperties(searchPropertyMapping, categoryName, categoryTitle, repo.branches);
 };
@@ -153,9 +138,7 @@ export const setPropertyMapping = async function () {
   const query = {
     search: { $exists: true },
   };
-  const searchPropertyMapping = {
-    projectToSearchMap: {},
-  };
+  const searchPropertyMapping = {};
 
   try {
     // Populate mapping with oldgen docs repos that we might not currently have documents for in the repos_branches collection.
