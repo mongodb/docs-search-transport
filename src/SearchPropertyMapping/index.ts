@@ -165,9 +165,6 @@ export const setPropertyMapping = async function () {
 
     const repos = await collection.find(query).toArray();
 
-    console.log('Check repos');
-    console.log(JSON.stringify(repos));
-
     repos.forEach((r) => {
       const repo = {
         project: r.project,
