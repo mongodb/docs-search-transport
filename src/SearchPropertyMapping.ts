@@ -96,10 +96,6 @@ const addSearchProperties = (
   categoryTitle: string,
   branches: Branches[]
 ) => {
-  if (!branches) {
-    return;
-  }
-
   branches.forEach((branch) => {
     if (!branch.active) {
       return;
@@ -145,11 +141,11 @@ const parseRepoForSearchProperties = (searchPropertyMapping: SearchPropertyMappi
   addSearchProperties(searchPropertyMapping, categoryName, categoryTitle, repo.branches);
 };
 
-export const setPropertyMapping = async function (env: string) {
+export const setPropertyMapping = async function () {
   let dbName;
   const collectionName = 'repos_branches';
 
-  switch (env) {
+  switch (process.env['env']) {
     case 'production':
       dbName = 'pool';
       break;
@@ -199,6 +195,7 @@ export const setPropertyMapping = async function (env: string) {
     console.log('the search property is ', searchPropertyMapping);
   } catch (e) {
     console.error(`Error while create search property mapping: ${e}`);
+    throw e;
   } finally {
     client.close();
   }

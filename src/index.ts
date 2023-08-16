@@ -12,7 +12,6 @@ import { MongoClient } from 'mongodb';
 import { AtlasAdminManager } from './AtlasAdmin';
 import Marian from './Marian';
 import { SearchIndex } from './SearchIndex';
-import { setPropertyMapping } from './SearchPropertyMapping';
 
 process.title = 'search-transport';
 
@@ -104,8 +103,6 @@ async function main() {
 
   const atlasAdmin = new AtlasAdminManager(adminPubKey, adminPrivKey, groupId, client);
   const server = new Marian(searchIndex, atlasAdmin);
-  // TODO: this should not be development it should be the current env variable
-  await setPropertyMapping('development');
 
   try {
     await server.load(process.argv.includes('--load-manifests'));

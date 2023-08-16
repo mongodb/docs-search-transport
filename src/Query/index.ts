@@ -154,7 +154,7 @@ export class Query {
     return agg;
   }
 
-  getAggregationQuery(searchProperty: string[] | null, pageNumber?: number): any[] {
+  getAggregationQuery(searchProperty: string[] | null): any[] {
     const searchPropertyMapping = getPropertyMapping();
     const filter =
       searchProperty !== null && searchProperty.length !== 0

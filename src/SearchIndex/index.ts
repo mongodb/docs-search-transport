@@ -39,7 +39,7 @@ export class SearchIndex {
   }
 
   async search(query: Query, searchProperty: string[] | null, pageNumber?: number) {
-    const aggregationQuery = query.getAggregationQuery(searchProperty, pageNumber);
+    const aggregationQuery = query.getAggregationQuery(searchProperty);
     const RES_COUNT = 50;
     const PAGINATED_RES_COUNT = 10;
     aggregationQuery.push({
