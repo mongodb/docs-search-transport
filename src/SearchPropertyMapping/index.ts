@@ -178,6 +178,9 @@ export const setPropertyMapping = async function () {
       .toArray()
       .then((repos) => {
         repos.forEach((r) => {
+          console.log('check repo in collection');
+          console.log(JSON.stringify(r));
+
           const repo = {
             project: r.project,
             search: !r.search
