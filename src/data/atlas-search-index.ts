@@ -103,8 +103,8 @@ export const SearchIndex: IndexMappings = {
         },
         {
           "type": "stopword",
-          "tokens": [""]
-        }
+          "tokens": [""],
+        },
       ],
       tokenizer: {
         type: 'whitespace',
