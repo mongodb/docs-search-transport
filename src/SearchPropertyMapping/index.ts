@@ -2,50 +2,6 @@ import { MongoClient } from 'mongodb';
 
 import { Branches, Repo, SearchPropertyMapping } from './types';
 
-// Other oldgen sites should have documents in the repos_branches collection as well, even if they're not on snooty yet.
-// Special case for mms-docs, which have editions and it's unclear how their document(s) will
-// look like in the repos_branches collection.
-const oldGenDocs = [
-  {
-    project: 'cloud',
-    branches: [
-      {
-        name: 'master',
-        active: true,
-        versionSelectorLabel: 'Latest',
-      },
-    ],
-    search: {
-      categoryName: 'mms-cloud',
-      categoryTitle: 'Cloud Manager',
-    },
-  },
-  {
-    project: 'onprem',
-    branches: [
-      {
-        name: 'master',
-        active: true,
-        versionSelectorLabel: 'upcoming',
-      },
-      {
-        name: 'v5.0',
-        active: true,
-        urlSlug: 'current',
-        versionSelectorLabel: 'Version 5.0 (current)',
-      },
-      {
-        name: 'v4.4',
-        active: true,
-        versionSelectorLabel: 'Version 4.4',
-      },
-    ],
-    search: {
-      categoryName: 'mms-onprem',
-      categoryTitle: 'Ops Manager',
-    },
-  },
-];
 const POOL_ATLAS_URI = 'POOL_ATLAS_URI';
 
 function verifyAndGetEnvVars() {
@@ -77,7 +33,7 @@ const addSearchProperties = (
       return;
     }
 
-    const { urlSlug, name, gitBranchName, versionSelectorLabel } = branch;
+    const { urlSlug, gitBranchName, versionSelectorLabel } = branch;
     const version = urlSlug || gitBranchName;
 
     const searchProperty = `${categoryName}-${version}`;
@@ -119,9 +75,6 @@ export const setPropertyMapping = async function () {
 
   try {
     // Populate mapping with oldgen docs repos that we might not currently have documents for in the repos_branches collection.
-    oldGenDocs.forEach((repo) => {
-      parseRepoForSearchProperties(searchPropertyMapping, repo);
-    });
 
     const repos = await collection.find(query).toArray();
 
