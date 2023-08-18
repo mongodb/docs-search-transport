@@ -245,7 +245,7 @@ export default class Marian {
       searchProperty = [searchProperty];
     }
 
-    let pageNumber = Number(parsedUrl.searchParams.get('page'));
+    const pageNumber = Number(parsedUrl.searchParams.get('page'));
     return await this.index.search(query, searchProperty, pageNumber);
   }
 

@@ -78,7 +78,7 @@ const addSearchProperties = (
     }
 
     const { urlSlug, name, gitBranchName, versionSelectorLabel } = branch;
-    const version = urlSlug || gitBranchName || name;
+    const version = urlSlug || gitBranchName;
 
     const searchProperty = `${categoryName}-${version}`;
 
@@ -98,8 +98,8 @@ const addSearchProperties = (
 
 // Look at document of a repo to create search properties for the mapping
 const parseRepoForSearchProperties = (searchPropertyMapping: SearchPropertyMapping, repo: Repo) => {
-  let categoryName = repo.search?.categoryName ?? repo.project;
-  let categoryTitle = repo.search?.categoryTitle ?? '';
+  const categoryName = repo.search?.categoryName ?? repo.project;
+  const categoryTitle = repo.search?.categoryTitle ?? '';
 
   addSearchProperties(searchPropertyMapping, categoryName, categoryTitle, repo.branches);
 };
@@ -128,18 +128,11 @@ export const setPropertyMapping = async function () {
     repos.forEach((r) => {
       const repo = {
         project: r.project,
-        search: !r.search
-          ? null
-          : {
-              categoryTitle: r.search.categoryTitle,
-              categoryName: r.search.categoryName ? r.search.categoryName : null,
-            },
+        search: r.search,
         branches: r.branches,
       };
       parseRepoForSearchProperties(searchPropertyMapping, repo);
     });
-
-    console.log('the search property is ', searchPropertyMapping);
   } catch (e) {
     console.error(`Error while create search property mapping: ${e}`);
     throw e;
