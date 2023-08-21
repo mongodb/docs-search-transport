@@ -1,6 +1,7 @@
 import { Filter } from 'mongodb';
 import { getFacetsForMeta, tokenize } from './util';
 import { Document, FacetDisplayNames } from '../SearchIndex/types';
+import { getPropertyMapping } from '../SearchPropertyMapping';
 
 export class InvalidQuery extends Error {}
 
@@ -154,10 +155,11 @@ export class Query {
   }
 
   getAggregationQuery(searchProperty: string[] | null): any[] {
+    const searchPropertyMapping = getPropertyMapping();
     const filter =
       searchProperty !== null && searchProperty.length !== 0
         ? { searchProperty: { $elemMatch: { $in: searchProperty } } }
-        : { includeInGlobalSearch: true };
+        : { searchProperty: { $in: Object.keys(searchPropertyMapping) }, includeInGlobalSearch: true };
 
     const compound = this.getCompound();
 

@@ -38,9 +38,10 @@ export class SearchIndex {
     this.convertedTaxonomy = {};
   }
 
-  async search(query: Query, searchProperty: string[] | null) {
+  async search(query: Query, searchProperty: string[] | null, pageNumber?: number) {
     const aggregationQuery = query.getAggregationQuery(searchProperty);
-    aggregationQuery.push({ $limit: 50 });
+    const RES_COUNT = 50;
+    const PAGINATED_RES_COUNT = 10;
     aggregationQuery.push({
       $project: {
         _id: 0,
@@ -50,6 +51,12 @@ export class SearchIndex {
         searchProperty: 1,
       },
     });
+    if (!pageNumber) {
+      aggregationQuery.push({ $limit: RES_COUNT });
+    } else {
+      aggregationQuery.push({ $skip: PAGINATED_RES_COUNT * (pageNumber - 1) });
+      aggregationQuery.push({ $limit: PAGINATED_RES_COUNT });
+    }
     const cursor = this.documents.aggregate(aggregationQuery);
     return await cursor.toArray();
   }

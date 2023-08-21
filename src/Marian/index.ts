@@ -10,6 +10,7 @@ import { StatusResponse } from './types';
 import { SearchIndex } from '../SearchIndex';
 import { Taxonomy } from '../SearchIndex/types';
 import { AtlasAdminManager } from '../AtlasAdmin';
+import { setPropertyMapping } from '../SearchPropertyMapping';
 import { Query, InvalidQuery } from '../Query';
 import { extractFacetFilters } from '../Query/util';
 
@@ -182,6 +183,7 @@ export default class Marian {
     try {
       // TODO: include taxonomy url in verifyEnvVars after it has been released
       taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
+      await setPropertyMapping();
       if (!initLoad) {
         await this.index.load(taxonomy, undefined, false);
         return;
@@ -243,7 +245,8 @@ export default class Marian {
       searchProperty = [searchProperty];
     }
 
-    return await this.index.search(query, searchProperty);
+    const pageNumber = Number(parsedUrl.searchParams.get('page'));
+    return await this.index.search(query, searchProperty, pageNumber);
   }
 
   private async fetchTaxonomy(url: string) {
