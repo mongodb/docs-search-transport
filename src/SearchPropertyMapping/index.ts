@@ -74,8 +74,6 @@ export const setPropertyMapping = async function () {
   const searchPropertyMapping = {};
 
   try {
-    // Populate mapping with oldgen docs repos that we might not currently have documents for in the repos_branches collection.
-
     const repos = await collection
       .find(query)
       .project<Repo>({
