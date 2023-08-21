@@ -67,7 +67,7 @@ export const setPropertyMapping = async function () {
   const poolAtlasUri = verifyAndGetEnvVars();
   const client = await MongoClient.connect(poolAtlasUri);
   const db = client.db(dbName);
-  const collection = db.collection(collectionName);
+  const collection = db.collection<Repo>(collectionName);
   const query = {
     search: { $exists: true },
   };
@@ -76,14 +76,17 @@ export const setPropertyMapping = async function () {
   try {
     // Populate mapping with oldgen docs repos that we might not currently have documents for in the repos_branches collection.
 
-    const repos = await collection.find(query).toArray();
+    const repos = await collection
+      .find(query)
+      .project<Repo>({
+        _id: 0,
+        project: 1,
+        search: 1,
+        branches: 1,
+      })
+      .toArray();
 
-    repos.forEach((r) => {
-      const repo = {
-        project: r.project,
-        search: r.search,
-        branches: r.branches,
-      };
+    repos.forEach((repo) => {
       parseRepoForSearchProperties(searchPropertyMapping, repo);
     });
   } catch (e) {
