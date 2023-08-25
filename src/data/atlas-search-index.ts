@@ -87,7 +87,7 @@ export const SearchIndex: IndexMappings = {
       source: {
         collection: SYNONYM_COLLECTION_NAME,
       },
-      analyzer: 'lucene.english',
+      analyzer: 'lucene.keyword',
     },
   ],
   analyzers: [
