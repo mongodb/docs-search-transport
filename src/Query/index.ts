@@ -115,17 +115,20 @@ export class Query {
     const compound: { should: any[]; must: any[]; filter?: any[]; minimumShouldMatch: number } = {
       should: parts,
       minimumShouldMatch: 1,
-      must: [{
-        equals: {
-          path: 'includeInGlobalSearch',
-          value: true
-        }
-      }, {
-        phrase: {
-          path: 'searchProperty',
-          query: Object.keys(searchPropertyMapping)
-        }
-      }]
+      must: [
+        {
+          equals: {
+            path: 'includeInGlobalSearch',
+            value: true,
+          },
+        },
+        {
+          phrase: {
+            path: 'searchProperty',
+            query: Object.keys(searchPropertyMapping),
+          },
+        },
+      ],
     };
 
     // if there are any phrases in quotes
@@ -168,10 +171,12 @@ export class Query {
   getAggregationQuery(searchProperty: string[] | null, page?: number): any[] {
     const compound = this.getCompound();
     if (searchProperty !== null && searchProperty.length !== 0) {
-      compound.must.push({phrase: {
-        path: 'searchProperty',
-        query: searchProperty
-      }});
+      compound.must.push({
+        phrase: {
+          path: 'searchProperty',
+          query: searchProperty,
+        },
+      });
     }
 
     const agg: Filter<Document>[] = [
@@ -182,7 +187,7 @@ export class Query {
             searchTerms: this.rawQuery,
           },
         },
-      }
+      },
     ];
 
     const RES_COUNT = 50;

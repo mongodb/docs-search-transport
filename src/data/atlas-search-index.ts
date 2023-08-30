@@ -80,11 +80,11 @@ export const SearchIndex: IndexMappings = {
         type: 'string',
       },
       searchProperty: {
-        type: 'string'
+        type: 'string',
       },
       includeInGlobalSearch: {
-        type: 'boolean'
-      }
+        type: 'boolean',
+      },
     },
   },
   synonyms: [
