@@ -63,6 +63,7 @@ export class Query {
   getCompound() {
     const terms = Array.from(this.terms);
     const parts: any[] = [];
+    const searchPropertyMapping = getPropertyMapping();
 
     parts.push({
       text: {
@@ -111,14 +112,31 @@ export class Query {
       },
     });
 
-    const compound: { should: any[]; must?: any[]; filter?: any[]; minimumShouldMatch: number } = {
+    const compound: { should: any[]; must: any[]; filter?: any[]; minimumShouldMatch: number } = {
       should: parts,
       minimumShouldMatch: 1,
+      must: [
+        {
+          equals: {
+            path: 'includeInGlobalSearch',
+            value: true,
+          },
+        },
+      ],
     };
+    const searchPropertyNames = Object.keys(searchPropertyMapping);
+
+    if (searchPropertyNames?.length) {
+      compound.must.push({
+        phrase: {
+          path: 'searchProperty',
+          query: searchPropertyNames,
+        },
+      });
+    }
 
     // if there are any phrases in quotes
     if (this.phrases.length > 0) {
-      compound['must'] = compound['must'] || [];
       compound.must = compound.must.concat(
         this.phrases.map((phrase) => {
           return {
@@ -154,16 +172,21 @@ export class Query {
     return agg;
   }
 
-  getAggregationQuery(searchProperty: string[] | null): any[] {
-    const searchPropertyMapping = getPropertyMapping();
-    const filter =
-      searchProperty !== null && searchProperty.length !== 0
-        ? { searchProperty: { $elemMatch: { $in: searchProperty } } }
-        : { searchProperty: { $in: Object.keys(searchPropertyMapping) }, includeInGlobalSearch: true };
-
+  getAggregationQuery(searchProperty: string[] | null, page?: number): any[] {
+    if (page && page < 1) {
+      throw new InvalidQuery('Invalid page');
+    }
     const compound = this.getCompound();
+    if (searchProperty !== null && searchProperty.length !== 0) {
+      compound.must.push({
+        phrase: {
+          path: 'searchProperty',
+          query: searchProperty,
+        },
+      });
+    }
 
-    const agg = [
+    const agg: Filter<Document>[] = [
       {
         $search: {
           compound,
@@ -172,8 +195,27 @@ export class Query {
           },
         },
       },
-      { $match: filter },
     ];
+
+    const RES_COUNT = 50;
+    const PAGINATED_RES_COUNT = 10;
+    // projection
+    agg.push({
+      $project: {
+        _id: 0,
+        title: 1,
+        preview: 1,
+        url: 1,
+        searchProperty: 1,
+      },
+    });
+    // count limit
+    if (!page) {
+      agg.push({ $limit: RES_COUNT });
+    } else {
+      agg.push({ $skip: PAGINATED_RES_COUNT * (page - 1) });
+      agg.push({ $limit: PAGINATED_RES_COUNT });
+    }
     console.log('Executing ' + JSON.stringify(agg));
     return agg;
   }

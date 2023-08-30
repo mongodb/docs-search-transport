@@ -105,11 +105,12 @@ export default class Marian {
     } catch (err) {
       if (err instanceof InvalidQuery) {
         res.writeHead(400, headers);
-        res.end('[]');
+        res.end(err.message);
         return;
       }
-
-      throw err;
+      res.writeHead(500, headers);
+      res.end();
+      return;
     }
     let responseBody = JSON.stringify({ results: results });
     res.writeHead(200, headers);
@@ -246,7 +247,7 @@ export default class Marian {
     }
 
     const pageNumber = Number(parsedUrl.searchParams.get('page'));
-    return await this.index.search(query, searchProperty, pageNumber);
+    return this.index.search(query, searchProperty, pageNumber);
   }
 
   private async fetchTaxonomy(url: string) {

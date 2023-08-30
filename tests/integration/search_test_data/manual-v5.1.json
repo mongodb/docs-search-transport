@@ -1,6 +1,6 @@
 {
     "url": "https://docs.mongodb.com//v5.1",
-    "includeInGlobalSearch": false,
+    "includeInGlobalSearch": true,
     "documents": [
         {
             "slug": "index.html",

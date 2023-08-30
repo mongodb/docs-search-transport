@@ -79,6 +79,12 @@ export const SearchIndex: IndexMappings = {
         store: false,
         type: 'string',
       },
+      searchProperty: {
+        type: 'string',
+      },
+      includeInGlobalSearch: {
+        type: 'boolean',
+      },
     },
   },
   synonyms: [
