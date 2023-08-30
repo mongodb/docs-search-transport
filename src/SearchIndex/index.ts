@@ -39,24 +39,7 @@ export class SearchIndex {
   }
 
   async search(query: Query, searchProperty: string[] | null, pageNumber?: number) {
-    const aggregationQuery = query.getAggregationQuery(searchProperty);
-    const RES_COUNT = 50;
-    const PAGINATED_RES_COUNT = 10;
-    aggregationQuery.push({
-      $project: {
-        _id: 0,
-        title: 1,
-        preview: 1,
-        url: 1,
-        searchProperty: 1,
-      },
-    });
-    if (!pageNumber) {
-      aggregationQuery.push({ $limit: RES_COUNT });
-    } else {
-      aggregationQuery.push({ $skip: PAGINATED_RES_COUNT * (pageNumber - 1) });
-      aggregationQuery.push({ $limit: PAGINATED_RES_COUNT });
-    }
+    const aggregationQuery = query.getAggregationQuery(searchProperty, pageNumber);
     const cursor = this.documents.aggregate(aggregationQuery);
     return await cursor.toArray();
   }
