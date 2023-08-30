@@ -41,7 +41,7 @@ export class SearchIndex {
   async search(query: Query, searchProperty: string[] | null, pageNumber?: number) {
     const aggregationQuery = query.getAggregationQuery(searchProperty, pageNumber);
     const cursor = this.documents.aggregate(aggregationQuery);
-    return await cursor.toArray();
+    return cursor.toArray();
   }
 
   async fetchFacets(query: Query) {

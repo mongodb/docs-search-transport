@@ -173,6 +173,9 @@ export class Query {
   }
 
   getAggregationQuery(searchProperty: string[] | null, page?: number): any[] {
+    if (page && page < 1) {
+      throw new InvalidQuery('Invalid page');
+    }
     const compound = this.getCompound();
     if (searchProperty !== null && searchProperty.length !== 0) {
       compound.must.push({
