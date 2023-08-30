@@ -122,14 +122,18 @@ export class Query {
             value: true,
           },
         },
-        {
-          phrase: {
-            path: 'searchProperty',
-            query: Object.keys(searchPropertyMapping),
-          },
-        },
       ],
     };
+    const searchPropertyNames = Object.keys(searchPropertyMapping);
+
+    if (searchPropertyNames?.length) {
+      compound.must.push({
+        phrase: {
+          path: 'searchProperty',
+          query: searchPropertyNames,
+        },
+      });
+    }
 
     // if there are any phrases in quotes
     if (this.phrases.length > 0) {
