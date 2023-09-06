@@ -60,7 +60,7 @@ export class Query {
     }
   }
 
-  getCompound() {
+  getCompound(searchProperty: string[] | null) {
     const terms = Array.from(this.terms);
     const parts: any[] = [];
     const searchPropertyMapping = getPropertyMapping();
@@ -126,6 +126,7 @@ export class Query {
     };
     const searchPropertyNames = Object.keys(searchPropertyMapping);
 
+    // must match all searchPropertyNames indexed by server
     if (searchPropertyNames?.length) {
       compound.must.push({
         phrase: {
@@ -149,11 +150,22 @@ export class Query {
       );
     }
 
+    // if user requested searchProperty, must match this property name
+    // TODO: change to filters.
+    if (searchProperty !== null && searchProperty.length !== 0) {
+      compound.must.push({
+        phrase: {
+          path: 'searchProperty',
+          query: searchProperty,
+        },
+      });
+    }
+
     return compound;
   }
 
-  getMetaQuery(taxonomyTrie: FacetDisplayNames) {
-    const compound = this.getCompound();
+  getMetaQuery(searchProperty: string[] | null, taxonomyTrie: FacetDisplayNames) {
+    const compound = this.getCompound(searchProperty);
 
     const facets = getFacetsForMeta(this.filters, taxonomyTrie);
 
@@ -176,15 +188,7 @@ export class Query {
     if (page && page < 1) {
       throw new InvalidQuery('Invalid page');
     }
-    const compound = this.getCompound();
-    if (searchProperty !== null && searchProperty.length !== 0) {
-      compound.must.push({
-        phrase: {
-          path: 'searchProperty',
-          query: searchProperty,
-        },
-      });
-    }
+    const compound = this.getCompound(searchProperty);
 
     const agg: Filter<Document>[] = [
       {
