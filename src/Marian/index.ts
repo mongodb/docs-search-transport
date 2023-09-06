@@ -79,10 +79,6 @@ export default class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatusV2(req, res);
       }
-    } else if (pathname === '/v2/status') {
-      if (checkMethod(req, res, 'GET')) {
-        this.handleStatusV2(req, res);
-      }
     } else {
       res.writeHead(400, {});
       res.end('');
@@ -290,8 +286,13 @@ export default class Marian {
     const filters = extractFacetFilters(parsedUrl.searchParams);
     const query = new Query(rawQuery, filters);
 
+    let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
+    if (typeof searchProperty === 'string') {
+      searchProperty = [searchProperty];
+    }
+
     try {
-      return this.index.fetchFacets(query);
+      return this.index.fetchFacets(query, searchProperty);
     } catch (e) {
       console.error(`Error fetching facet metadata: ${JSON.stringify(e)}`);
       throw e;

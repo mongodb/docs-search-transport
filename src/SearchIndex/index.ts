@@ -44,8 +44,8 @@ export class SearchIndex {
     return cursor.toArray();
   }
 
-  async fetchFacets(query: Query) {
-    const metaAggregationQuery = query.getMetaQuery(this.convertedTaxonomy);
+  async fetchFacets(query: Query, searchProperty: string[] | null) {
+    const metaAggregationQuery = query.getMetaQuery(searchProperty, this.convertedTaxonomy);
     const cursor = this.documents.aggregate(metaAggregationQuery);
     try {
       const aggRes = await cursor.toArray();
