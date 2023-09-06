@@ -126,8 +126,17 @@ export class Query {
     };
     const searchPropertyNames = Object.keys(searchPropertyMapping);
 
-    // must match all searchPropertyNames indexed by server
-    if (searchPropertyNames?.length) {
+    // if user requested searchProperty, must match this property name
+    // TODO: change to filters.
+    if (searchProperty !== null && searchProperty.length !== 0) {
+      compound.must.push({
+        phrase: {
+          path: 'searchProperty',
+          query: searchProperty,
+        },
+      });
+    } else if (searchPropertyNames?.length) {
+      // must match all searchPropertyNames indexed by server otherwise
       compound.must.push({
         phrase: {
           path: 'searchProperty',
@@ -148,17 +157,6 @@ export class Query {
           };
         })
       );
-    }
-
-    // if user requested searchProperty, must match this property name
-    // TODO: change to filters.
-    if (searchProperty !== null && searchProperty.length !== 0) {
-      compound.must.push({
-        phrase: {
-          path: 'searchProperty',
-          query: searchProperty,
-        },
-      });
     }
 
     return compound;

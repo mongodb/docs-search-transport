@@ -79,10 +79,6 @@ export default class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatusV2(req, res);
       }
-    } else if (pathname === '/v2/status') {
-      if (checkMethod(req, res, 'GET')) {
-        this.handleStatusV2(req, res);
-      }
     } else {
       res.writeHead(400, {});
       res.end('');
