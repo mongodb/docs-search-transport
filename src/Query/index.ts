@@ -115,14 +115,7 @@ export class Query {
     const compound: { should: any[]; must: any[]; filter?: any[]; minimumShouldMatch: number } = {
       should: parts,
       minimumShouldMatch: 1,
-      must: [
-        {
-          equals: {
-            path: 'includeInGlobalSearch',
-            value: true,
-          },
-        },
-      ],
+      must: [],
     };
     const searchPropertyNames = Object.keys(searchPropertyMapping);
 
@@ -135,14 +128,23 @@ export class Query {
           query: searchProperty,
         },
       });
-    } else if (searchPropertyNames?.length) {
-      // must match all searchPropertyNames indexed by server otherwise
+    } else {
       compound.must.push({
-        phrase: {
-          path: 'searchProperty',
-          query: searchPropertyNames,
+        equals: {
+          path: 'includeInGlobalSearch',
+          value: true,
         },
       });
+
+      // must match all searchPropertyNames indexed by server
+      if (searchPropertyNames?.length) {
+        compound.must.push({
+          phrase: {
+            path: 'searchProperty',
+            query: searchPropertyNames,
+          },
+        });
+      }
     }
 
     // if there are any phrases in quotes
