@@ -1,9 +1,9 @@
 {
   "name": "search-transport",
   "version": "0.1.0",
-  "description": "a tiny search engine",
+  "description": "a not so tiny search engine",
   "engines": {
-    "node": "^14"
+    "node": "^18"
   },
   "main": "src/index.js",
   "files": [
