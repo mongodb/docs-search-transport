@@ -2,6 +2,7 @@ import { Filter } from 'mongodb';
 import { getFacetsForMeta, tokenize } from './util';
 import { Document, FacetDisplayNames } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
+import { resultMapping } from '../data/term-result-mappings';
 
 export class InvalidQuery extends Error {}
 
@@ -145,6 +146,17 @@ export class Query {
           },
         });
       }
+    }
+
+    // if we need to boost for matching slug on an exact rawQuery match
+    if (resultMapping[this.rawQuery.trim()]) {
+      compound.must.push({
+        in: {
+          path: 'slug',
+          value: resultMapping[this.rawQuery.trim()],
+          score: { boost: { value: 100 } }
+        }
+      })
     }
 
     // if there are any phrases in quotes
