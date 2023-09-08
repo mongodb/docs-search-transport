@@ -66,6 +66,17 @@ export class Query {
     const parts: any[] = [];
     const searchPropertyMapping = getPropertyMapping();
 
+    // if we need to boost for matching slug on an exact rawQuery match
+    if (resultMapping[this.rawQuery.trim()]) {
+      parts.push({
+        text: {
+          path: 'strippedSlug',
+          query: resultMapping[this.rawQuery.trim()].map((r) => r.replace('/', '')),
+          score: { boost: { value: 100 } },
+        },
+      });
+    }
+
     parts.push({
       text: {
         query: terms,
@@ -146,17 +157,6 @@ export class Query {
           },
         });
       }
-    }
-
-    // if we need to boost for matching slug on an exact rawQuery match
-    if (resultMapping[this.rawQuery.trim()]) {
-      compound.must.push({
-        text: {
-          path: 'slug',
-          query: resultMapping[this.rawQuery.trim()],
-          score: { boost: { value: 100 } },
-        },
-      });
     }
 
     // if there are any phrases in quotes

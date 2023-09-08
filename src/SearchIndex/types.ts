@@ -1,6 +1,7 @@
 // MongoDB Documents
 export interface Document {
   slug: string;
+  strippedSlug?: string;
   title?: string;
   headings?: string[];
   text?: string; // legacy manifests have text instead of paragraphs

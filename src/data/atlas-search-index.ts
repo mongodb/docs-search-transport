@@ -56,7 +56,7 @@ export const SearchIndex: IndexMappings = {
         searchAnalyzer: 'lucene.english',
         type: 'string',
       },
-      slug: {
+      strippedSlug: {
         analyzer: 'lucene.keyword',
         searchAnalayzer: 'lucene.keyword',
         type: 'string',
