@@ -8,7 +8,7 @@ COPY . ./
 RUN npm run build
 
 # main image
-FROM node:14-alpine as main
+FROM node:18-alpine as main
 ENV NODE_ENV=production
 WORKDIR /app
 
