@@ -154,9 +154,9 @@ export class Query {
         in: {
           path: 'slug',
           value: resultMapping[this.rawQuery.trim()],
-          score: { boost: { value: 100 } }
-        }
-      })
+          score: { boost: { value: 100 } },
+        },
+      });
     }
 
     // if there are any phrases in quotes
