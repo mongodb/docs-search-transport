@@ -151,9 +151,9 @@ export class Query {
     // if we need to boost for matching slug on an exact rawQuery match
     if (resultMapping[this.rawQuery.trim()]) {
       compound.must.push({
-        in: {
+        text: {
           path: 'slug',
-          value: resultMapping[this.rawQuery.trim()],
+          query: resultMapping[this.rawQuery.trim()],
           score: { boost: { value: 100 } },
         },
       });

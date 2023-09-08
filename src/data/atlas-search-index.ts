@@ -56,6 +56,11 @@ export const SearchIndex: IndexMappings = {
         searchAnalyzer: 'lucene.english',
         type: 'string',
       },
+      slug: {
+        analyzer: 'lucene.keyword',
+        searchAnalayzer: 'lucene.keyword',
+        type: 'string',
+      },
       tags: {
         analyzer: 'lucene.english',
         indexOptions: 'freqs',
