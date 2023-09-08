@@ -71,7 +71,7 @@ export class Query {
       parts.push({
         text: {
           path: 'strippedSlug',
-          query: resultMapping[this.rawQuery.trim()].map((r) => r.replace('/', '')),
+          query: resultMapping[this.rawQuery.trim()].map((r) => r.replaceAll('/', '')),
           score: { boost: { value: 100 } },
         },
       });
