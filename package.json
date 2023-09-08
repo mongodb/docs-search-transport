@@ -15,7 +15,7 @@
     "lint": "npx prettier --check . && tsc --noEmit",
     "format": "npx prettier --write .",
     "search-transport": "ts-node src/index.ts",
-    "prepare": "husky install"
+    "prepare": "node -e \"if (process.env.NODE_ENV !== 'production'){process.exit(1)} \" || husky install"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
