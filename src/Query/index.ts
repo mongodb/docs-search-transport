@@ -2,7 +2,7 @@ import { Filter } from 'mongodb';
 import { getFacetsForMeta, tokenize } from './util';
 import { Document, FacetDisplayNames } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
-import { resultMapping } from '../data/term-result-mappings';
+import { strippedMapping } from '../data/term-result-mappings';
 
 export class InvalidQuery extends Error {}
 
@@ -67,11 +67,11 @@ export class Query {
     const searchPropertyMapping = getPropertyMapping();
 
     // if we need to boost for matching slug on an exact rawQuery match
-    if (resultMapping[this.rawQuery.trim()]) {
+    if (strippedMapping[this.rawQuery.trim()]) {
       parts.push({
         text: {
           path: 'strippedSlug',
-          query: resultMapping[this.rawQuery.trim()].map((r) => r.replaceAll('/', '')),
+          query: strippedMapping[this.rawQuery.trim()],
           score: { boost: { value: 100 } },
         },
       });

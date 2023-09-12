@@ -1,4 +1,4 @@
-export const resultMapping: ResultMapping = {
+const resultMapping: ResultMapping = {
   and: ['reference/operator/query/and'],
   or: ['reference/operator/query/or'],
   in: ['reference/operator/query/in'],
@@ -17,6 +17,11 @@ export const resultMapping: ResultMapping = {
   project: ['reference/operator/aggregation/project'],
   group: ['reference/operator/aggregation/group'],
 };
+
+// Strips the result mapping of any '/' characters
+export const strippedMapping: ResultMapping = Object.fromEntries(
+  Object.entries(resultMapping).map((e) => [e[0], e[1].map((r) => r.replaceAll('/', ''))])
+);
 
 // Values are subject to change, but each key should have a string array.
 interface ResultMapping {
