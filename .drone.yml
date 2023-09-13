@@ -8,6 +8,7 @@ trigger:
     include:
       - 'refs/tags/v*'
       - 'refs/heads/main'
+      - 'DOCSP-32881'
 
 steps:
   - name: publish-staging
