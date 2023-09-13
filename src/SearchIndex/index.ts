@@ -210,6 +210,11 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     // slug is possible to be empty string ''
     assert.ok(document.slug || document.slug === '');
 
+    // DOP-3962
+    // We need a slug field with no special chars for keyword search
+    // and exact match, e.g. no "( ) { } [ ] ^ “ ~ * ? : \ /" present
+    document.strippedSlug = document.slug.replaceAll('/', '');
+
     const facets: Record<string, string | string[]> = {};
 
     // <-------- BEGIN TESTING PRE TAXONOMY -------->

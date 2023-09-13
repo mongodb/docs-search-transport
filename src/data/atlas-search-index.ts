@@ -56,6 +56,11 @@ export const SearchIndex: IndexMappings = {
         searchAnalyzer: 'lucene.english',
         type: 'string',
       },
+      strippedSlug: {
+        analyzer: 'lucene.keyword',
+        searchAnalyzer: 'lucene.keyword',
+        type: 'string',
+      },
       tags: {
         analyzer: 'lucene.english',
         indexOptions: 'freqs',
