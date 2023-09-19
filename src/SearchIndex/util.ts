@@ -286,7 +286,7 @@ export function convertManifestFacet(facets: ManifestFacet[]): DocumentFacet {
   const res: DocumentFacet = {};
 
   function addDocumentFacet(facet: ManifestFacet, parentKey = ''): void {
-    const facetKey = `${parentKey ? parentKey + '>' : ''}>${facet.category}`;
+    const facetKey = `${parentKey}${parentKey ? '>' : ''}${facet.category}`;
     res[facetKey] = res[facetKey] || [];
     res[facetKey].push(facet.value);
 
@@ -295,8 +295,16 @@ export function convertManifestFacet(facets: ManifestFacet[]): DocumentFacet {
       addDocumentFacet(subFacet, `${facetKey}>${facet.value}`);
     }
   }
+  console.log('check facets')
+  console.log(facets);
+  
   for (const facet of facets) {
     addDocumentFacet(facet);
   }
+
+  console.log('check res');
+  console.log(res);
+  
+  
   return res;
 }
