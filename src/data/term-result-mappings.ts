@@ -88,9 +88,9 @@ const resultMapping: ResultMapping = {
   condition: ['reference/operator/aggregation/cond', 'tutorial/query-documents', 'reference/operator/query/expr'],
   relation: ['applications/data-models', 'introduction', 'core/data-modeling-introduction'],
   cond: ['reference/operator/aggregation/cond', 'tutorial/query-documents', 'reference/operator/query/expr'],
-  node: ['fundamentals/connection/connect', 'quick-start/', 'usage-examples/'],
-  'node.js driver': ['fundamentals/connection/connect', 'quick-start/', 'usage-examples/'],
-  nodejs: ['fundamentals/connection/connect', 'node/current/quick-start/', 'usage-examples/'],
+  node: ['quick-start/download-and-install', 'usage-examples/'],
+  'node.js driver': ['quick-start/download-and-install', 'usage-examples/'],
+  nodejs: ['quick-start/download-and-install', 'usage-examples/'],
   $filter: [
     'reference/operator/aggregation/filter',
     'reference/operator/aggregation',
