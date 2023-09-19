@@ -8,7 +8,7 @@ import dive from 'dive';
 import fs from 'fs';
 import util from 'util';
 
-import { Manifest, Taxonomy, FacetBucket, FacetDisplayNames, FacetAggRes } from './types';
+import { Manifest, ManifestFacet, DocumentFacet, Taxonomy, FacetBucket, FacetDisplayNames, FacetAggRes } from './types';
 import { TaxonomyEntity } from '../SearchIndex/types';
 
 // TODO: update Query
@@ -278,4 +278,25 @@ export async function getManifests(manifestSource: string): Promise<Manifest[]> 
   }
 
   return manifests;
+}
+
+// converts incoming manifest documents' facet data into
+// search collection's document.facet entries
+export function convertManifestFacet(facets: ManifestFacet[]): DocumentFacet {
+  const res: DocumentFacet = {};
+
+  function addDocumentFacet(facet: ManifestFacet, parentKey = ''): void {
+    const facetKey = `${parentKey ? parentKey + '>' : ''}>${facet.category}`;
+    res[facetKey] = res[facetKey] || [];
+    res[facetKey].push(facet.value);
+
+    if (!facet.sub_facets) return;
+    for (const subFacet of facet.sub_facets) {
+      addDocumentFacet(subFacet, `${facetKey}>${facet.value}`);
+    }
+  }
+  for (const facet of facets) {
+    addDocumentFacet(facet);
+  }
+  return res;
 }

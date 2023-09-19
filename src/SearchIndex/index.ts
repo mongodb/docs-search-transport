@@ -3,9 +3,19 @@ import assert from 'assert';
 import Logger from 'basic-logger';
 import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession } from 'mongodb';
 
-import { convertTaxonomyResponse, formatFacetMetaResponse, getManifests, joinUrl } from './util';
+import { convertManifestFacet, convertTaxonomyResponse, formatFacetMetaResponse, getManifests, joinUrl } from './util';
 import { Query } from '../Query';
-import { Document, Manifest, DatabaseDocument, RefreshInfo, Taxonomy, FacetDisplayNames, FacetAggRes } from './types';
+import {
+  DatabaseDocument,
+  DocumentFacet,
+  Manifest,
+  ManifestFacet,
+  RefreshInfo,
+  Taxonomy,
+  FacetDisplayNames,
+  FacetAggRes,
+  ManifestDocument,
+} from './types';
 
 const log = new Logger({
   showTimestamp: true,
@@ -203,7 +213,10 @@ const deleteStaleProperties = async (
   status.deleted += deleteResult.deletedCount === undefined ? 0 : deleteResult.deletedCount;
 };
 
-const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWriteOperation<DatabaseDocument>[] => {
+const composeUpserts = (
+  manifest: Manifest,
+  documents: ManifestDocument[]
+): AnyBulkWriteOperation<DatabaseDocument>[] => {
   return documents.map((document) => {
     assert.strictEqual(typeof document.slug, 'string');
     // DOP-3545 and DOP-3585
@@ -215,34 +228,7 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     // and exact match, e.g. no "( ) { } [ ] ^ “ ~ * ? : \ /" present
     document.strippedSlug = document.slug.replaceAll('/', '');
 
-    const facets: Record<string, string | string[]> = {};
-
-    // <-------- BEGIN TESTING PRE TAXONOMY -------->
-    // testing genres and target platform as part of faceted search
-    // TODO: update and revise after taxonomy v1 is finalized
-    if (document.slug.includes('reference')) {
-      facets['genres'] = ['reference'];
-    } else if (document.slug.includes('tutorial')) {
-      facets['genres'] = ['tutorial'];
-    }
-
-    // target_platform and target_platform->atlas<-versions acquired from manifest.searchProperty
-    const parts = manifest.searchProperty.split('-');
-    const target = parts.slice(0, parts.length - 1).join('-');
-    const version = parts.slice(parts.length - 1).join('');
-    facets['target_platforms'] = [target];
-    facets[`target_platforms>${target}>versions`] = [version];
-
-    // test driver hierarchy
-    if (target === 'drivers') {
-      // get sub_platform
-      const sub_platform = document.slug.split(/[\/ | \-]/)[0];
-      if (['index.html', 'community', 'specs', 'reactive', 'driver'].indexOf(sub_platform) === -1) {
-        facets[`target_platforms>drivers>sub_platforms`] = [sub_platform];
-      }
-    }
-
-    // <-------- END TESTING PRE TAXONOMY -------->
+    const facets: DocumentFacet = document.facets ? convertManifestFacet(document.facets as ManifestFacet[]) : {};
 
     const newDocument: DatabaseDocument = {
       ...document,

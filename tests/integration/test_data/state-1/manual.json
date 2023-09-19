@@ -18,6 +18,18 @@
             "tags": "",
             "links": [
                 "https://docs.mongodb.com/realm/get-started/introduction-web/"
+            ],
+            "facets": [
+                {
+                    "category": "target_product",
+                    "value": "manual",
+                    "sub_facets": null
+                },
+                {
+                    "category": "genre",
+                    "value": "tutorial",
+                    "sub_facets": null
+                }
             ]
         },
         {
