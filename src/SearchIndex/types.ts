@@ -9,14 +9,11 @@ export interface Document {
   code?: {}[]; // legacy manifests will not have code field
   preview?: string;
   tags: null | string[];
-}
-
-export interface ManifestDocument extends Document {
-  facets?: ManifestFacet[];
+  facets?: {};
 }
 
 interface ManifestData {
-  documents: ManifestDocument[];
+  documents: Document[];
   includeInGlobalSearch: boolean;
   url: string;
 }
@@ -33,7 +30,6 @@ export interface DatabaseDocument extends Document {
   manifestRevisionId: string;
   searchProperty: string[];
   includeInGlobalSearch: boolean;
-  facets: DocumentFacet;
 }
 
 // Typed response
@@ -57,16 +53,6 @@ export interface TaxonomyEntity {
 export type Taxonomy = Record<string, TaxonomyEntity[]>;
 
 // Facets
-export type ManifestFacet = {
-  category: string;
-  value: string;
-  sub_facets: ManifestFacet[] | null;
-};
-
-export type DocumentFacet = {
-  [key: string]: string[];
-};
-
 export type FacetDisplayNames = {
   name?: string;
   [key: string]: FacetDisplayNames | string | boolean | undefined;

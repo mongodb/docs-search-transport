@@ -3,19 +3,9 @@ import assert from 'assert';
 import Logger from 'basic-logger';
 import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession } from 'mongodb';
 
-import { convertManifestFacet, convertTaxonomyResponse, formatFacetMetaResponse, getManifests, joinUrl } from './util';
+import { convertTaxonomyResponse, formatFacetMetaResponse, getManifests, joinUrl } from './util';
 import { Query } from '../Query';
-import {
-  DatabaseDocument,
-  DocumentFacet,
-  Manifest,
-  ManifestFacet,
-  RefreshInfo,
-  Taxonomy,
-  FacetDisplayNames,
-  FacetAggRes,
-  ManifestDocument,
-} from './types';
+import { Document, Manifest, DatabaseDocument, RefreshInfo, Taxonomy, FacetDisplayNames, FacetAggRes } from './types';
 
 const log = new Logger({
   showTimestamp: true,
@@ -215,7 +205,7 @@ const deleteStaleProperties = async (
 
 const composeUpserts = (
   manifest: Manifest,
-  documents: ManifestDocument[]
+  documents: Document[]
 ): AnyBulkWriteOperation<DatabaseDocument>[] => {
   return documents.map((document) => {
     assert.strictEqual(typeof document.slug, 'string');
@@ -228,15 +218,12 @@ const composeUpserts = (
     // and exact match, e.g. no "( ) { } [ ] ^ “ ~ * ? : \ /" present
     document.strippedSlug = document.slug.replaceAll('/', '');
 
-    const facets: DocumentFacet = document.facets ? convertManifestFacet(document.facets as ManifestFacet[]) : {};
-
     const newDocument: DatabaseDocument = {
       ...document,
       url: joinUrl(manifest.manifest.url, document.slug),
       manifestRevisionId: manifest.manifestRevisionId,
       searchProperty: [manifest.searchProperty],
       includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
-      facets: facets,
     };
 
     return {

@@ -8,7 +8,6 @@ trigger:
     include:
       - 'refs/tags/v*'
       - 'refs/heads/main'
-      - DOP-4037
 
 steps:
   - name: publish-staging
