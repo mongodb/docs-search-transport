@@ -21,14 +21,8 @@
             ],
             "facets": [
                 {
-                    "category": "target_product",
-                    "value": "manual",
-                    "sub_facets": null
-                },
-                {
-                    "category": "genre",
-                    "value": "tutorial",
-                    "sub_facets": null
+                    "target_product": ["manual"],
+                    "genre": ["tutorial"]
                 }
             ]
         },
