@@ -102,7 +102,7 @@ const resultMapping: ResultMapping = {
     'reference/operator/aggregation/push',
     'reference/operator/update/position/',
   ],
-  $regex: ['reference/operator/query/regex', 'atlas/atlas-search/regex', 'reference/operator/aggregation/regexMatch/'],
+  $regex: ['reference/operator/query/regex', 'atlas-search/regex', 'reference/operator/aggregation/regexMatch/'],
   $eq: ['reference/operator/query/eq', 'reference/operator/aggregation/eq', 'reference/operator/query/elemMatch'],
   $size: ['reference/operator/query/size', 'reference/operator/aggregation/size', 'tutorial/query-arrays/'],
   $sort: [
@@ -123,7 +123,7 @@ const resultMapping: ResultMapping = {
   $pull: ['reference/operator/update/pull', 'reference/operator/update/pullAll', 'reference/operator/update'],
   $reduce: ['reference/operator/aggregation/reduce', 'reference/operator/aggregation'],
   $all: ['reference/operator/query/all', 'reference/operator/query/elemMatch', 'reference/operator/query/and'],
-  $facet: ['reference/operator/aggregation/facet', 'reference/operator/aggregation/bucket', 'atlas/atlas-search/facet'],
+  $facet: ['reference/operator/aggregation/facet', 'reference/operator/aggregation/bucket', 'atlas-search/facet'],
   $add: [
     'reference/operator/aggregation/add',
     'tutorial/update-documents-with-aggregation-pipeline',
@@ -134,7 +134,7 @@ const resultMapping: ResultMapping = {
     'tutorial/aggregation-zip-code-data-set',
     'reference/operator/aggregation',
   ],
-  $count: ['reference/operator/aggregation/count', 'reference/command/count', 'atlas/atlas-search/counting'],
+  $count: ['reference/operator/aggregation/count', 'reference/command/count', 'atlas-search/counting'],
   indexes: ['core/indexes'],
   $addFields: [
     'reference/operator/aggregation/addFields',
@@ -175,7 +175,7 @@ const resultMapping: ResultMapping = {
   ],
   $merge: [
     'reference/operator/aggregation/merge',
-    'atlas/data-federation/supported-unsupported/pipeline/merge',
+    'data-federation/supported-unsupported/pipeline/merge',
     'reference/aggregation-commands-comparison',
   ],
 };
