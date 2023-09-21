@@ -19,6 +19,7 @@ jobs:
       ATLAS_ADMIN_PUB_KEY: ${{ secrets.ATLAS_ADMIN_PUB_KEY }}
       ATLAS_DATABASE: ${{ vars.ATLAS_DATABASE }}
       COLLECTION_NAME: ${{ vars.COLLECTION_NAME }}
+      TAXONOMY_URL: ${{ vars.TAXONOMY_URL }}
     strategy:
       matrix:
         node-version: [18.x]
