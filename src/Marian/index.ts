@@ -247,21 +247,17 @@ export default class Marian {
   }
 
   private async fetchTaxonomy(url: string) {
-    // TODO: remove after taxonomy has been supplied. change env var
-    return parse(taxonomy);
-    // try {
-    //   if (!url) {
-    //     throw new Error('Taxonomy URL required');
-    //   }
-    //   const res = await fetch(url);
-    //   const toml = await res.text();
-    //   return parse(toml);
-    // } catch (e) {
-    //   // console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
-    //   // throw e;
-    //   console.log(`Returning test taxonomy with test toml`);
-    //   return parse(taxonomy);
-    // }
+    try {
+      if (!url) {
+        throw new Error('Taxonomy URL required');
+      }
+      const res = await fetch(url);
+      const toml = await res.text();
+      return parse(toml);
+    } catch (e) {
+      console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
+      throw e;
+    }
   }
 
   private async handleStatusV2(req: http.IncomingMessage, res: http.ServerResponse) {

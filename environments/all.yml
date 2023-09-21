@@ -7,6 +7,7 @@ env:
   GROUP_ID: '5bad1d3d96e82129f16c5df3'
   CLUSTER_NAME: 'Search'
   COLLECTION_NAME: 'documents'
+  TAXONOMY_URL: 'https://raw.githubusercontent.com/mongodb/snooty-parser/master/snooty/taxonomy.toml'
 
 service:
   targetPort: 8080

@@ -215,42 +215,12 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     // and exact match, e.g. no "( ) { } [ ] ^ “ ~ * ? : \ /" present
     document.strippedSlug = document.slug.replaceAll('/', '');
 
-    const facets: Record<string, string | string[]> = {};
-
-    // <-------- BEGIN TESTING PRE TAXONOMY -------->
-    // testing genres and target platform as part of faceted search
-    // TODO: update and revise after taxonomy v1 is finalized
-    if (document.slug.includes('reference')) {
-      facets['genres'] = ['reference'];
-    } else if (document.slug.includes('tutorial')) {
-      facets['genres'] = ['tutorial'];
-    }
-
-    // target_platform and target_platform->atlas<-versions acquired from manifest.searchProperty
-    const parts = manifest.searchProperty.split('-');
-    const target = parts.slice(0, parts.length - 1).join('-');
-    const version = parts.slice(parts.length - 1).join('');
-    facets['target_platforms'] = [target];
-    facets[`target_platforms>${target}>versions`] = [version];
-
-    // test driver hierarchy
-    if (target === 'drivers') {
-      // get sub_platform
-      const sub_platform = document.slug.split(/[\/ | \-]/)[0];
-      if (['index.html', 'community', 'specs', 'reactive', 'driver'].indexOf(sub_platform) === -1) {
-        facets[`target_platforms>drivers>sub_platforms`] = [sub_platform];
-      }
-    }
-
-    // <-------- END TESTING PRE TAXONOMY -------->
-
     const newDocument: DatabaseDocument = {
       ...document,
       url: joinUrl(manifest.manifest.url, document.slug),
       manifestRevisionId: manifest.manifestRevisionId,
       searchProperty: [manifest.searchProperty],
       includeInGlobalSearch: manifest.manifest.includeInGlobalSearch,
-      facets: facets,
     };
 
     return {
