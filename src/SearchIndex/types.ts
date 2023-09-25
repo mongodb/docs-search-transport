@@ -74,3 +74,22 @@ export type FacetAggRes = {
     // key is split by '>' key
   };
 };
+
+export type FacetOption = {
+  id: string; // used to verify against taxonomy
+  name: string; // used to display for front end
+  count?: number;
+  options: FacetValue[];
+  key: string;
+  type: 'facet-option';
+};
+
+export type FacetValue = {
+  id: string;
+  name: string;
+  facets: FacetOption[];
+  key: string;
+  type: 'facet-value';
+};
+
+export type FacetAggregationStage = { [key: string]: { type: 'string'; path: string } };

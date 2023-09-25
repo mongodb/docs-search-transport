@@ -1,6 +1,6 @@
 import { Filter } from 'mongodb';
 
-import { Document, FacetDisplayNames } from '../SearchIndex/types';
+import { Document, FacetAggregationStage, FacetDisplayNames, FacetOption } from '../SearchIndex/types';
 
 const atomicPhraseMap: Record<string, string> = {
   ops: 'manager',
@@ -80,47 +80,14 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
   return filter;
 };
 
-// TODO: update this to use with new children attribute taxonomy
-export const getFacetsForMeta = (filter: Filter<Document>, taxonomy: FacetDisplayNames) => {
-  const facets: { [key: string]: { type: 'string'; path: string } } = {};
+// TODO: update this to work with new facet structure (children and options)
+export const getFacetAggregationStages = (taxonomy: FacetOption[]) => {
+  const facetKeysForAgg: FacetAggregationStage = {};
 
-  for (const baseFacet in taxonomy) {
-    facets[baseFacet] = {
-      type: 'string',
-      path: `facets.${baseFacet}`,
-    };
+  // TODO: traverse all of taxonomy to get facets for meta
+  for (const facetOption of taxonomy) {
+    console.log(facetOption);
   }
 
-  for (const [key, values] of Object.entries(filter)) {
-    const facetKey = key.replace('facets.', '');
-    for (const value of values) {
-      const entry = _lookup(taxonomy, facetKey, value);
-      if (typeof entry === 'object') {
-        for (const entryKey in entry) {
-          if (['name', 'displayName'].indexOf(entryKey) > -1) {
-            continue;
-          }
-          facets[`${facetKey}>${value}>${entryKey}`] = {
-            type: 'string',
-            path: `${key}>${value}>${entryKey}`,
-          };
-        }
-      }
-    }
-  }
-
-  return facets;
-};
-
-const _lookup = (taxonomy: FacetDisplayNames, facetKey: string, value: string) => {
-  let ref: { [key: string]: any } = taxonomy;
-
-  const parts = facetKey.split('>');
-  for (let idx = 0; idx < parts.length; idx++) {
-    const part = parts[idx];
-    if (ref[part]) {
-      ref = ref[part];
-    }
-  }
-  return ref[value];
+  return facetKeysForAgg;
 };

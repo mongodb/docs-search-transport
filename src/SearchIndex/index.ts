@@ -5,7 +5,7 @@ import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db,
 
 import { convertTaxonomyResponse, formatFacetMetaResponse, getManifests, joinUrl } from './util';
 import { Query } from '../Query';
-import { Document, Manifest, DatabaseDocument, RefreshInfo, Taxonomy, FacetDisplayNames, FacetAggRes } from './types';
+import { Document, Manifest, DatabaseDocument, RefreshInfo, Taxonomy, FacetOption, FacetAggRes } from './types';
 
 const log = new Logger({
   showTimestamp: true,
@@ -22,7 +22,7 @@ export class SearchIndex {
   documents: Collection<DatabaseDocument>;
   unindexable: Collection<DatabaseDocument>;
   taxonomy: Taxonomy;
-  convertedTaxonomy: FacetDisplayNames;
+  convertedTaxonomy: FacetOption[];
 
   constructor(manifestSource: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;
@@ -35,7 +35,7 @@ export class SearchIndex {
     this.unindexable = this.db.collection<DatabaseDocument>('unindexable');
     this.lastRefresh = null;
     this.taxonomy = {};
-    this.convertedTaxonomy = {};
+    this.convertedTaxonomy = [];
   }
 
   async search(query: Query, searchProperty: string[] | null, pageNumber?: number) {
@@ -48,9 +48,13 @@ export class SearchIndex {
     const metaAggregationQuery = query.getMetaQuery(searchProperty, this.convertedTaxonomy);
     const cursor = this.documents.aggregate(metaAggregationQuery);
     try {
-      const aggRes = await cursor.toArray();
-      const res = formatFacetMetaResponse(aggRes[0] as FacetAggRes, this.convertedTaxonomy);
-      return res;
+      // TODO: re-implement
+      // const aggRes = await cursor.toArray();
+      // const res = formatFacetMetaResponse(aggRes[0] as FacetAggRes, this.convertedTaxonomy);
+      return {
+        count: 0,
+        aggRes: null,
+      };
     } catch (e) {
       log.error(`Error while fetching facets: ${JSON.stringify(e)}`);
       throw e;

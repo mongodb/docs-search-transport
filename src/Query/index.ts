@@ -1,6 +1,6 @@
 import { Filter } from 'mongodb';
-import { getFacetsForMeta, tokenize } from './util';
-import { Document, FacetDisplayNames } from '../SearchIndex/types';
+import { getFacetAggregationStages, tokenize } from './util';
+import { Document, FacetDisplayNames, FacetOption } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
 import { strippedMapping } from '../data/term-result-mappings';
 
@@ -177,19 +177,22 @@ export class Query {
       compound.must.push({
         phrase: {
           query: this.filters[key],
-          path: key
-        }
+          path: key,
+        },
       });
     }
 
     return compound;
   }
 
-  // TODO: update this to work with new facet children structure
-  getMetaQuery(searchProperty: string[] | null, taxonomyTrie: FacetDisplayNames) {
+  // TODO: update this to work with new facet structure (children and options)
+  // should expand all of taxonomy into document.facets keys (ie. search index keys)
+  // then return aggregation pipeline stages[]
+  // ie. target_product>atlas>versions
+  getMetaQuery(searchProperty: string[] | null, taxonomy: FacetOption[]) {
     const compound = this.getCompound(searchProperty);
 
-    const facets = getFacetsForMeta(this.filters, taxonomyTrie);
+    const facets = getFacetAggregationStages(taxonomy);
 
     const agg = [
       {

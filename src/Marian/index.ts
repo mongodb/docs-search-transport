@@ -4,7 +4,6 @@ import Logger from 'basic-logger';
 import http from 'http';
 import { parse } from 'toml';
 
-import { taxonomy } from '../data/sample-taxonomy';
 import { checkAllowedOrigin, checkMethod } from './util';
 import { StatusResponse } from './types';
 import { SearchIndex } from '../SearchIndex';

@@ -8,10 +8,9 @@ import dive from 'dive';
 import fs from 'fs';
 import util from 'util';
 
-import { Manifest, Taxonomy, FacetBucket, FacetDisplayNames, FacetAggRes } from './types';
+import { Manifest, Taxonomy, FacetBucket, FacetDisplayNames, FacetAggRes, FacetOption, FacetValue } from './types';
 import { TaxonomyEntity } from '../SearchIndex/types';
 
-// TODO: update Query
 import { InvalidQuery } from '../Query';
 
 const log = new Logger({
@@ -32,6 +31,7 @@ interface FacetRes {
   [key: string]: FacetRes | string | number | undefined;
 }
 
+// TODO: update this to work with new facet structure (children and options)
 export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: FacetDisplayNames) {
   const res: {
     count: number;
@@ -96,45 +96,49 @@ function _constructFacetResponse(
   }
 }
 
-/**
- *
- * @param taxonomy
- * @returns a trie structure of taxonomy.
- * each node is denoted by a 'name' attribute.
- * other attributes denotes a new node
- * ['name' and 'display_name' attributes denote name(s) of facet]
- * [versions have special boolean attribute of 'stable']
- */
-export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetDisplayNames {
-  const res: FacetDisplayNames = {};
+// TODO: update this to work with new facet structure (children and options)
+// DONE
+export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetOption[] {
+  const res: FacetOption[] = [];
 
-  function addToRes(entityList: TaxonomyEntity[], ref: { [key: string]: any }, property: string) {
-    ref[property] = {
-      name: convertTitleCase(property, property), // convert snakecase to title case
+  function handleFacetOption(taxonomy: Taxonomy, id: string, prefix: string): FacetOption {
+    const newFacetOption: FacetOption = {
+      type: 'facet-option',
+      id: id,
+      key: prefix + id,
+      name: convertTitleCase(id, id),
+      options: [],
     };
-    ref = ref[property];
-    for (const taxEntity of entityList) {
-      const entity: Record<string, any> = {
-        name: taxEntity['display_name'] || convertTitleCase(taxEntity['name'], property),
-      };
-      if (property === 'versions' && taxEntity['stable']) {
-        entity['stable'] = true;
-      }
-      for (const key in taxEntity) {
-        if (!Array.isArray(taxEntity[key])) {
-          continue;
-        }
-        addToRes(taxEntity[key] as TaxonomyEntity[], entity, key);
-      }
-      ref[taxEntity['name']] = entity;
+
+    for (const taxonomyFacet of taxonomy[id]) {
+      if (typeof taxonomyFacet !== 'object') continue;
+      newFacetOption.options.push(handleFacetValue(id, taxonomyFacet, prefix + id));
     }
+
+    return newFacetOption;
   }
 
-  for (const stringKey in taxonomy) {
-    if (stringKey === 'name') {
-      continue;
+  function handleFacetValue(taxonomyKey: string, taxonomyFacet: TaxonomyEntity, prefix: string): FacetValue {
+    const newFacet: FacetValue = {
+      type: 'facet-value',
+      id: taxonomyFacet.name,
+      key: prefix,
+      name: taxonomyFacet.display_name || convertTitleCase(taxonomyFacet.name, taxonomyKey),
+      facets: [],
+    };
+
+    for (const key of Object.keys(taxonomyFacet)) {
+      if (typeof taxonomyFacet[key] !== 'object' && taxonomyFacet[key]?.length === undefined) continue;
+      newFacet.facets.push(
+        handleFacetOption(taxonomyFacet as unknown as Taxonomy, key, `${prefix}>${taxonomyFacet.name}>`)
+      );
     }
-    addToRes(taxonomy[stringKey], res as object, stringKey);
+
+    return newFacet;
+  }
+
+  for (const facetOptionKey of Object.keys(taxonomy)) {
+    res.push(handleFacetOption(taxonomy, facetOptionKey, ''));
   }
   return res;
 }
