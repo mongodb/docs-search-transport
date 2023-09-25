@@ -42,14 +42,14 @@ export const sampleFacetTrie = [
         id: 'reference',
         key: 'genres',
         name: 'Reference',
-        facets: [{ type: 'facet-option', id: 'name', key: 'genres>reference>name', name: 'Name', options: [] }],
+        facets: [],
       },
       {
         type: 'facet-value',
         id: 'tutorial',
         key: 'genres',
         name: 'Tutorial',
-        facets: [{ type: 'facet-option', id: 'name', key: 'genres>tutorial>name', name: 'Name', options: [] }],
+        facets: [],
       },
     ],
   },
@@ -65,7 +65,6 @@ export const sampleFacetTrie = [
         key: 'target_platforms',
         name: 'Atlas',
         facets: [
-          { type: 'facet-option', id: 'name', key: 'target_platforms>atlas>name', name: 'Name', options: [] },
           {
             type: 'facet-option',
             id: 'versions',
@@ -77,30 +76,14 @@ export const sampleFacetTrie = [
                 id: 'v1.2',
                 key: 'target_platforms>atlas>versions',
                 name: 'v1.2',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>atlas>versions>v1.2>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
               {
                 type: 'facet-value',
                 id: 'master',
                 key: 'target_platforms>atlas>versions',
                 name: 'master',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>atlas>versions>master>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
             ],
           },
@@ -112,14 +95,6 @@ export const sampleFacetTrie = [
         key: 'target_platforms',
         name: 'Atlas CLI',
         facets: [
-          { type: 'facet-option', id: 'name', key: 'target_platforms>atlas-cli>name', name: 'Name', options: [] },
-          {
-            type: 'facet-option',
-            id: 'display_name',
-            key: 'target_platforms>atlas-cli>display_name',
-            name: 'Display Name',
-            options: [],
-          },
           {
             type: 'facet-option',
             id: 'versions',
@@ -131,30 +106,14 @@ export const sampleFacetTrie = [
                 id: 'v1.2',
                 key: 'target_platforms>atlas-cli>versions',
                 name: 'v1.2',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>atlas-cli>versions>v1.2>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
               {
                 type: 'facet-value',
                 id: 'master',
                 key: 'target_platforms>atlas-cli>versions',
                 name: 'master',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>atlas-cli>versions>master>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
             ],
           },
@@ -166,7 +125,6 @@ export const sampleFacetTrie = [
         key: 'target_platforms',
         name: 'Manual',
         facets: [
-          { type: 'facet-option', id: 'name', key: 'target_platforms>manual>name', name: 'Name', options: [] },
           {
             type: 'facet-option',
             id: 'versions',
@@ -178,30 +136,14 @@ export const sampleFacetTrie = [
                 id: 'v1.0',
                 key: 'target_platforms>manual>versions',
                 name: 'v1.0',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>manual>versions>v1.0>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
               {
                 type: 'facet-value',
                 id: 'master',
                 key: 'target_platforms>manual>versions',
                 name: 'master',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>manual>versions>master>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
             ],
           },
@@ -213,14 +155,6 @@ export const sampleFacetTrie = [
         key: 'target_platforms',
         name: 'Spark Connector',
         facets: [
-          { type: 'facet-option', id: 'name', key: 'target_platforms>spark-connector>name', name: 'Name', options: [] },
-          {
-            type: 'facet-option',
-            id: 'display_name',
-            key: 'target_platforms>spark-connector>display_name',
-            name: 'Display Name',
-            options: [],
-          },
           {
             type: 'facet-option',
             id: 'versions',
@@ -232,30 +166,14 @@ export const sampleFacetTrie = [
                 id: 'v2.0',
                 key: 'target_platforms>spark-connector>versions',
                 name: 'v2.0',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>spark-connector>versions>v2.0>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
               {
                 type: 'facet-value',
                 id: 'v2.1',
                 key: 'target_platforms>spark-connector>versions',
                 name: 'v2.1',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>spark-connector>versions>v2.1>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
             ],
           },
@@ -267,7 +185,6 @@ export const sampleFacetTrie = [
         key: 'target_platforms',
         name: 'Node',
         facets: [
-          { type: 'facet-option', id: 'name', key: 'target_platforms>node>name', name: 'Name', options: [] },
           {
             type: 'facet-option',
             id: 'versions',
@@ -279,15 +196,7 @@ export const sampleFacetTrie = [
                 id: 'v4.9',
                 key: 'target_platforms>node>versions',
                 name: 'v4.9',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>node>versions>v4.9>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
             ],
           },
@@ -299,14 +208,6 @@ export const sampleFacetTrie = [
         key: 'target_platforms',
         name: 'Mongo CLI',
         facets: [
-          { type: 'facet-option', id: 'name', key: 'target_platforms>mongocli>name', name: 'Name', options: [] },
-          {
-            type: 'facet-option',
-            id: 'display_name',
-            key: 'target_platforms>mongocli>display_name',
-            name: 'Display Name',
-            options: [],
-          },
           {
             type: 'facet-option',
             id: 'versions',
@@ -318,15 +219,7 @@ export const sampleFacetTrie = [
                 id: 'v1.0',
                 key: 'target_platforms>mongocli>versions',
                 name: 'v1.0',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>mongocli>versions>v1.0>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
             ],
           },
@@ -340,13 +233,6 @@ export const sampleFacetTrie = [
         facets: [
           {
             type: 'facet-option',
-            id: 'name',
-            key: 'target_platforms>visual-studio-extension>name',
-            name: 'Name',
-            options: [],
-          },
-          {
-            type: 'facet-option',
             id: 'versions',
             key: 'target_platforms>visual-studio-extension>versions',
             name: 'versions',
@@ -356,15 +242,7 @@ export const sampleFacetTrie = [
                 id: 'current',
                 key: 'target_platforms>visual-studio-extension>versions',
                 name: 'current',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>visual-studio-extension>versions>current>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
             ],
           },
@@ -376,7 +254,6 @@ export const sampleFacetTrie = [
         key: 'target_platforms',
         name: 'Golang',
         facets: [
-          { type: 'facet-option', id: 'name', key: 'target_platforms>golang>name', name: 'Name', options: [] },
           {
             type: 'facet-option',
             id: 'versions',
@@ -388,15 +265,7 @@ export const sampleFacetTrie = [
                 id: 'v1.7',
                 key: 'target_platforms>golang>versions',
                 name: 'v1.7',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>golang>versions>v1.7>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
             ],
           },
@@ -408,7 +277,6 @@ export const sampleFacetTrie = [
         key: 'target_platforms',
         name: 'Java',
         facets: [
-          { type: 'facet-option', id: 'name', key: 'target_platforms>java>name', name: 'Name', options: [] },
           {
             type: 'facet-option',
             id: 'versions',
@@ -420,15 +288,7 @@ export const sampleFacetTrie = [
                 id: 'v4.3',
                 key: 'target_platforms>java>versions',
                 name: 'v4.3',
-                facets: [
-                  {
-                    type: 'facet-option',
-                    id: 'name',
-                    key: 'target_platforms>java>versions>v4.3>name',
-                    name: 'Name',
-                    options: [],
-                  },
-                ],
+                facets: [],
               },
             ],
           },

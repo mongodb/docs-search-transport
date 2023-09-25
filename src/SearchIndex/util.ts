@@ -97,7 +97,7 @@ function _constructFacetResponse(
 }
 
 /**
- * 
+ *
  * @param taxonomy    taxonomy representation of all available facets
  * @returns           root list of FacetOption[], representing taxonomy
  */
@@ -114,7 +114,6 @@ export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetOption[] {
     };
 
     for (const taxonomyFacet of taxonomy[id]) {
-      if (typeof taxonomyFacet !== 'object') continue;
       newFacetOption.options.push(handleFacetValue(id, taxonomyFacet, prefix + id));
     }
 
@@ -131,7 +130,7 @@ export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetOption[] {
     };
 
     for (const key of Object.keys(taxonomyFacet)) {
-      if (typeof taxonomyFacet[key] !== 'object' && taxonomyFacet[key]?.length === undefined) continue;
+      if (!Array.isArray(taxonomyFacet[key])) continue;
       newFacet.facets.push(
         handleFacetOption(taxonomyFacet as unknown as Taxonomy, key, `${prefix}>${taxonomyFacet.name}>`)
       );
