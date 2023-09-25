@@ -96,8 +96,11 @@ function _constructFacetResponse(
   }
 }
 
-// TODO: update this to work with new facet structure (children and options)
-// DONE
+/**
+ * 
+ * @param taxonomy    taxonomy representation of all available facets
+ * @returns           root list of FacetOption[], representing taxonomy
+ */
 export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetOption[] {
   const res: FacetOption[] = [];
 
