@@ -132,7 +132,7 @@ export class Query {
     const searchPropertyNames = Object.keys(searchPropertyMapping);
 
     // if user requested searchProperty, must match this property name
-    // TODO: change to filters.
+    // allowing mix usage of searchProperty and facets
     if (searchProperty !== null && searchProperty.length !== 0) {
       compound.must.push({
         phrase: {
@@ -173,9 +173,19 @@ export class Query {
       );
     }
 
+    for (const key in this.filters) {
+      compound.must.push({
+        phrase: {
+          query: this.filters[key],
+          path: key
+        }
+      });
+    }
+
     return compound;
   }
 
+  // TODO: update this to work with new facet children structure
   getMetaQuery(searchProperty: string[] | null, taxonomyTrie: FacetDisplayNames) {
     const compound = this.getCompound(searchProperty);
 

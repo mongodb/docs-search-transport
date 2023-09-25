@@ -80,6 +80,7 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
   return filter;
 };
 
+// TODO: update this to use with new children attribute taxonomy
 export const getFacetsForMeta = (filter: Filter<Document>, taxonomy: FacetDisplayNames) => {
   const facets: { [key: string]: { type: 'string'; path: string } } = {};
 
