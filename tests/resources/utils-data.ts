@@ -30,7 +30,7 @@ export const sampleTaxonomy = {
   ],
 } as Taxonomy;
 
-export const sampleFacetTrie = [
+export const sampleFacetOption = [
   {
     type: 'facet-option',
     id: 'genres',
