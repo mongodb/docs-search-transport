@@ -267,7 +267,7 @@ export default class Marian {
     };
     Object.assign(headers, STANDARD_HEADERS);
     checkAllowedOrigin(req.headers.origin, headers);
-    const responseBody = JSON.stringify(this.index.convertedTaxonomy);
+    const responseBody = JSON.stringify(this.index.responseFacets);
     res.writeHead(200, headers);
     res.end(responseBody);
   }
