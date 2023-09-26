@@ -8,7 +8,7 @@ trigger:
     include:
       - 'refs/tags/v*'
       - 'refs/heads/main'
-      - 'refs/heads/DOP-4048'
+      - 'refs/heads/DOP-4048-responsive'
 
 steps:
   - name: publish-staging
