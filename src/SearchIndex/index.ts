@@ -3,9 +3,24 @@ import assert from 'assert';
 import Logger from 'basic-logger';
 import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession } from 'mongodb';
 
-import { convertTaxonomyToResponseFormat, convertTaxonomyToTrie, formatFacetMetaResponse, getManifests, joinUrl } from './util';
+import {
+  convertTaxonomyToResponseFormat,
+  convertTaxonomyToTrie,
+  formatFacetMetaResponse,
+  getManifests,
+  joinUrl,
+} from './util';
 import { Query } from '../Query';
-import { Document, Manifest, DatabaseDocument, RefreshInfo, Taxonomy, FacetOption, FacetAggRes, FacetDisplayNames } from './types';
+import {
+  Document,
+  Manifest,
+  DatabaseDocument,
+  RefreshInfo,
+  Taxonomy,
+  FacetOption,
+  FacetAggRes,
+  FacetDisplayNames,
+} from './types';
 
 const log = new Logger({
   showTimestamp: true,

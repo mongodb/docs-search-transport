@@ -42,7 +42,6 @@ export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: 
   };
 }
 
-
 function handleFacetValue(
   facetOption: FacetOption,
   key: string,
@@ -102,7 +101,7 @@ function convertToFacetOptions(
     for (let partIdx = 0; partIdx < parts.length; partIdx++) {
       const part = parts[partIdx];
       partialKey = `${partialKey ? partialKey + '>' : ''}${part}`;
-      const parentKey = parts.slice(0, partIdx).join('>')
+      const parentKey = parts.slice(0, partIdx).join('>');
       taxonomyRef = taxonomyRef[part] as FacetDisplayNames;
       if (!taxonomyRef) {
         console.error(`Facet filter does not exist: ${facetKey}`);
@@ -121,8 +120,7 @@ function convertToFacetOptions(
       if (partIdx % 2 && !facetsByFacetKey[parentKey]) {
         // handle facet value
         handleFacetValue(facetRef as FacetOption, partialKey, part, taxonomyRef, facetsByFacetKey);
-      }
-      else if (!facetsByFacetKey[partialKey] && facetsRes[facetKey].buckets.length) {
+      } else if (!facetsByFacetKey[partialKey] && facetsRes[facetKey].buckets.length) {
         handleFacetOption(facetRef as FacetValue, partialKey, part, taxonomyRef, facetsByFacetKey);
       }
     }
