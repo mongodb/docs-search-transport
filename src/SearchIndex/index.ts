@@ -36,7 +36,6 @@ export class SearchIndex {
   lastRefresh: RefreshInfo | null;
   documents: Collection<DatabaseDocument>;
   unindexable: Collection<DatabaseDocument>;
-  // taxonomy: Taxonomy;
   trieFacets: TrieFacet;
   responseFacets: FacetOption[];
 
@@ -76,7 +75,6 @@ export class SearchIndex {
   }
 
   async load(taxonomy: Taxonomy, manifestSource?: string, refreshManifests = true): Promise<RefreshInfo | undefined> {
-    // this.taxonomy = taxonomy;
     this.responseFacets = convertTaxonomyToResponseFormat(taxonomy);
     this.trieFacets = convertTaxonomyToTrie(taxonomy);
 
