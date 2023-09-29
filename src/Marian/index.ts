@@ -153,7 +153,7 @@ export default class Marian {
       Pragma: 'no-cache',
     };
     Object.assign(headers, STANDARD_HEADERS);
-    console.log('req.headers : ', JSON.stringify(req.headers))
+    console.log('req.headers : ', JSON.stringify(req.headers));
 
     checkAllowedOrigin(req.headers.origin, headers);
 
