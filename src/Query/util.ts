@@ -1,6 +1,6 @@
 import { Filter } from 'mongodb';
 
-import { Document, FacetAggregationStage, FacetDisplayNames, FacetOption } from '../SearchIndex/types';
+import { Document, FacetAggregationStage, FacetOption } from '../SearchIndex/types';
 
 const atomicPhraseMap: Record<string, string> = {
   ops: 'manager',
@@ -80,14 +80,23 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
   return filter;
 };
 
-// TODO: update this to work with new facet structure (children and options)
 export const getFacetAggregationStages = (taxonomy: FacetOption[]) => {
   const facetKeysForAgg: FacetAggregationStage = {};
 
-  // TODO: traverse all of taxonomy to get facets for meta
-  for (const facetOption of taxonomy) {
-    console.log(facetOption);
+  function getKeysFromFacetOptions(facetOptions: FacetOption[]) {
+    for (const facetOption of facetOptions) {
+      facetKeysForAgg[facetOption.key] = {
+        type: 'string',
+        path: `facets.${facetOption.key}`,
+      };
+      for (const facetValue of facetOption.options) {
+        if (facetValue.facets?.length) {
+          getKeysFromFacetOptions(facetValue.facets);
+        }
+      }
+    }
   }
 
+  getKeysFromFacetOptions(taxonomy);
   return facetKeysForAgg;
 };

@@ -3,9 +3,24 @@ import assert from 'assert';
 import Logger from 'basic-logger';
 import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession } from 'mongodb';
 
-import { convertTaxonomyResponse, formatFacetMetaResponse, getManifests, joinUrl } from './util';
+import {
+  convertTaxonomyToResponseFormat,
+  convertTaxonomyToTrie,
+  formatFacetMetaResponse,
+  getManifests,
+  joinUrl,
+} from './util';
 import { Query } from '../Query';
-import { Document, Manifest, DatabaseDocument, RefreshInfo, Taxonomy, FacetOption, FacetAggRes } from './types';
+import {
+  Document,
+  Manifest,
+  DatabaseDocument,
+  RefreshInfo,
+  Taxonomy,
+  FacetOption,
+  FacetAggRes,
+  TrieFacet,
+} from './types';
 
 const log = new Logger({
   showTimestamp: true,
@@ -21,8 +36,8 @@ export class SearchIndex {
   lastRefresh: RefreshInfo | null;
   documents: Collection<DatabaseDocument>;
   unindexable: Collection<DatabaseDocument>;
-  taxonomy: Taxonomy;
-  convertedTaxonomy: FacetOption[];
+  trieFacets: TrieFacet;
+  responseFacets: FacetOption[];
 
   constructor(manifestSource: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;
@@ -34,8 +49,10 @@ export class SearchIndex {
     this.documents = this.db.collection<DatabaseDocument>('documents');
     this.unindexable = this.db.collection<DatabaseDocument>('unindexable');
     this.lastRefresh = null;
-    this.taxonomy = {};
-    this.convertedTaxonomy = [];
+    this.trieFacets = {
+      name: '',
+    };
+    this.responseFacets = [];
   }
 
   async search(query: Query, searchProperty: string[] | null, pageNumber?: number) {
@@ -45,16 +62,12 @@ export class SearchIndex {
   }
 
   async fetchFacets(query: Query, searchProperty: string[] | null) {
-    const metaAggregationQuery = query.getMetaQuery(searchProperty, this.convertedTaxonomy);
+    const metaAggregationQuery = query.getMetaQuery(searchProperty, this.responseFacets);
     const cursor = this.documents.aggregate(metaAggregationQuery);
     try {
       // TODO: re-implement
-      // const aggRes = await cursor.toArray();
-      // const res = formatFacetMetaResponse(aggRes[0] as FacetAggRes, this.convertedTaxonomy);
-      return {
-        count: 0,
-        aggRes: null,
-      };
+      const aggRes = await cursor.toArray();
+      return formatFacetMetaResponse(aggRes[0] as FacetAggRes, this.trieFacets);
     } catch (e) {
       log.error(`Error while fetching facets: ${JSON.stringify(e)}`);
       throw e;
@@ -62,8 +75,8 @@ export class SearchIndex {
   }
 
   async load(taxonomy: Taxonomy, manifestSource?: string, refreshManifests = true): Promise<RefreshInfo | undefined> {
-    this.taxonomy = taxonomy;
-    this.convertedTaxonomy = convertTaxonomyResponse(taxonomy);
+    this.responseFacets = convertTaxonomyToResponseFormat(taxonomy);
+    this.trieFacets = convertTaxonomyToTrie(taxonomy);
 
     if (!refreshManifests) {
       return;
