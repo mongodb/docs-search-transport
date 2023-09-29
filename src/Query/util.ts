@@ -1,6 +1,6 @@
 import { Filter } from 'mongodb';
 
-import { Document, FacetDisplayNames } from '../SearchIndex/types';
+import { Document, FacetAggregationStage, FacetOption } from '../SearchIndex/types';
 
 const atomicPhraseMap: Record<string, string> = {
   ops: 'manager',
@@ -80,46 +80,23 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
   return filter;
 };
 
-export const getFacetsForMeta = (filter: Filter<Document>, taxonomy: FacetDisplayNames) => {
-  const facets: { [key: string]: { type: 'string'; path: string } } = {};
+export const getFacetAggregationStages = (taxonomy: FacetOption[]) => {
+  const facetKeysForAgg: FacetAggregationStage = {};
 
-  for (const baseFacet in taxonomy) {
-    facets[baseFacet] = {
-      type: 'string',
-      path: `facets.${baseFacet}`,
-    };
-  }
-
-  for (const [key, values] of Object.entries(filter)) {
-    const facetKey = key.replace('facets.', '');
-    for (const value of values) {
-      const entry = _lookup(taxonomy, facetKey, value);
-      if (typeof entry === 'object') {
-        for (const entryKey in entry) {
-          if (['name', 'displayName'].indexOf(entryKey) > -1) {
-            continue;
-          }
-          facets[`${facetKey}>${value}>${entryKey}`] = {
-            type: 'string',
-            path: `${key}>${value}>${entryKey}`,
-          };
+  function getKeysFromFacetOptions(facetOptions: FacetOption[]) {
+    for (const facetOption of facetOptions) {
+      facetKeysForAgg[facetOption.key] = {
+        type: 'string',
+        path: `facets.${facetOption.key}`,
+      };
+      for (const facetValue of facetOption.options) {
+        if (facetValue.facets?.length) {
+          getKeysFromFacetOptions(facetValue.facets);
         }
       }
     }
   }
 
-  return facets;
-};
-
-const _lookup = (taxonomy: FacetDisplayNames, facetKey: string, value: string) => {
-  let ref: { [key: string]: any } = taxonomy;
-
-  const parts = facetKey.split('>');
-  for (let idx = 0; idx < parts.length; idx++) {
-    const part = parts[idx];
-    if (ref[part]) {
-      ref = ref[part];
-    }
-  }
-  return ref[value];
+  getKeysFromFacetOptions(taxonomy);
+  return facetKeysForAgg;
 };

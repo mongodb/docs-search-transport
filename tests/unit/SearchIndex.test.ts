@@ -1,6 +1,6 @@
 import { strictEqual, deepStrictEqual } from 'assert';
-import { joinUrl, convertTaxonomyResponse } from '../../src/SearchIndex/util';
-import { sampleFacetTrie, sampleTaxonomy } from '../resources/utils-data';
+import { joinUrl, convertTaxonomyToResponseFormat } from '../../src/SearchIndex/util';
+import { sampleFacetOption, sampleTaxonomy } from '../resources/utils-data';
 
 describe('SearchIndex', function () {
   it('correctly joins base URLs with slugs', function () {
@@ -8,11 +8,11 @@ describe('SearchIndex', function () {
     strictEqual(joinUrl('https://example.com', 'foo'), 'https://example.com/foo');
   });
 
-  describe('convertTaxonomyResponse', () => {
+  describe('convertTaxonomyToResponseFormat', () => {
     it('converts taxonomy object into a trie structure', () => {
       const input = sampleTaxonomy;
-      const expected = sampleFacetTrie;
-      deepStrictEqual(convertTaxonomyResponse(input), expected);
+      const expected = sampleFacetOption;
+      deepStrictEqual(convertTaxonomyToResponseFormat(input), expected);
     });
   });
 });

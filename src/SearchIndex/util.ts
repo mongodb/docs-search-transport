@@ -8,11 +8,8 @@ import dive from 'dive';
 import fs from 'fs';
 import util from 'util';
 
-import { Manifest, Taxonomy, FacetBucket, FacetDisplayNames, FacetAggRes } from './types';
+import { Manifest, Taxonomy, FacetBucket, TrieFacet, FacetAggRes, FacetOption, FacetValue } from './types';
 import { TaxonomyEntity } from '../SearchIndex/types';
-
-// TODO: update Query
-import { InvalidQuery } from '../Query';
 
 const log = new Logger({
   showTimestamp: true,
@@ -32,68 +29,118 @@ interface FacetRes {
   [key: string]: FacetRes | string | number | undefined;
 }
 
-export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: FacetDisplayNames) {
-  const res: {
-    count: number;
-    facets: FacetRes;
-  } = {
-    count: facetAggRes['count']['lowerBound'],
-    facets: {},
-  };
+export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: TrieFacet) {
+  const facetRes: FacetRes = {};
 
-  for (const [facetKey, facetBucket] of Object.entries(facetAggRes['facet'])) {
-    _constructFacetResponse(res.facets, facetKey, facetBucket, taxonomyTrie);
-  }
-  // for each facetAggRes
-  // split the key into parts
-  // and lookup each bucket of aggres
-  return res;
+  const facets: FacetOption[] = convertToFacetOptions(facetAggRes.facet, taxonomyTrie);
+
+  return {
+    count: facetAggRes.count['lowerBound'],
+    facets: facets,
+  };
 }
 
-// generates same response structure as /v2/manifest
-// for facet aggregation results
-// mutates and formats resultsFacet
-function _constructFacetResponse(
-  responseFacets: FacetRes,
-  facetKey: string,
-  facetBucket: FacetBucket,
-  taxonomy: FacetDisplayNames
+function handleFacetValue(
+  facetOption: FacetOption,
+  key: string,
+  id: string,
+  trieFacet: TrieFacet,
+  facetsByFacetKey: { [key: string]: FacetOption | FacetValue }
 ) {
-  let responseRef = responseFacets;
-  let taxRef = taxonomy;
-  try {
-    for (const facetName of facetKey.split('>')) {
-      const taxEntity = taxRef[facetName] as FacetDisplayNames;
-      if (!taxEntity) {
+  facetOption.options.push({
+    id: id,
+    name: trieFacet.name, //
+    facets: [],
+    key: key,
+    type: 'facet-value',
+  });
+
+  facetsByFacetKey[key] = facetOption.options[facetOption.options.length - 1];
+}
+
+function handleFacetOption(
+  facetValue: FacetValue,
+  key: string,
+  id: string,
+  trieFacet: TrieFacet,
+  facetsByFacetKey: { [key: string]: FacetOption | FacetValue }
+) {
+  facetValue.facets.push({
+    id: id,
+    name: trieFacet.name,
+    options: [],
+    key: key,
+    type: 'facet-option',
+  });
+
+  facetsByFacetKey[key] = facetValue.facets[facetValue.facets.length - 1];
+}
+
+function convertToFacetOptions(facetsRes: { [key: string]: FacetBucket }, taxonomyTrie: TrieFacet): FacetOption[] {
+  const res: { facets: FacetOption[] } = {
+    facets: [],
+  };
+  const facetsByFacetKey: { [key: string]: FacetOption | FacetValue } = {};
+  const taxonomyByKey: { [key: string]: TrieFacet } = {};
+  // keep index of partial taxonomy buckets as we add to res
+  // so we don't have to keep searching.
+  // length of number[] should correlate to length of '>' in key
+  const facetKeys = Object.keys(facetsRes).sort();
+
+  for (const facetKey of facetKeys) {
+    const parts = facetKey.split('>');
+    let partialKey = '';
+    let taxonomyRef = taxonomyTrie;
+    let facetRef: FacetOption | FacetValue;
+
+    for (let partIdx = 0; partIdx < parts.length; partIdx++) {
+      const part = parts[partIdx];
+      partialKey = `${partialKey ? partialKey + '>' : ''}${part}`;
+      const parentKey = parts.slice(0, partIdx).join('>');
+      taxonomyRef = taxonomyRef[part] as TrieFacet;
+      if (!taxonomyRef) {
         console.error(`Facet filter does not exist: ${facetKey}`);
         continue;
+      } else {
+        taxonomyByKey[partialKey] = taxonomyRef;
       }
-      responseRef[facetName] = responseRef[facetName] || {
-        name: taxEntity['name'],
-      };
-      responseRef = responseRef[facetName] as FacetRes;
-      taxRef = taxRef[facetName] as FacetDisplayNames;
+
+      // find reference of facet value / facet option
+      if (partIdx === 0) {
+        facetRef = res as unknown as FacetOption;
+      } else {
+        facetRef = facetsByFacetKey[parentKey];
+      }
+
+      if (partIdx % 2 && !facetsByFacetKey[parentKey]) {
+        // handle facet value
+        handleFacetValue(facetRef as FacetOption, partialKey, part, taxonomyRef, facetsByFacetKey);
+      } else if (!facetsByFacetKey[partialKey] && facetsRes[facetKey].buckets.length) {
+        handleFacetOption(facetRef as FacetValue, partialKey, part, taxonomyRef, facetsByFacetKey);
+      }
     }
 
-    for (const bucket of facetBucket['buckets']) {
-      const childFacet = taxRef[bucket._id] as FacetDisplayNames;
-      if (!childFacet) {
-        console.error(
-          `Error: Facets.bucket:  \n ${JSON.stringify(bucket)} \n` +
-            `Does not match taxonomy: \n${JSON.stringify(taxRef)}`
-        );
-        continue;
-      }
-      responseRef[bucket._id] = {
-        ...Object(responseRef[bucket._id]),
-        name: childFacet.name,
-        count: bucket.count,
-      };
+    const target = facetsByFacetKey[facetKey] as FacetOption;
+    if (target) {
+      target.options = [];
     }
-  } catch (e) {
-    console.error(`Error while constructing facet response: ${e}`);
-    throw new InvalidQuery();
+    for (const bucket of facetsRes[facetKey].buckets) {
+      const foundFacet = taxonomyByKey[facetKey]?.[bucket._id] as TrieFacet;
+      const key = facetKey + '>' + bucket._id;
+      target.options.push({
+        id: bucket._id,
+        name: foundFacet.name || '',
+        facets: [],
+        key: facetKey,
+        type: 'facet-value',
+        count: bucket.count,
+      });
+
+      facetsByFacetKey[key] = target.options[target.options.length - 1];
+    }
   }
+
+  return res.facets;
 }
 
 /**
@@ -105,8 +152,10 @@ function _constructFacetResponse(
  * ['name' and 'display_name' attributes denote name(s) of facet]
  * [versions have special boolean attribute of 'stable']
  */
-export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetDisplayNames {
-  const res: FacetDisplayNames = {};
+export function convertTaxonomyToTrie(taxonomy: Taxonomy): TrieFacet {
+  const res: TrieFacet = {
+    name: '',
+  };
 
   function addToRes(entityList: TaxonomyEntity[], ref: { [key: string]: any }, property: string) {
     ref[property] = {
@@ -135,6 +184,55 @@ export function convertTaxonomyResponse(taxonomy: Taxonomy): FacetDisplayNames {
       continue;
     }
     addToRes(taxonomy[stringKey], res as object, stringKey);
+  }
+  return res;
+}
+
+/**
+ *
+ * @param taxonomy    taxonomy representation of all available facets
+ * @returns           root list of FacetOption[], representing taxonomy
+ */
+export function convertTaxonomyToResponseFormat(taxonomy: Taxonomy): FacetOption[] {
+  const res: FacetOption[] = [];
+
+  function constructFacetOption(taxonomy: Taxonomy, id: string, prefix: string): FacetOption {
+    const newFacetOption: FacetOption = {
+      type: 'facet-option',
+      id: id,
+      key: prefix + id,
+      name: convertTitleCase(id, id),
+      options: [],
+    };
+
+    for (const taxonomyFacet of taxonomy[id]) {
+      newFacetOption.options.push(constructFacetValue(id, taxonomyFacet, prefix + id));
+    }
+
+    return newFacetOption;
+  }
+
+  function constructFacetValue(taxonomyKey: string, taxonomyFacet: TaxonomyEntity, prefix: string): FacetValue {
+    const newFacet: FacetValue = {
+      type: 'facet-value',
+      id: taxonomyFacet.name,
+      key: prefix,
+      name: taxonomyFacet.display_name || convertTitleCase(taxonomyFacet.name, taxonomyKey),
+      facets: [],
+    };
+
+    for (const key of Object.keys(taxonomyFacet)) {
+      if (!Array.isArray(taxonomyFacet[key])) continue;
+      newFacet.facets.push(
+        constructFacetOption(taxonomyFacet as unknown as Taxonomy, key, `${prefix}>${taxonomyFacet.name}>`)
+      );
+    }
+
+    return newFacet;
+  }
+
+  for (const facetOptionKey of Object.keys(taxonomy)) {
+    res.push(constructFacetOption(taxonomy, facetOptionKey, ''));
   }
   return res;
 }
