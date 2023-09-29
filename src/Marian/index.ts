@@ -4,7 +4,6 @@ import Logger from 'basic-logger';
 import http from 'http';
 import { parse } from 'toml';
 
-import { taxonomy } from '../data/sample-taxonomy';
 import { checkAllowedOrigin, checkMethod } from './util';
 import { StatusResponse } from './types';
 import { SearchIndex } from '../SearchIndex';
@@ -268,7 +267,7 @@ export default class Marian {
     };
     Object.assign(headers, STANDARD_HEADERS);
     checkAllowedOrigin(req.headers.origin, headers);
-    const responseBody = JSON.stringify(this.index.convertedTaxonomy);
+    const responseBody = JSON.stringify(this.index.responseFacets);
     res.writeHead(200, headers);
     res.end(responseBody);
   }

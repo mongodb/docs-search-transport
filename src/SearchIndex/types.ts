@@ -53,9 +53,9 @@ export interface TaxonomyEntity {
 export type Taxonomy = Record<string, TaxonomyEntity[]>;
 
 // Facets
-export type FacetDisplayNames = {
-  name?: string;
-  [key: string]: FacetDisplayNames | string | boolean | undefined;
+export type TrieFacet = {
+  name: string;
+  [key: string]: TrieFacet | string | boolean | undefined;
 };
 
 export type FacetBucket = {
@@ -74,3 +74,22 @@ export type FacetAggRes = {
     // key is split by '>' key
   };
 };
+
+export type FacetOption = {
+  type: 'facet-option';
+  id: string; // used to verify against taxonomy
+  name: string; // used to display for front end
+  key: string;
+  options: FacetValue[];
+};
+
+export type FacetValue = {
+  type: 'facet-value';
+  id: string;
+  name: string;
+  key: string;
+  count?: number;
+  facets: FacetOption[];
+};
+
+export type FacetAggregationStage = { [key: string]: { type: 'string'; path: string } };
