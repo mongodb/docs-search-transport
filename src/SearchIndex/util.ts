@@ -8,10 +8,8 @@ import dive from 'dive';
 import fs from 'fs';
 import util from 'util';
 
-import { Manifest, Taxonomy, FacetBucket, FacetDisplayNames, FacetAggRes, FacetOption, FacetValue } from './types';
+import { Manifest, Taxonomy, FacetBucket, TrieFacet, FacetAggRes, FacetOption, FacetValue } from './types';
 import { TaxonomyEntity } from '../SearchIndex/types';
-
-import { InvalidQuery } from '../Query';
 
 const log = new Logger({
   showTimestamp: true,
@@ -31,7 +29,7 @@ interface FacetRes {
   [key: string]: FacetRes | string | number | undefined;
 }
 
-export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: FacetDisplayNames) {
+export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: TrieFacet) {
   const facetRes: FacetRes = {};
 
   const facets: FacetOption[] = convertToFacetOptions(facetAggRes.facet, taxonomyTrie);
@@ -46,12 +44,12 @@ function handleFacetValue(
   facetOption: FacetOption,
   key: string,
   id: string,
-  taxonomyEntity: FacetDisplayNames,
+  trieFacet: TrieFacet,
   facetsByFacetKey: { [key: string]: FacetOption | FacetValue }
 ) {
   facetOption.options.push({
     id: id,
-    name: taxonomyEntity.name || convertTitleCase(taxonomyEntity.name || '', id),
+    name: trieFacet.name, //
     facets: [],
     key: key,
     type: 'facet-value',
@@ -64,12 +62,12 @@ function handleFacetOption(
   facetValue: FacetValue,
   key: string,
   id: string,
-  taxonomyEntity: FacetDisplayNames,
+  trieFacet: TrieFacet,
   facetsByFacetKey: { [key: string]: FacetOption | FacetValue }
 ) {
   facetValue.facets.push({
     id: id,
-    name: taxonomyEntity.name || convertTitleCase(taxonomyEntity.name || '', id),
+    name: trieFacet.name,
     options: [],
     key: key,
     type: 'facet-option',
@@ -78,15 +76,12 @@ function handleFacetOption(
   facetsByFacetKey[key] = facetValue.facets[facetValue.facets.length - 1];
 }
 
-function convertToFacetOptions(
-  facetsRes: { [key: string]: FacetBucket },
-  taxonomyTrie: FacetDisplayNames
-): FacetOption[] {
+function convertToFacetOptions(facetsRes: { [key: string]: FacetBucket }, taxonomyTrie: TrieFacet): FacetOption[] {
   const res: { facets: FacetOption[] } = {
     facets: [],
   };
   const facetsByFacetKey: { [key: string]: FacetOption | FacetValue } = {};
-  const taxonomyByKey: { [key: string]: FacetDisplayNames } = {};
+  const taxonomyByKey: { [key: string]: TrieFacet } = {};
   // keep index of partial taxonomy buckets as we add to res
   // so we don't have to keep searching.
   // length of number[] should correlate to length of '>' in key
@@ -102,7 +97,7 @@ function convertToFacetOptions(
       const part = parts[partIdx];
       partialKey = `${partialKey ? partialKey + '>' : ''}${part}`;
       const parentKey = parts.slice(0, partIdx).join('>');
-      taxonomyRef = taxonomyRef[part] as FacetDisplayNames;
+      taxonomyRef = taxonomyRef[part] as TrieFacet;
       if (!taxonomyRef) {
         console.error(`Facet filter does not exist: ${facetKey}`);
         continue;
@@ -130,7 +125,7 @@ function convertToFacetOptions(
       target.options = [];
     }
     for (const bucket of facetsRes[facetKey].buckets) {
-      const foundFacet = taxonomyByKey[facetKey]?.[bucket._id] as FacetDisplayNames;
+      const foundFacet = taxonomyByKey[facetKey]?.[bucket._id] as TrieFacet;
       const key = facetKey + '>' + bucket._id;
       target.options.push({
         id: bucket._id,
@@ -157,8 +152,10 @@ function convertToFacetOptions(
  * ['name' and 'display_name' attributes denote name(s) of facet]
  * [versions have special boolean attribute of 'stable']
  */
-export function convertTaxonomyToTrie(taxonomy: Taxonomy): FacetDisplayNames {
-  const res: FacetDisplayNames = {};
+export function convertTaxonomyToTrie(taxonomy: Taxonomy): TrieFacet {
+  const res: TrieFacet = {
+    name: '',
+  };
 
   function addToRes(entityList: TaxonomyEntity[], ref: { [key: string]: any }, property: string) {
     ref[property] = {
@@ -199,7 +196,7 @@ export function convertTaxonomyToTrie(taxonomy: Taxonomy): FacetDisplayNames {
 export function convertTaxonomyToResponseFormat(taxonomy: Taxonomy): FacetOption[] {
   const res: FacetOption[] = [];
 
-  function handleFacetOption(taxonomy: Taxonomy, id: string, prefix: string): FacetOption {
+  function constructFacetOption(taxonomy: Taxonomy, id: string, prefix: string): FacetOption {
     const newFacetOption: FacetOption = {
       type: 'facet-option',
       id: id,
@@ -209,13 +206,13 @@ export function convertTaxonomyToResponseFormat(taxonomy: Taxonomy): FacetOption
     };
 
     for (const taxonomyFacet of taxonomy[id]) {
-      newFacetOption.options.push(handleFacetValue(id, taxonomyFacet, prefix + id));
+      newFacetOption.options.push(constructFacetValue(id, taxonomyFacet, prefix + id));
     }
 
     return newFacetOption;
   }
 
-  function handleFacetValue(taxonomyKey: string, taxonomyFacet: TaxonomyEntity, prefix: string): FacetValue {
+  function constructFacetValue(taxonomyKey: string, taxonomyFacet: TaxonomyEntity, prefix: string): FacetValue {
     const newFacet: FacetValue = {
       type: 'facet-value',
       id: taxonomyFacet.name,
@@ -227,7 +224,7 @@ export function convertTaxonomyToResponseFormat(taxonomy: Taxonomy): FacetOption
     for (const key of Object.keys(taxonomyFacet)) {
       if (!Array.isArray(taxonomyFacet[key])) continue;
       newFacet.facets.push(
-        handleFacetOption(taxonomyFacet as unknown as Taxonomy, key, `${prefix}>${taxonomyFacet.name}>`)
+        constructFacetOption(taxonomyFacet as unknown as Taxonomy, key, `${prefix}>${taxonomyFacet.name}>`)
       );
     }
 
@@ -235,7 +232,7 @@ export function convertTaxonomyToResponseFormat(taxonomy: Taxonomy): FacetOption
   }
 
   for (const facetOptionKey of Object.keys(taxonomy)) {
-    res.push(handleFacetOption(taxonomy, facetOptionKey, ''));
+    res.push(constructFacetOption(taxonomy, facetOptionKey, ''));
   }
   return res;
 }

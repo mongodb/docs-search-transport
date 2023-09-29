@@ -19,7 +19,7 @@ import {
   Taxonomy,
   FacetOption,
   FacetAggRes,
-  FacetDisplayNames,
+  TrieFacet,
 } from './types';
 
 const log = new Logger({
@@ -37,7 +37,7 @@ export class SearchIndex {
   documents: Collection<DatabaseDocument>;
   unindexable: Collection<DatabaseDocument>;
   // taxonomy: Taxonomy;
-  trieFacets: FacetDisplayNames;
+  trieFacets: TrieFacet;
   responseFacets: FacetOption[];
 
   constructor(manifestSource: string, client: MongoClient, databaseName: string) {
@@ -50,7 +50,9 @@ export class SearchIndex {
     this.documents = this.db.collection<DatabaseDocument>('documents');
     this.unindexable = this.db.collection<DatabaseDocument>('unindexable');
     this.lastRefresh = null;
-    this.trieFacets = {};
+    this.trieFacets = {
+      name: '',
+    };
     this.responseFacets = [];
   }
 

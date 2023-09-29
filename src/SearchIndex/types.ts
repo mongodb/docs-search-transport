@@ -53,9 +53,9 @@ export interface TaxonomyEntity {
 export type Taxonomy = Record<string, TaxonomyEntity[]>;
 
 // Facets
-export type FacetDisplayNames = {
-  name?: string;
-  [key: string]: FacetDisplayNames | string | boolean | undefined;
+export type TrieFacet = {
+  name: string;
+  [key: string]: TrieFacet | string | boolean | undefined;
 };
 
 export type FacetBucket = {

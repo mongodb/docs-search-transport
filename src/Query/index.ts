@@ -1,6 +1,6 @@
 import { Filter } from 'mongodb';
 import { getFacetAggregationStages, tokenize } from './util';
-import { Document, FacetDisplayNames, FacetOption } from '../SearchIndex/types';
+import { Document, FacetOption } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
 import { strippedMapping } from '../data/term-result-mappings';
 
