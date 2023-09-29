@@ -131,7 +131,7 @@ function convertToFacetOptions(facetsRes: { [key: string]: FacetBucket }, taxono
         id: bucket._id,
         name: foundFacet.name || '',
         facets: [],
-        key: key,
+        key: facetKey,
         type: 'facet-value',
         count: bucket.count,
       });
