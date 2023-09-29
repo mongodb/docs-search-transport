@@ -15,6 +15,7 @@ export function arrayEquals<T>(arr1: Array<T>, arr2: Array<T>): boolean {
 }
 
 export function isPermittedOrigin(url: URL): boolean {
+  console.log('check url hostname: ', url.hostname);
   return (
     url.protocol == 'https:' &&
     (url.hostname.split('.')[0] == 'docs-mongodb-org-stg' ||
@@ -23,6 +24,7 @@ export function isPermittedOrigin(url: URL): boolean {
 }
 
 export function checkAllowedOrigin(origin: string | undefined, headers: Record<string, string>): void {
+  console.log('check origin ', origin);
   if (!origin) {
     return;
   }
