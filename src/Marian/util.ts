@@ -15,7 +15,11 @@ export function arrayEquals<T>(arr1: Array<T>, arr2: Array<T>): boolean {
 }
 
 export function isPermittedOrigin(url: URL): boolean {
-  return url.protocol == 'https:' && arrayEquals(url.hostname.split('.').slice(-2), ['mongodb', 'com']);
+  return (
+    url.protocol == 'https:' &&
+    (url.hostname === 'docs-mongodb-org-stg.s3.us-east-2.amazonaws.com' ||
+      arrayEquals(url.hostname.split('.').slice(-2), ['mongodb', 'com']))
+  );
 }
 
 export function checkAllowedOrigin(origin: string | undefined, headers: Record<string, string>): void {
