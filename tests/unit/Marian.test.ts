@@ -19,5 +19,8 @@ describe('util', function () {
     strictEqual(isPermittedOrigin(new URL('https://docs.atlas.mongodb.com/reference/atlas-limits/')), true);
     strictEqual(isPermittedOrigin(new URL('https://mongodb.com')), true);
     strictEqual(isPermittedOrigin(new URL('http://docs.mongodb.com/')), false);
+    strictEqual(isPermittedOrigin(new URL('https://docs-mongodb-org-stg.s3.us-east-2.amazonaws.com')), true);
+    strictEqual(isPermittedOrigin(new URL('http://example.s3.us-east-2.amazonaws.com')), false);
+    strictEqual(isPermittedOrigin(new URL('https://evil-mongodb-org-stg.s3.us-east-2.amazonaws.com')), false);
   });
 });
