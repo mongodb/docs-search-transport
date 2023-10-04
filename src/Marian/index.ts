@@ -267,6 +267,8 @@ export default class Marian {
       'Cache-Control': 'public,max-age=120,must-revalidate',
     };
     Object.assign(headers, STANDARD_HEADERS);
+    console.log('check req.headers');
+    console.log(JSON.stringify(req.headers));
     checkAllowedOrigin(req.headers.origin, headers);
     const responseBody = JSON.stringify(this.index.responseFacets);
     res.writeHead(200, headers);
