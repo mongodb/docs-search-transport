@@ -158,6 +158,18 @@ describe('http interface', function () {
     });
     strictEqual(result.response.headers['access-control-allow-origin'], 'https://docs.mongodb.com');
 
+    result = await request({
+      port: ctx.port,
+      path: `/status`,
+      headers: {
+        Origin: 'https://docs-mongodb-org-stg.s3.us-east-2.amazonaws.com',
+      },
+    });
+    strictEqual(
+      result.response.headers['access-control-allow-origin'],
+      'https://docs-mongodb-org-stg.s3.us-east-2.amazonaws.com'
+    );
+
     // Test an unparseable origin URL
     result = await request({
       port: ctx.port,
