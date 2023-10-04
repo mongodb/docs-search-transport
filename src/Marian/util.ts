@@ -23,7 +23,6 @@ export function isPermittedOrigin(url: URL): boolean {
 }
 
 export function checkAllowedOrigin(origin: string | undefined, headers: Record<string, string>): void {
-  console.log('check origin ', origin);
   if (!origin) {
     return;
   }
