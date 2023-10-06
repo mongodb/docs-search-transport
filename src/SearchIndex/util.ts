@@ -23,15 +23,7 @@ function convertTitleCase(name: string, property: string): string {
   return name.replace(/^[_-]*(.)|[_-]+(.)/g, (s, c, d) => (c ? c.toUpperCase() : ' ' + d.toUpperCase()));
 }
 
-interface FacetRes {
-  count?: number;
-  name?: string;
-  [key: string]: FacetRes | string | number | undefined;
-}
-
 export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: TrieFacet) {
-  const facetRes: FacetRes = {};
-
   const facets: FacetOption[] = convertToFacetOptions(facetAggRes.facet, taxonomyTrie);
 
   return {
@@ -40,7 +32,7 @@ export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: 
   };
 }
 
-function handleFacetValue(
+function handleFacetOption(
   facetOption: FacetOption,
   key: string,
   id: string,
@@ -49,7 +41,7 @@ function handleFacetValue(
 ) {
   facetOption.options.push({
     id: id,
-    name: trieFacet.name, //
+    name: trieFacet.name,
     facets: [],
     key: key,
     type: 'facet-value',
@@ -58,7 +50,7 @@ function handleFacetValue(
   facetsByFacetKey[key] = facetOption.options[facetOption.options.length - 1];
 }
 
-function handleFacetOption(
+function handleFacetValue(
   facetValue: FacetValue,
   key: string,
   id: string,
@@ -107,16 +99,22 @@ function convertToFacetOptions(facetsRes: { [key: string]: FacetBucket }, taxono
 
       // find reference of facet value / facet option
       if (partIdx === 0) {
-        facetRef = res as unknown as FacetOption;
+        facetRef = res as unknown as FacetValue;
       } else {
         facetRef = facetsByFacetKey[parentKey];
       }
 
+      // keys are sorted. if no reference facet, assume there is no results
+      // in parent bucket.
+      if (!facetRef) {
+        continue;
+      }
+
       if (partIdx % 2 && !facetsByFacetKey[parentKey]) {
         // handle facet value
-        handleFacetValue(facetRef as FacetOption, partialKey, part, taxonomyRef, facetsByFacetKey);
-      } else if (!facetsByFacetKey[partialKey] && facetsRes[facetKey].buckets.length) {
-        handleFacetOption(facetRef as FacetValue, partialKey, part, taxonomyRef, facetsByFacetKey);
+        handleFacetOption(facetRef as FacetOption, partialKey, part, taxonomyRef, facetsByFacetKey);
+      } else if (!facetsByFacetKey[partialKey] && facetsRes[facetKey]?.buckets?.length) {
+        handleFacetValue(facetRef as FacetValue, partialKey, part, taxonomyRef, facetsByFacetKey);
       }
     }
 
