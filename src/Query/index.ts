@@ -15,7 +15,6 @@ export class Query {
   terms: Set<string>;
   phrases: string[];
   rawQuery: string;
-  // filters: Filter<Document>;
 
   /**
    * Create a new query.
@@ -26,7 +25,6 @@ export class Query {
     this.terms = new Set();
     this.phrases = [];
     this.rawQuery = queryString;
-    // this.filters = filters || {};
 
     const parts = queryString.split(/((?:\s+|^)"[^"]+"(?:\s+|$))/);
     let inQuotes = false;
