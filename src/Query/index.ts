@@ -1,5 +1,5 @@
 import { Filter } from 'mongodb';
-import { getFacetAggregationStages, tokenize } from './util';
+import { getFacetAggregationStages, getProjectionAndFormatStages, tokenize } from './util';
 import { Document, FacetOption } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
 import { strippedMapping } from '../data/term-result-mappings';
@@ -239,15 +239,7 @@ export class Query {
     const RES_COUNT = 50;
     const PAGINATED_RES_COUNT = 10;
     // projection
-    agg.push({
-      $project: {
-        _id: 0,
-        title: 1,
-        preview: 1,
-        url: 1,
-        searchProperty: 1,
-      },
-    });
+    agg.push(...getProjectionAndFormatStages());
     // count limit
     if (!page) {
       agg.push({ $limit: RES_COUNT });
