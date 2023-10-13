@@ -107,7 +107,10 @@ export const getProjectionAndFormatStages = (): Filter<Document>[] => [
   {
     // unwinds each {facets: [k: string, v: string[]]} to its own document
     // so it becomes { facets: {k: string, v: string[] } }
-    $unwind: '$facets',
+    $unwind: {
+      path: '$facets',
+      preserveNullAndEmptyArrays: true
+    },
   },
   {
     $project: {
@@ -132,7 +135,10 @@ export const getProjectionAndFormatStages = (): Filter<Document>[] => [
   },
   {
     // unwind all nested values
-    $unwind: '$values',
+    $unwind: {
+      path: '$values',
+      preserveNullAndEmptyArrays: true
+    },
   },
   {
     // group all unnested values and keys back
