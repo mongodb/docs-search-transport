@@ -109,7 +109,7 @@ export const getProjectionAndFormatStages = (): Filter<Document>[] => [
     // so it becomes { facets: {k: string, v: string[] } }
     $unwind: {
       path: '$facets',
-      preserveNullAndEmptyArrays: true
+      preserveNullAndEmptyArrays: true,
     },
   },
   {
@@ -137,7 +137,7 @@ export const getProjectionAndFormatStages = (): Filter<Document>[] => [
     // unwind all nested values
     $unwind: {
       path: '$values',
-      preserveNullAndEmptyArrays: true
+      preserveNullAndEmptyArrays: true,
     },
   },
   {
