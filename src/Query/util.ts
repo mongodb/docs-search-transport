@@ -88,3 +88,85 @@ export const getFacetAggregationStages = (taxonomy: FacetOption[]) => {
   getKeysFromFacetOptions(taxonomy);
   return facetKeysForAgg;
 };
+
+export const getProjectionAndFormatStages = (): Filter<Document>[] => [
+  {
+    $project: {
+      _id: 1,
+      title: 1,
+      preview: 1,
+      url: 1,
+      searchProperty: 1,
+      facets: {
+        // facets are originally stored as {facets: { string: string[] }}
+        // this converts to {facets: [k: string, v: string[]]}
+        $objectToArray: '$facets',
+      },
+    },
+  },
+  {
+    // unwinds each {facets: [k: string, v: string[]]} to its own document
+    // so it becomes { facets: {k: string, v: string[] } }
+    $unwind: {
+      path: '$facets',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    $project: {
+      // project key and values to its own document
+      // so we can unwind values
+      key: '$facets.k',
+      values: {
+        $map: {
+          input: '$facets.v',
+          as: 'value',
+          in: {
+            id: '$$value',
+          },
+        },
+      },
+      _id: 1,
+      title: 1,
+      preview: 1,
+      url: 1,
+      searchProperty: 1,
+    },
+  },
+  {
+    // unwind all nested values
+    $unwind: {
+      path: '$values',
+      preserveNullAndEmptyArrays: true,
+    },
+  },
+  {
+    // group all unnested values and keys back
+    $group: {
+      _id: '$_id',
+      title: {
+        $first: '$title',
+      },
+      preview: {
+        $first: '$preview',
+      },
+      url: {
+        $first: '$url',
+      },
+      searchProperty: {
+        $first: '$searchProperty',
+      },
+      facets: {
+        $push: {
+          key: '$key',
+          id: '$values.id',
+        },
+      },
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+    },
+  },
+];
