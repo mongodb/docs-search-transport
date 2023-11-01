@@ -53,14 +53,24 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
   // where each query param starting with 'facets.' denotes a filter
   const FACET_PREFIX = 'facets.';
   const filters: Filter<Document>[] = [];
+
+  // values with same keys should be treated as OR
+  // store in hash with one pass and another pass of the hash to filters
+  const queryParamLists: { [key: string]: string[] } = {};
+
   for (const [key, value] of searchParams) {
     if (!key.startsWith(FACET_PREFIX)) {
       continue;
     }
 
+    queryParamLists[key] = queryParamLists[key] || [];
+    queryParamLists[key].push(value);
+  }
+
+  for (const [key, values] of Object.entries(queryParamLists)) {
     filters.push({
       phrase: {
-        query: value,
+        query: values,
         path: key,
       },
     });
