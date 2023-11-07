@@ -20,8 +20,9 @@
                 "https://docs.mongodb.com/realm/get-started/introduction-web/"
             ],
             "facets": {
-                "target_product": ["manual"],
-                "genre": ["tutorial"]
+                "genre": ["tutorial"],
+                "programming_language": ["java"],
+                "target_product": ["manual"]
             }
         },
         {

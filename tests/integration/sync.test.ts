@@ -1,4 +1,4 @@
-import { strictEqual, deepStrictEqual } from 'assert';
+import { strictEqual, deepStrictEqual, notEqual } from 'assert';
 import { MongoClient } from 'mongodb';
 import { SearchIndex } from '../../src/SearchIndex';
 import { DatabaseDocument, Taxonomy } from '../../src/SearchIndex/types';
@@ -50,6 +50,13 @@ describe('Synchronization', function () {
       documents.filter((doc) => doc.searchProperty.includes('manual') && doc.slug === 'tutorial/index.html')[0].title,
       'Create a Task Tracker Ap'
     );
+
+    // facets are present and have intended order
+    const documentWithFacet = await documentsCursor.findOne({ facets: { $exists: true } });
+    notEqual(documentWithFacet, null);
+    if (documentWithFacet?.facets) {
+      deepStrictEqual(Object.keys(documentWithFacet.facets), ['target_product', 'programming_language', 'genre']);
+    }
   };
 
   it('loads initial state', loadInitialState);
