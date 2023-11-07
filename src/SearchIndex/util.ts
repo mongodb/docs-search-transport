@@ -237,7 +237,53 @@ export function compareFacets(a: AmbiguousFacet, b: AmbiguousFacet): number {
  * @param facets 
  */
 export function sortFacets(facets: FacetOption[]): FacetOption[] {
+  function getVersionNumber(version: string) {
+    const stringNumber = version.replace(/[^0-9\.]+/g, '');
+    try {
+      const num = parseFloat(stringNumber);
+      if (isNaN(num)) {
+        return undefined;
+      }
+      return num;
+    } catch {
+      return undefined;
+    }
+  }
+
+  function compareVersions(a: string, b: string) {
+    const versionA = getVersionNumber(a);
+    const versionB = getVersionNumber(b);
+    if (versionA && versionB) {
+      // We want versions in descending order, where higher number is first
+      return versionB - versionA;
+    }
+
+    const specialOrder = ['upcoming', 'latest', 'stable', 'current'];
+    const processedA = a.toLowerCase();
+    const processedB = b.toLowerCase();
+
+    const indexOfA = specialOrder.indexOf(processedA);
+    const indexOfB = specialOrder.indexOf(processedB);
+    const aUndefined = indexOfA === -1;
+    const bUndefined = indexOfB === -1;
+
+    // Unexpected non-numerical versions will be at the bottom of the list
+    if (aUndefined && bUndefined) {
+      return a.localeCompare(b);
+    } else if (bUndefined) {
+      return -1;
+    } else if (aUndefined) {
+      return 1;
+    }
+
+    // Non-numerical versions should follow the special order
+    return indexOfA - indexOfB;
+  }
+
   function compareFacetValues(a: FacetValue, b: FacetValue): number {
+    if (a.key.endsWith('versions') && b.key.endsWith('versions')) {
+      return compareVersions(a.name, b.name);
+    }
     // Default to sorting alphabetically unless specified
     return a.name.localeCompare(b.name);
   }
