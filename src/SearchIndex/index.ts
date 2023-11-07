@@ -59,10 +59,9 @@ export class SearchIndex {
     query: Query,
     searchProperty: string[] | null,
     filters: Filter<Document>[],
-    pageNumber?: number,
-    combineFilters = false
+    pageNumber?: number
   ) {
-    const aggregationQuery = query.getAggregationQuery(searchProperty, filters, pageNumber, combineFilters);
+    const aggregationQuery = query.getAggregationQuery(searchProperty, filters, pageNumber);
     const cursor = this.documents.aggregate(aggregationQuery);
     return cursor.toArray();
   }
@@ -70,10 +69,9 @@ export class SearchIndex {
   async fetchFacets(
     query: Query,
     searchProperty: string[] | null,
-    filters: Filter<Document>[],
-    combineFilters = false
+    filters: Filter<Document>[]
   ) {
-    const metaAggregationQuery = query.getMetaQuery(searchProperty, this.responseFacets, filters, combineFilters);
+    const metaAggregationQuery = query.getMetaQuery(searchProperty, this.responseFacets, filters);
     const cursor = this.documents.aggregate(metaAggregationQuery);
     try {
       // TODO: re-implement

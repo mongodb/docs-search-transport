@@ -1,6 +1,6 @@
 import { Filter } from 'mongodb';
 
-import { Document, FacetAggregationStage, FacetOption } from '../SearchIndex/types';
+import { Document, FacetAggregationStage, FacetOption, TrieFacet } from '../SearchIndex/types';
 
 const atomicPhraseMap: Record<string, string> = {
   ops: 'manager',
@@ -47,35 +47,42 @@ export function tokenize(text: string, fuzzy: boolean): string[] {
   return tokens;
 }
 
-export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<Document>[] => {
+export const extractFacetFilters = (
+  searchParams: URL['searchParams']
+): Filter<Document>[] => {
   // query should be in form of:
   // q=test&facets.target_product>manual>versions=v6.0&facets.target_product=atlas
   // where each query param starting with 'facets.' denotes a filter
   const FACET_PREFIX = 'facets.';
-  const filters: Filter<Document>[] = [];
 
-  // values with same keys should be treated as OR
-  // store in hash with one pass and another pass of the hash to filters
-  const queryParamLists: { [key: string]: string[] } = {};
+  // values with same base facet keys should be treated as OR
+  const queryParamLists: { [key: string]: Filter<Document> } = {};
 
   for (const [key, value] of searchParams) {
+    // key = 'facets.target_product>atlas>sub_product'
+    // value = 'search'
     if (!key.startsWith(FACET_PREFIX)) {
       continue;
     }
 
-    queryParamLists[key] = queryParamLists[key] || [];
-    queryParamLists[key].push(value);
-  }
+    // get base facet name
+    const drilldownKeyIdx = key.indexOf('>');
+    const baseFacet = drilldownKeyIdx > -1 ? key.slice(0, drilldownKeyIdx) : key;
 
-  for (const [key, values] of Object.entries(queryParamLists)) {
-    filters.push({
+    queryParamLists[baseFacet] = queryParamLists[key] || {
+      compound: {
+        should: [],
+      },
+    };
+    queryParamLists[baseFacet]['compound']['should'].push({
       phrase: {
-        query: values,
+        query: value,
         path: key,
       },
     });
   }
-  return filters;
+
+  return Object.values(queryParamLists);
 };
 
 export const getFacetAggregationStages = (taxonomy: FacetOption[]) => {
