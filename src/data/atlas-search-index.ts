@@ -15,12 +15,20 @@ export const SearchIndex: IndexMappings = {
             },
             {
               type: 'string',
+              analyzer: 'lucene.standard',
+              multi: {
+                whitespace: {
+                  analyzer: 'lucene.whitespace',
+                  type: 'string',
+                },
+              },
             },
           ],
           value: [
             {
               dynamic: true,
               type: 'document',
+              //do i need to specify the analyzer here too? I think so??
             },
             {
               analyzer: 'lucene.whitespace',
@@ -37,6 +45,7 @@ export const SearchIndex: IndexMappings = {
           ],
         },
         type: 'document',
+        //do i need to specify it here
       },
       headings: {
         analyzer: 'lucene.english',
@@ -55,11 +64,23 @@ export const SearchIndex: IndexMappings = {
         analyzer: 'lucene.english',
         searchAnalyzer: 'lucene.english',
         type: 'string',
+        multi: {
+          whitespace: {
+            analyzer: 'lucene.whitespace',
+            type: 'string',
+          },
+        },  
       },
       strippedSlug: {
         analyzer: 'lucene.keyword',
         searchAnalyzer: 'lucene.keyword',
         type: 'string',
+        multi: {
+          whitespace: {
+            analyzer: 'lucene.whitespace',
+            type: 'string',
+          },
+        },  
       },
       tags: {
         analyzer: 'lucene.english',
@@ -67,9 +88,22 @@ export const SearchIndex: IndexMappings = {
         searchAnalyzer: 'lucene.english',
         store: false,
         type: 'string',
+        multi: {
+          whitespace: {
+            analyzer: 'lucene.whitespace',
+            type: 'string',
+          },
+        },
       },
       text: {
         type: 'string',
+        analyzer: 'lucene.standard',
+        multi: {
+          whitespace: {
+            analyzer: 'lucene.whitespace',
+            type: 'string',
+          },
+        },  
       },
       title: {
         analyzer: 'lucene.english',
@@ -98,7 +132,7 @@ export const SearchIndex: IndexMappings = {
       source: {
         collection: SYNONYM_COLLECTION_NAME,
       },
-      analyzer: 'lucene.keyword',
+      analyzer: 'lucene.whitespace',
     },
   ],
   analyzers: [
