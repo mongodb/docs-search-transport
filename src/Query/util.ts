@@ -47,9 +47,7 @@ export function tokenize(text: string, fuzzy: boolean): string[] {
   return tokens;
 }
 
-export const extractFacetFilters = (
-  searchParams: URL['searchParams']
-): Filter<Document>[] => {
+export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<Document>[] => {
   // query should be in form of:
   // q=test&facets.target_product>manual>versions=v6.0&facets.target_product=atlas
   // where each query param starting with 'facets.' denotes a filter
