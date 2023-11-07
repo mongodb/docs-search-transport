@@ -9,7 +9,17 @@ import fs from 'fs';
 import { Document } from 'mongodb';
 import util from 'util';
 
-import { Manifest, Taxonomy, FacetBucket, TrieFacet, FacetAggRes, FacetOption, FacetValue, DatabaseDocument, AmbiguousFacet } from './types';
+import {
+  Manifest,
+  Taxonomy,
+  FacetBucket,
+  TrieFacet,
+  FacetAggRes,
+  FacetOption,
+  FacetValue,
+  DatabaseDocument,
+  AmbiguousFacet,
+} from './types';
 import { TaxonomyEntity } from '../SearchIndex/types';
 
 const log = new Logger({
@@ -196,10 +206,10 @@ function getLastKeyPart(key: string) {
  * Comparison function that sorts same-level facets based on the following properties:
  * 1) Facet keys organized by categories/options in the order desired for the UI
  * 2) Alphabetical ID order (since name might not be guaranteed)
- * Facets with nested keys will be sorted based on their immediate parent's key 
+ * Facets with nested keys will be sorted based on their immediate parent's key
  * (i.e. the rightmost part after the last '>')
- * @param a 
- * @param b 
+ * @param a
+ * @param b
  */
 export function compareFacets(a: AmbiguousFacet, b: AmbiguousFacet): number {
   // This order is consistent for how options are ordered on the UI
@@ -221,7 +231,7 @@ export function compareFacets(a: AmbiguousFacet, b: AmbiguousFacet): number {
     return 1;
   }
 
-  // Should be negative if indexOfA is less than indexOfB, meaning facet option 
+  // Should be negative if indexOfA is less than indexOfB, meaning facet option
   // "a" should precede option "b"
   const res = indexOfA - indexOfB;
   if (res === 0) {
@@ -234,7 +244,7 @@ export function compareFacets(a: AmbiguousFacet, b: AmbiguousFacet): number {
 
 /**
  * Orders facets at every level from options to values.
- * @param facets 
+ * @param facets
  */
 export function sortFacets(facets: FacetOption[]): FacetOption[] {
   function getVersionNumber(version: string) {
@@ -307,18 +317,18 @@ export function sortFacets(facets: FacetOption[]): FacetOption[] {
 }
 
 /**
- * Transforms aggregated search documents with facets to sort their facets based 
+ * Transforms aggregated search documents with facets to sort their facets based
  * on expected order for search results' tags.
  * @param doc
  */
 export function sortDocumentFacets(doc: Document) {
-  function sortFacetTags(facets: { id: string, key: string }[]) {
+  function sortFacetTags(facets: { id: string; key: string }[]) {
     // ask what the ideal order is
   }
 
   try {
     if (doc.facets) {
-      doc.facets = (doc.facets);
+      doc.facets = doc.facets;
     }
     return doc;
   } catch (err) {

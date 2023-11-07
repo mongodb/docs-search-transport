@@ -87,13 +87,13 @@ export interface FacetOption extends AmbiguousFacet {
   type: 'facet-option';
   name: string; // used to display for front end
   options: FacetValue[];
-};
+}
 
 export interface FacetValue extends AmbiguousFacet {
   type: 'facet-value';
   name: string;
   count?: number;
   facets: FacetOption[];
-};
+}
 
 export type FacetAggregationStage = { [key: string]: { type: 'string'; path: string } };

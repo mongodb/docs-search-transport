@@ -290,7 +290,7 @@ export default class Marian {
     }
 
     try {
-      const res = await this.index.fetchFacets(query, searchProperty, filters, combineFilters)
+      const res = await this.index.fetchFacets(query, searchProperty, filters, combineFilters);
       res.facets = sortFacets(res.facets);
       return res;
     } catch (e) {

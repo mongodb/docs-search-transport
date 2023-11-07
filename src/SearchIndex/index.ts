@@ -236,7 +236,7 @@ const deleteStaleProperties = async (
 /**
  * Reorders keys in the facets object. This assumes that all keys are strings that
  * are ordered in insertion order.
- * @param originalFacets 
+ * @param originalFacets
  * @returns A new object for facets, with keys reordered based on intended UI.
  */
 const sortFacetsObject = (originalFacets: Record<string, string[]>) => {
@@ -251,17 +251,20 @@ const sortFacetsObject = (originalFacets: Record<string, string[]>) => {
 
   // Re-convert from array back to object
   const orderedFacets = unorderedFacets.sort(compareFacets);
-  const newFacetsObject: Record<string, string[]> = orderedFacets.reduce((acc: Record<string, string[]>, { key, id }) => {
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    // Should maintain insertion order of facets array under the same key
-    acc[key].push(id);
-    return acc;
-  }, {});
+  const newFacetsObject: Record<string, string[]> = orderedFacets.reduce(
+    (acc: Record<string, string[]>, { key, id }) => {
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      // Should maintain insertion order of facets array under the same key
+      acc[key].push(id);
+      return acc;
+    },
+    {}
+  );
 
   return newFacetsObject;
-}
+};
 
 const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWriteOperation<DatabaseDocument>[] => {
   return documents.map((document) => {
