@@ -73,7 +73,7 @@ export const SearchIndex: IndexMappings = {
             analyzer: 'lucene.whitespace',
             type: 'string',
           },
-        },  
+        },
       },
       strippedSlug: {
         analyzer: 'lucene.keyword',
@@ -84,7 +84,7 @@ export const SearchIndex: IndexMappings = {
             analyzer: 'lucene.whitespace',
             type: 'string',
           },
-        },  
+        },
       },
       tags: {
         analyzer: 'lucene.english',
@@ -107,7 +107,7 @@ export const SearchIndex: IndexMappings = {
             analyzer: 'lucene.whitespace',
             type: 'string',
           },
-        },  
+        },
       },
       title: {
         analyzer: 'lucene.english',
