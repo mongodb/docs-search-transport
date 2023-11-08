@@ -80,7 +80,15 @@ export class Query {
     parts.push({
       text: {
         query: terms,
-        path: ['paragraphs', 'code.lang', 'code.value', 'text', { value: 'code.value', multi: 'simple' }],
+        path: [ 'code.lang', 'paragraphs', 'code.value', 'text', { value: 'code.value', multi: 'simple'},],
+      },
+    });
+
+    parts.push({
+      text:{
+        query: terms,
+        path: [ {value: 'paragraphs', multi: 'luceneWhitespace'}, {value: 'headings', multi: 'luceneWhitespace'}, {value: 'headings', multi: 'whitespace'}, {value: 'title', multi: 'luceneWhitespace'}, {value: 'code.lang', multi: 'luceneWhitespace'}, {value: 'tags', multi: 'luceneWhitespace'}, {value: 'text', multi: 'luceneWhitespace'}],
+        synonyms: 'synonym-mapping',
       },
     });
 

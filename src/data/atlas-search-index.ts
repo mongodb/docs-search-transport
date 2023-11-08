@@ -17,7 +17,7 @@ export const SearchIndex: IndexMappings = {
               type: 'string',
               analyzer: 'lucene.standard',
               multi: {
-                whitespace: {
+                luceneWhitespace: {
                   analyzer: 'lucene.whitespace',
                   type: 'string',
                 },
@@ -55,6 +55,10 @@ export const SearchIndex: IndexMappings = {
             store: false,
             type: 'string',
           },
+          luceneWhitespace: {
+            analyzer: 'lucene.whitespace',
+            type: 'string',
+          },
         },
         searchAnalyzer: 'lucene.english',
         store: false,
@@ -65,7 +69,7 @@ export const SearchIndex: IndexMappings = {
         searchAnalyzer: 'lucene.english',
         type: 'string',
         multi: {
-          whitespace: {
+          luceneWhitespace: {
             analyzer: 'lucene.whitespace',
             type: 'string',
           },
@@ -76,7 +80,7 @@ export const SearchIndex: IndexMappings = {
         searchAnalyzer: 'lucene.keyword',
         type: 'string',
         multi: {
-          whitespace: {
+          luceneWhitespace: {
             analyzer: 'lucene.whitespace',
             type: 'string',
           },
@@ -89,7 +93,7 @@ export const SearchIndex: IndexMappings = {
         store: false,
         type: 'string',
         multi: {
-          whitespace: {
+          luceneWhitespace: {
             analyzer: 'lucene.whitespace',
             type: 'string',
           },
@@ -99,7 +103,7 @@ export const SearchIndex: IndexMappings = {
         type: 'string',
         analyzer: 'lucene.standard',
         multi: {
-          whitespace: {
+          luceneWhitespace: {
             analyzer: 'lucene.whitespace',
             type: 'string',
           },
@@ -111,6 +115,10 @@ export const SearchIndex: IndexMappings = {
           whitespace: {
             analyzer: 'custom.whitespace',
             store: false,
+            type: 'string',
+          },
+          luceneWhitespace: {
+            analyzer: 'lucene.whitespace',
             type: 'string',
           },
         },
