@@ -16,19 +16,12 @@ export const SearchIndex: IndexMappings = {
             {
               type: 'string',
               analyzer: 'lucene.standard',
-              multi: {
-                luceneWhitespace: {
-                  analyzer: 'lucene.whitespace',
-                  type: 'string',
-                },
-              },
             },
           ],
           value: [
             {
               dynamic: true,
               type: 'document',
-              //do i need to specify the analyzer here too? I think so??
             },
             {
               analyzer: 'lucene.whitespace',
@@ -45,7 +38,6 @@ export const SearchIndex: IndexMappings = {
           ],
         },
         type: 'document',
-        //do i need to specify it here
       },
       headings: {
         analyzer: 'lucene.english',
@@ -79,12 +71,6 @@ export const SearchIndex: IndexMappings = {
         analyzer: 'lucene.keyword',
         searchAnalyzer: 'lucene.keyword',
         type: 'string',
-        multi: {
-          luceneWhitespace: {
-            analyzer: 'lucene.whitespace',
-            type: 'string',
-          },
-        },
       },
       tags: {
         analyzer: 'lucene.english',
@@ -92,12 +78,6 @@ export const SearchIndex: IndexMappings = {
         searchAnalyzer: 'lucene.english',
         store: false,
         type: 'string',
-        multi: {
-          luceneWhitespace: {
-            analyzer: 'lucene.whitespace',
-            type: 'string',
-          },
-        },
       },
       text: {
         type: 'string',

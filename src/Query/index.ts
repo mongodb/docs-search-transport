@@ -92,8 +92,6 @@ export class Query {
           { value: 'headings', multi: 'luceneWhitespace' },
           { value: 'headings', multi: 'whitespace' },
           { value: 'title', multi: 'luceneWhitespace' },
-          { value: 'code.lang', multi: 'luceneWhitespace' },
-          { value: 'tags', multi: 'luceneWhitespace' },
           { value: 'text', multi: 'luceneWhitespace' },
         ],
         synonyms: 'synonym-mapping',
