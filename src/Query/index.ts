@@ -90,7 +90,7 @@ export class Query {
         path: [
           { value: 'paragraphs', multi: 'luceneWhitespace' },
           { value: 'headings', multi: 'luceneWhitespace' },
-          { value: 'headings', multi: 'whitespace' },
+          { value: 'headings', multi: 'lucenewhitespace' },
           { value: 'title', multi: 'luceneWhitespace' },
           { value: 'text', multi: 'luceneWhitespace' },
         ],
