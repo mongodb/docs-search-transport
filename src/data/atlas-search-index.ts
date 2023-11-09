@@ -16,6 +16,12 @@ export const SearchIndex: IndexMappings = {
             {
               type: 'string',
               analyzer: 'lucene.standard',
+              multi: {
+                luceneWhitespace: {
+                  analyzer: 'lucene.whitespace',
+                  type: 'string',
+                },
+              },
             },
           ],
           value: [
@@ -108,13 +114,6 @@ export const SearchIndex: IndexMappings = {
       },
       searchProperty: {
         type: 'string',
-        analyzer: 'lucene.standard',
-        multi: {
-          luceneWhitespace: {
-            analyzer: 'lucene.whitespace',
-            type: 'string',
-          },
-        },
       },
       includeInGlobalSearch: {
         type: 'boolean',
