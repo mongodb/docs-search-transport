@@ -47,37 +47,25 @@ export function tokenize(text: string, fuzzy: boolean): string[] {
   return tokens;
 }
 
-export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<Document> => {
+export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<Document>[] => {
   // query should be in form of:
-  // q=test&facets.target_platforms>manual>versions=v6.0&facets.target_platforms=atlas
-  // where each query param starting with 'facets.' denotes a filter and possible expansion
-  // {
-  //   "facets.target_platforms": ["manual", "atlas"],
-  //   "facets.target_platforms>manual>versions": ["v6.0"]
-  // }
-  const filter: Filter<Document> = {};
+  // q=test&facets.target_product>manual>versions=v6.0&facets.target_product=atlas
+  // where each query param starting with 'facets.' denotes a filter
+  const FACET_PREFIX = 'facets.';
+  const filters: Filter<Document>[] = [];
   for (const [key, value] of searchParams) {
-    if (!key.startsWith('facets.')) {
+    if (!key.startsWith(FACET_PREFIX)) {
       continue;
     }
-    const facetNames = key.replace('facets.', '').split('>');
-    // hierarchy facets denoted by >
-    // each facet node requires a facet property, at every even level
-    for (let facetIdx = 0; facetIdx < facetNames.length; facetIdx += 2) {
-      const facetName = facetNames[facetIdx];
-      // construct partial facet name
-      const prefix = facetIdx === 0 ? '' : facetNames.slice(0, facetIdx).join('>') + '>';
-      const facetKey = `facets.${prefix}${facetName}`;
-      if (!filter[facetKey]) {
-        filter[facetKey] = [];
-      }
 
-      // the value is the next key in query param, or if there is no next key, the value itself
-      const facetValue = facetIdx === facetNames.length - 1 ? value : facetNames[facetIdx + 1];
-      filter[facetKey].push(facetValue);
-    }
+    filters.push({
+      phrase: {
+        query: value,
+        path: key,
+      },
+    });
   }
-  return filter;
+  return filters;
 };
 
 export const getFacetAggregationStages = (taxonomy: FacetOption[]) => {
@@ -100,3 +88,36 @@ export const getFacetAggregationStages = (taxonomy: FacetOption[]) => {
   getKeysFromFacetOptions(taxonomy);
   return facetKeysForAgg;
 };
+
+export const getProjectionAndFormatStages = (): Filter<Document>[] => [
+  {
+    $project: {
+      _id: 0,
+      title: 1,
+      preview: 1,
+      url: 1,
+      searchProperty: 1,
+      facets: {
+        $reduce: {
+          input: { $objectToArray: '$facets' },
+          initialValue: [],
+          in: {
+            $concatArrays: [
+              '$$value',
+              {
+                $map: {
+                  input: '$$this.v',
+                  as: 'facetValue',
+                  in: {
+                    id: '$$facetValue',
+                    key: '$$this.k',
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    },
+  },
+];

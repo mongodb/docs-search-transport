@@ -234,7 +234,7 @@ export default class Marian {
     }
 
     const filters = extractFacetFilters(parsedUrl.searchParams);
-    const query = new Query(rawQuery, filters);
+    const query = new Query(rawQuery);
 
     let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
     if (typeof searchProperty === 'string') {
@@ -242,7 +242,8 @@ export default class Marian {
     }
 
     const pageNumber = Number(parsedUrl.searchParams.get('page'));
-    return this.index.search(query, searchProperty, pageNumber);
+    const combineFilters = Boolean(parsedUrl.searchParams.get('combineFilters'));
+    return this.index.search(query, searchProperty, filters, pageNumber, combineFilters);
   }
 
   private async fetchTaxonomy(url: string) {
@@ -279,7 +280,8 @@ export default class Marian {
     }
 
     const filters = extractFacetFilters(parsedUrl.searchParams);
-    const query = new Query(rawQuery, filters);
+    const combineFilters = Boolean(parsedUrl.searchParams.get('combineFilters'));
+    const query = new Query(rawQuery);
 
     let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
     if (typeof searchProperty === 'string') {
@@ -287,7 +289,7 @@ export default class Marian {
     }
 
     try {
-      return this.index.fetchFacets(query, searchProperty);
+      return this.index.fetchFacets(query, searchProperty, filters, combineFilters);
     } catch (e) {
       console.error(`Error fetching facet metadata: ${JSON.stringify(e)}`);
       throw e;

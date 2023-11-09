@@ -20,7 +20,7 @@ describe('Searching', function () {
   before('Loading test data', async function () {
     await client.connect();
     index = new SearchIndex('dir:tests/integration/search_test_data/', client, TEST_DATABASE);
-    const result = await index.load({} as Taxonomy);
+    const result = await index.load({} as Taxonomy, 'dir:tests/integration/search_test_data/');
     await index.createRecommendedIndexes();
 
     // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
@@ -32,7 +32,7 @@ describe('Searching', function () {
 
   // Test variants of searchProperty
   it('should properly handle incorrect urls in manifests', async () => {
-    let result = await index.search(new Query('manual'), ['manual-v5.1']);
+    let result = await index.search(new Query('manual'), ['manual-v5.1'], []);
     strictEqual(result[0].url, 'https://docs.mongodb.com/v5.1/index.html');
   });
 

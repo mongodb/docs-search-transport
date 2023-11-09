@@ -1,7 +1,7 @@
 import assert from 'assert';
 // @ts-ignore
 import Logger from 'basic-logger';
-import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession } from 'mongodb';
+import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession, Filter } from 'mongodb';
 
 import {
   convertTaxonomyToResponseFormat,
@@ -55,14 +55,25 @@ export class SearchIndex {
     this.responseFacets = [];
   }
 
-  async search(query: Query, searchProperty: string[] | null, pageNumber?: number) {
-    const aggregationQuery = query.getAggregationQuery(searchProperty, pageNumber);
+  async search(
+    query: Query,
+    searchProperty: string[] | null,
+    filters: Filter<Document>[],
+    pageNumber?: number,
+    combineFilters = false
+  ) {
+    const aggregationQuery = query.getAggregationQuery(searchProperty, filters, pageNumber, combineFilters);
     const cursor = this.documents.aggregate(aggregationQuery);
     return cursor.toArray();
   }
 
-  async fetchFacets(query: Query, searchProperty: string[] | null) {
-    const metaAggregationQuery = query.getMetaQuery(searchProperty, this.responseFacets);
+  async fetchFacets(
+    query: Query,
+    searchProperty: string[] | null,
+    filters: Filter<Document>[],
+    combineFilters = false
+  ) {
+    const metaAggregationQuery = query.getMetaQuery(searchProperty, this.responseFacets, filters, combineFilters);
     const cursor = this.documents.aggregate(metaAggregationQuery);
     try {
       // TODO: re-implement
@@ -171,7 +182,7 @@ export class SearchIndex {
       this.lastRefresh = status;
     } catch (err) {
       log.error(err);
-      status.errors.push(err);
+      status.errors.push(err as Error);
     } finally {
       await session.endSession();
       log.info('Done!');

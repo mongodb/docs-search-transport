@@ -1,5 +1,5 @@
 import { Filter } from 'mongodb';
-import { getFacetAggregationStages, tokenize } from './util';
+import { getFacetAggregationStages, getProjectionAndFormatStages, tokenize } from './util';
 import { Document, FacetOption } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
 import { strippedMapping } from '../data/term-result-mappings';
@@ -15,18 +15,16 @@ export class Query {
   terms: Set<string>;
   phrases: string[];
   rawQuery: string;
-  filters: Filter<Document>;
 
   /**
    * Create a new query.
    * @param {string} queryString The query to parse
    */
-  constructor(queryString: string, filters?: Filter<Document>) {
+  constructor(queryString: string) {
     console.log('Query parsing: ' + queryString);
     this.terms = new Set();
     this.phrases = [];
     this.rawQuery = queryString;
-    this.filters = filters || {};
 
     const parts = queryString.split(/((?:\s+|^)"[^"]+"(?:\s+|$))/);
     let inQuotes = false;
@@ -61,7 +59,7 @@ export class Query {
     }
   }
 
-  getCompound(searchProperty: string[] | null) {
+  getCompound(searchProperty: string[] | null, filters: Filter<Document>[], combineFilters = false) {
     const terms = Array.from(this.terms);
     const parts: any[] = [];
     const searchPropertyMapping = getPropertyMapping();
@@ -187,24 +185,31 @@ export class Query {
       );
     }
 
-    for (const key in this.filters) {
-      compound.must.push({
-        phrase: {
-          query: this.filters[key],
-          path: key,
-        },
-      });
+    if (filters?.length) {
+      // if facet filters are passed as "or",
+      // they must match at least one
+      if (!combineFilters) {
+        compound.must.push({
+          compound: {
+            should: filters,
+            minimumShouldMatch: 1,
+          },
+        });
+      } else {
+        compound.must = compound.must.concat(filters);
+      }
     }
 
     return compound;
   }
 
-  // TODO: update this to work with new facet structure (children and options)
-  // should expand all of taxonomy into document.facets keys (ie. search index keys)
-  // then return aggregation pipeline stages[]
-  // ie. target_product>atlas>versions
-  getMetaQuery(searchProperty: string[] | null, taxonomy: FacetOption[]) {
-    const compound = this.getCompound(searchProperty);
+  getMetaQuery(
+    searchProperty: string[] | null,
+    taxonomy: FacetOption[],
+    filters: Filter<Document>[],
+    combineFilters = false
+  ) {
+    const compound = this.getCompound(searchProperty, filters, combineFilters);
 
     const facets = getFacetAggregationStages(taxonomy);
 
@@ -223,11 +228,16 @@ export class Query {
     return agg;
   }
 
-  getAggregationQuery(searchProperty: string[] | null, page?: number): any[] {
+  getAggregationQuery(
+    searchProperty: string[] | null,
+    filters: Filter<Document>[],
+    page?: number,
+    combineFilters = false
+  ): any[] {
     if (page && page < 1) {
       throw new InvalidQuery('Invalid page');
     }
-    const compound = this.getCompound(searchProperty);
+    const compound = this.getCompound(searchProperty, filters, combineFilters);
 
     const agg: Filter<Document>[] = [
       {
@@ -243,15 +253,7 @@ export class Query {
     const RES_COUNT = 50;
     const PAGINATED_RES_COUNT = 10;
     // projection
-    agg.push({
-      $project: {
-        _id: 0,
-        title: 1,
-        preview: 1,
-        url: 1,
-        searchProperty: 1,
-      },
-    });
+    agg.push(...getProjectionAndFormatStages());
     // count limit
     if (!page) {
       agg.push({ $limit: RES_COUNT });
