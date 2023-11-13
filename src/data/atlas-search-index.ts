@@ -137,11 +137,9 @@ export const SearchIndex: IndexMappings = {
     {
       name: 'synonym.whitespace',
       tokenizer: {
-        type: 'whitespace'
+        type: 'whitespace',
       },
-      tokenFilters: [
-        { type: 'lowercase'}
-      ]
+      tokenFilters: [{ type: 'lowercase' }],
     },
     {
       charFilters: [],
