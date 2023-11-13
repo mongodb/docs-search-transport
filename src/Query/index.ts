@@ -86,11 +86,11 @@ export class Query {
       text: {
         query: terms,
         path: [
-          { value: 'paragraphs', multi: 'luceneWhitespace' },
-          { value: 'headings', multi: 'luceneWhitespace' },
-          { value: 'title', multi: 'luceneWhitespace' },
-          { value: 'text', multi: 'luceneWhitespace' },
-          { value: 'code.lang', multi: 'luceneWhitespace' },
+          { value: 'paragraphs', multi: 'synonymAnalyzer' },
+          { value: 'headings', multi: 'synonymAnalyzer' },
+          { value: 'title', multi: 'synonymAnalyzer' },
+          { value: 'text', multi: 'synonymAnalyzer' },
+          { value: 'code.lang', multi: 'synonymAnalyzer' },
         ],
         synonyms: 'synonym-mapping',
       },

@@ -17,8 +17,8 @@ export const SearchIndex: IndexMappings = {
               type: 'string',
               analyzer: 'lucene.standard',
               multi: {
-                luceneWhitespace: {
-                  analyzer: 'lucene.whitespace',
+                synonymAnalyzer: {
+                  analyzer: 'synonym.whitespace',
                   type: 'string',
                 },
               },
@@ -37,6 +37,10 @@ export const SearchIndex: IndexMappings = {
                   store: false,
                   type: 'string',
                 },
+                synonymAnalyzer: {
+                  analyzer: 'synonym.whitespace',
+                  type: 'string',
+                },
               },
               searchAnalyzer: 'lucene.whitespace',
               type: 'string',
@@ -53,8 +57,8 @@ export const SearchIndex: IndexMappings = {
             store: false,
             type: 'string',
           },
-          luceneWhitespace: {
-            analyzer: 'lucene.whitespace',
+          synonymAnalyzer: {
+            analyzer: 'synonym.whitespace',
             type: 'string',
           },
         },
@@ -67,8 +71,8 @@ export const SearchIndex: IndexMappings = {
         searchAnalyzer: 'lucene.english',
         type: 'string',
         multi: {
-          luceneWhitespace: {
-            analyzer: 'lucene.whitespace',
+          synonymAnalyzer: {
+            analyzer: 'synonym.whitespace',
             type: 'string',
           },
         },
@@ -89,8 +93,8 @@ export const SearchIndex: IndexMappings = {
         type: 'string',
         analyzer: 'lucene.standard',
         multi: {
-          luceneWhitespace: {
-            analyzer: 'lucene.whitespace',
+          synonymAnalyzer: {
+            analyzer: 'synonym.whitespace',
             type: 'string',
           },
         },
@@ -103,8 +107,8 @@ export const SearchIndex: IndexMappings = {
             store: false,
             type: 'string',
           },
-          luceneWhitespace: {
-            analyzer: 'lucene.whitespace',
+          synonymAnalyzer: {
+            analyzer: 'synonym.whitespace',
             type: 'string',
           },
         },
@@ -126,10 +130,19 @@ export const SearchIndex: IndexMappings = {
       source: {
         collection: SYNONYM_COLLECTION_NAME,
       },
-      analyzer: 'lucene.whitespace',
+      analyzer: 'synonym.whitespace',
     },
   ],
   analyzers: [
+    {
+      name: 'synonym.whitespace',
+      tokenizer: {
+        type: 'whitespace'
+      },
+      tokenFilters: [
+        { type: 'lowercase'}
+      ]
+    },
     {
       charFilters: [],
       name: 'custom.whitespace',
