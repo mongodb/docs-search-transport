@@ -10,6 +10,7 @@ import {
   formatFacetMetaResponse,
   getManifests,
   joinUrl,
+  sortFacetsObject,
 } from './util';
 import { Query } from '../Query';
 import {
@@ -165,7 +166,7 @@ export class SearchIndex {
         assert.ok(manifest.manifestRevisionId);
 
         await session.withTransaction(async () => {
-          const upserts = composeUpserts(manifest, manifest.manifest.documents);
+          const upserts = composeUpserts(manifest, manifest.manifest.documents, this.trieFacets);
 
           // Upsert documents
           if (upserts.length > 0) {
@@ -233,40 +234,7 @@ const deleteStaleProperties = async (
   status.deleted += deleteResult.deletedCount === undefined ? 0 : deleteResult.deletedCount;
 };
 
-/**
- * Reorders keys in the facets object. This assumes that all keys are strings that
- * are ordered in insertion order.
- * @param originalFacets
- * @returns A new object for facets, with keys reordered based on intended UI.
- */
-const sortFacetsObject = (originalFacets: Record<string, string[]>) => {
-  const enumeratedFacets = Object.entries(originalFacets);
-  // Temporarily restructure facets object to array form to facilitate sorting
-  const unorderedFacets: AmbiguousFacet[] = [];
-  enumeratedFacets.forEach(([key, val]) => {
-    val.forEach((id) => {
-      unorderedFacets.push({ id, key });
-    });
-  });
-
-  // Re-convert from array back to object
-  const orderedFacets = unorderedFacets.sort(compareFacets);
-  const newFacetsObject: Record<string, string[]> = orderedFacets.reduce(
-    (acc: Record<string, string[]>, { key, id }) => {
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      // Should maintain insertion order of facets array under the same key
-      acc[key].push(id);
-      return acc;
-    },
-    {}
-  );
-
-  return newFacetsObject;
-};
-
-const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWriteOperation<DatabaseDocument>[] => {
+const composeUpserts = (manifest: Manifest, documents: Document[], trieFacets: TrieFacet): AnyBulkWriteOperation<DatabaseDocument>[] => {
   return documents.map((document) => {
     assert.strictEqual(typeof document.slug, 'string');
     // DOP-3545 and DOP-3585
@@ -279,7 +247,7 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     document.strippedSlug = document.slug.replaceAll('/', '');
 
     if (document.facets) {
-      document.facets = sortFacetsObject(document.facets);
+      document.facets = sortFacetsObject(document.facets, trieFacets);
     }
 
     const newDocument: DatabaseDocument = {

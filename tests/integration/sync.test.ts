@@ -33,7 +33,19 @@ describe('Synchronization', function () {
   });
 
   const loadInitialState = async () => {
-    await index.load({} as Taxonomy, PATH_STATE_1);
+    const taxonomy = {
+      genre: [
+        { name: 'reference' },
+        { name: 'tutorial' },
+      ],
+      target_product: [
+        { name: 'docs', display_name: 'Server' },
+      ],
+      programming_language: [
+        { name: 'java' },
+      ],
+    };
+    await index.load(taxonomy, PATH_STATE_1);
     const documentsCursor = client.db(DB).collection<DatabaseDocument>('documents');
     const documents = await documentsCursor.find().toArray();
     sortDocuments(documents);
@@ -55,7 +67,10 @@ describe('Synchronization', function () {
     const documentWithFacet = await documentsCursor.findOne({ facets: { $exists: true } });
     notEqual(documentWithFacet, null);
     if (documentWithFacet?.facets) {
-      deepStrictEqual(Object.keys(documentWithFacet.facets), ['target_product', 'programming_language', 'genre']);
+      const facets: Record<string, string[]> = documentWithFacet.facets;
+      deepStrictEqual(Object.keys(facets), ['target_product', 'programming_language', 'genre']);
+      // Ensure values are also ordered
+      deepStrictEqual(facets['genre'], ['reference', 'tutorial']);
     }
   };
 

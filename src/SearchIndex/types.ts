@@ -81,17 +81,16 @@ export type FacetAggRes = {
 export interface AmbiguousFacet {
   id: string; // used to verify against taxonomy
   key: string;
+  name: string; // used to display for front end
 }
 
 export interface FacetOption extends AmbiguousFacet {
   type: 'facet-option';
-  name: string; // used to display for front end
   options: FacetValue[];
 }
 
 export interface FacetValue extends AmbiguousFacet {
   type: 'facet-value';
-  name: string;
   count?: number;
   facets: FacetOption[];
 }

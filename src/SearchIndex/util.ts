@@ -22,6 +22,9 @@ import {
 } from './types';
 import { TaxonomyEntity } from '../SearchIndex/types';
 
+// This order is representative of how options are expected to be ordered in the UI
+const OPTIONS_SORT_ORDER = ['target_product', 'sub_product', 'version', 'programming_language', 'genre'];
+
 const log = new Logger({
   showTimestamp: true,
 });
@@ -205,19 +208,17 @@ function getLastKeyPart(key: string) {
 /**
  * Comparison function that sorts same-level facets based on the following properties:
  * 1) Facet keys organized by categories/options in the order desired for the UI
- * 2) Alphabetical ID order (since name might not be guaranteed)
+ * 2) Alphabetical name order
  * Facets with nested keys will be sorted based on their immediate parent's key
  * (i.e. the rightmost part after the last '>')
  * @param a
  * @param b
  */
 export function compareFacets(a: AmbiguousFacet, b: AmbiguousFacet): number {
-  // This order is consistent for how options are ordered on the UI
-  const optionsOrder = ['target_product', 'sub_product', 'version', 'programming_language', 'genre'];
   const optionA = getLastKeyPart(a.key);
   const optionB = getLastKeyPart(b.key);
-  const indexOfA = optionsOrder.indexOf(optionA);
-  const indexOfB = optionsOrder.indexOf(optionB);
+  const indexOfA = OPTIONS_SORT_ORDER.indexOf(optionA);
+  const indexOfB = OPTIONS_SORT_ORDER.indexOf(optionB);
   const aUndefined = indexOfA === -1;
   const bUndefined = indexOfB === -1;
 
@@ -236,7 +237,7 @@ export function compareFacets(a: AmbiguousFacet, b: AmbiguousFacet): number {
   const res = indexOfA - indexOfB;
   if (res === 0) {
     // Alphabetical order may be negligible for parent facets, but not for nested facets
-    return a.id.localeCompare(b.id);
+    return a.name.localeCompare(b.name);
   }
 
   return res;
@@ -317,27 +318,62 @@ export function sortFacets(facets: FacetOption[]): FacetOption[] {
 }
 
 /**
- * Transforms aggregated search documents with facets to sort their facets based
- * on expected order for search results' tags.
- * @param doc
+ * Returns the name of the facet based on the trie facet structure of the taxonomy.
+ * The name will default to the facet id if the facet cannot be determined from the trie.
  */
-export function sortDocumentFacets(doc: Document) {
-  function sortFacetTags(facets: { id: string; key: string }[]) {
-    // ask what the ideal order is
+function getNameFromTrieFacet(trieFacets: TrieFacet, key: string, id: string): string {
+  const parts = key.split('>');
+  parts.push(id);
+  let currentFacet = trieFacets;
+
+  // Traverse through parts of the key until it reaches the target facet
+  for (const part of parts) {
+    if (typeof currentFacet[part] === 'object') {
+      currentFacet = currentFacet[part] as TrieFacet;
+    } else {
+      // Either the key's structure is wrong, or the trie does not have the same key structure
+      return id;
+    }
   }
 
-  try {
-    if (doc.facets) {
-      doc.facets = doc.facets;
-    }
-    return doc;
-  } catch (err) {
-    // Mapping functions for MongoDB cursors may not always handle errors as intended,
-    // so we catch here
-    log.error(err);
-    return null;
-  }
+  return currentFacet.name;
 }
+
+/**
+ * Reorders keys in the facets object. This assumes that all keys are strings that
+ * are ordered in insertion order.
+ * @param originalFacets
+ * @returns A new object for facets, with keys reordered based on intended UI.
+ */
+export function sortFacetsObject(originalFacets: Record<string, string[]>, trieFacets: TrieFacet) {
+  const enumeratedFacets = Object.entries(originalFacets);
+  // Temporarily restructure facets object to array form to facilitate sorting
+  const separateFacetsList: AmbiguousFacet[] = [];
+  enumeratedFacets.forEach(([key, val]) => {
+    // Reshapes facets under the same key to be separate objects for sorting.
+    // Example: {genre: ['reference', 'tutorial']} => [{key: 'genre', id: 'reference'}, {key: 'genre', id: 'tutorial'}]
+    val.forEach((id) => {
+      // Empty name for now
+      separateFacetsList.push({ id, key, name: getNameFromTrieFacet(trieFacets, key, id) });
+    });
+  });
+  
+  separateFacetsList.sort(compareFacets);
+  // Re-convert from array back to object
+  const newFacetsObject: Record<string, string[]> = separateFacetsList.reduce(
+    (acc: Record<string, string[]>, { key, id }) => {
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      // Should maintain insertion order of facets array under the same key
+      acc[key].push(id);
+      return acc;
+    },
+    {}
+  );
+
+  return newFacetsObject;
+};
 
 /**
  *
