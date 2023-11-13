@@ -6,7 +6,6 @@ import crypto from 'crypto';
 // @ts-ignore
 import dive from 'dive';
 import fs from 'fs';
-import { Document } from 'mongodb';
 import util from 'util';
 
 import {
@@ -17,7 +16,6 @@ import {
   FacetAggRes,
   FacetOption,
   FacetValue,
-  DatabaseDocument,
   AmbiguousFacet,
 } from './types';
 import { TaxonomyEntity } from '../SearchIndex/types';
@@ -357,7 +355,7 @@ export function sortFacetsObject(originalFacets: Record<string, string[]>, trieF
       separateFacetsList.push({ id, key, name: getNameFromTrieFacet(trieFacets, key, id) });
     });
   });
-  
+
   separateFacetsList.sort(compareFacets);
   // Re-convert from array back to object
   const newFacetsObject: Record<string, string[]> = separateFacetsList.reduce(
@@ -373,7 +371,7 @@ export function sortFacetsObject(originalFacets: Record<string, string[]>, trieF
   );
 
   return newFacetsObject;
-};
+}
 
 /**
  *

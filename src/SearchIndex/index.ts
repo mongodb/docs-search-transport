@@ -234,7 +234,11 @@ const deleteStaleProperties = async (
   status.deleted += deleteResult.deletedCount === undefined ? 0 : deleteResult.deletedCount;
 };
 
-const composeUpserts = (manifest: Manifest, documents: Document[], trieFacets: TrieFacet): AnyBulkWriteOperation<DatabaseDocument>[] => {
+const composeUpserts = (
+  manifest: Manifest,
+  documents: Document[],
+  trieFacets: TrieFacet
+): AnyBulkWriteOperation<DatabaseDocument>[] => {
   return documents.map((document) => {
     assert.strictEqual(typeof document.slug, 'string');
     // DOP-3545 and DOP-3585

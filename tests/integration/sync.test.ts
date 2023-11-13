@@ -34,16 +34,9 @@ describe('Synchronization', function () {
 
   const loadInitialState = async () => {
     const taxonomy = {
-      genre: [
-        { name: 'reference' },
-        { name: 'tutorial' },
-      ],
-      target_product: [
-        { name: 'docs', display_name: 'Server' },
-      ],
-      programming_language: [
-        { name: 'java' },
-      ],
+      genre: [{ name: 'reference' }, { name: 'tutorial' }],
+      target_product: [{ name: 'docs', display_name: 'Server' }],
+      programming_language: [{ name: 'java' }],
     };
     await index.load(taxonomy, PATH_STATE_1);
     const documentsCursor = client.db(DB).collection<DatabaseDocument>('documents');
