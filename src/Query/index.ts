@@ -172,8 +172,8 @@ export class Query {
     }
 
     if (filters?.length) {
-      // if facet filters are passed as "or",
-      // they must match at least one
+      // facet filters are passed as nested compounds
+      // each compound (as a whole) must be matched
       compound.must = compound.must.concat(filters);
     }
 
