@@ -1,6 +1,6 @@
 import { Filter } from 'mongodb';
 
-import { Document, FacetAggregationStage, FacetOption, TrieFacet } from '../SearchIndex/types';
+import { Document, FacetAggregationStage, FacetOption } from '../SearchIndex/types';
 
 const atomicPhraseMap: Record<string, string> = {
   ops: 'manager',
