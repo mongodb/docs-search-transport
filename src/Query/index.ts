@@ -59,7 +59,7 @@ export class Query {
     }
   }
 
-  getCompound(searchProperty: string[] | null, filters: Filter<Document>[], combineFilters = false) {
+  getCompound(searchProperty: string[] | null, filters: Filter<Document>[]) {
     const terms = Array.from(this.terms);
     const parts: any[] = [];
     const searchPropertyMapping = getPropertyMapping();
@@ -172,30 +172,16 @@ export class Query {
     }
 
     if (filters?.length) {
-      // if facet filters are passed as "or",
-      // they must match at least one
-      if (!combineFilters) {
-        compound.must.push({
-          compound: {
-            should: filters,
-            minimumShouldMatch: 1,
-          },
-        });
-      } else {
-        compound.must = compound.must.concat(filters);
-      }
+      // facet filters are passed as nested compounds
+      // each compound (as a whole) must be matched
+      compound.must = compound.must.concat(filters);
     }
 
     return compound;
   }
 
-  getMetaQuery(
-    searchProperty: string[] | null,
-    taxonomy: FacetOption[],
-    filters: Filter<Document>[],
-    combineFilters = false
-  ) {
-    const compound = this.getCompound(searchProperty, filters, combineFilters);
+  getMetaQuery(searchProperty: string[] | null, taxonomy: FacetOption[], filters: Filter<Document>[]) {
+    const compound = this.getCompound(searchProperty, filters);
 
     const facets = getFacetAggregationStages(taxonomy);
 
@@ -214,16 +200,11 @@ export class Query {
     return agg;
   }
 
-  getAggregationQuery(
-    searchProperty: string[] | null,
-    filters: Filter<Document>[],
-    page?: number,
-    combineFilters = false
-  ): any[] {
+  getAggregationQuery(searchProperty: string[] | null, filters: Filter<Document>[], page?: number): any[] {
     if (page && page < 1) {
       throw new InvalidQuery('Invalid page');
     }
-    const compound = this.getCompound(searchProperty, filters, combineFilters);
+    const compound = this.getCompound(searchProperty, filters);
 
     const agg: Filter<Document>[] = [
       {

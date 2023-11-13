@@ -120,7 +120,7 @@ export default class Marian {
 
     try {
       await this.load();
-    } catch (err) {
+    } catch (err: any) {
       log.error(err);
       headers['Content-Type'] = 'application/json';
       const body = JSON.stringify({ errors: [err] });
@@ -242,8 +242,7 @@ export default class Marian {
     }
 
     const pageNumber = Number(parsedUrl.searchParams.get('page'));
-    const combineFilters = Boolean(parsedUrl.searchParams.get('combineFilters'));
-    return this.index.search(query, searchProperty, filters, pageNumber, combineFilters);
+    return this.index.search(query, searchProperty, filters, pageNumber);
   }
 
   private async fetchTaxonomy(url: string) {
@@ -280,7 +279,6 @@ export default class Marian {
     }
 
     const filters = extractFacetFilters(parsedUrl.searchParams);
-    const combineFilters = Boolean(parsedUrl.searchParams.get('combineFilters'));
     const query = new Query(rawQuery);
 
     let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
@@ -289,7 +287,7 @@ export default class Marian {
     }
 
     try {
-      return this.index.fetchFacets(query, searchProperty, filters, combineFilters);
+      return this.index.fetchFacets(query, searchProperty, filters);
     } catch (e) {
       console.error(`Error fetching facet metadata: ${JSON.stringify(e)}`);
       throw e;

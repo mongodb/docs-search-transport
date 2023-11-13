@@ -52,20 +52,35 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
   // q=test&facets.target_product>manual>versions=v6.0&facets.target_product=atlas
   // where each query param starting with 'facets.' denotes a filter
   const FACET_PREFIX = 'facets.';
-  const filters: Filter<Document>[] = [];
+
+  // values with same base facet keys should be treated as OR
+  const queryParamLists: { [key: string]: Filter<Document> } = {};
+
   for (const [key, value] of searchParams) {
+    // key = 'facets.target_product>atlas>sub_product'
+    // value = 'search'
     if (!key.startsWith(FACET_PREFIX)) {
       continue;
     }
 
-    filters.push({
+    // get base facet name
+    const drilldownKeyIdx = key.indexOf('>');
+    const baseFacet = drilldownKeyIdx > -1 ? key.slice(0, drilldownKeyIdx) : key;
+
+    queryParamLists[baseFacet] = queryParamLists[key] || {
+      compound: {
+        should: [],
+      },
+    };
+    queryParamLists[baseFacet]['compound']['should'].push({
       phrase: {
         query: value,
         path: key,
       },
     });
   }
-  return filters;
+
+  return Object.values(queryParamLists);
 };
 
 export const getFacetAggregationStages = (taxonomy: FacetOption[]) => {
