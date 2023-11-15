@@ -78,7 +78,21 @@ export class Query {
     parts.push({
       text: {
         query: terms,
-        path: ['paragraphs', 'code.lang', 'code.value', 'text', { value: 'code.value', multi: 'simple' }],
+        path: ['code.lang', 'paragraphs', 'code.value', 'text', { value: 'code.value', multi: 'simple' }],
+      },
+    });
+
+    parts.push({
+      text: {
+        query: terms,
+        path: [
+          { value: 'paragraphs', multi: 'synonymAnalyzer' },
+          { value: 'headings', multi: 'synonymAnalyzer' },
+          { value: 'title', multi: 'synonymAnalyzer' },
+          { value: 'text', multi: 'synonymAnalyzer' },
+          { value: 'code.lang', multi: 'synonymAnalyzer' },
+        ],
+        synonyms: 'synonym-mapping',
       },
     });
 
