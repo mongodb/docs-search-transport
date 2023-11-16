@@ -4,11 +4,13 @@ import Logger from 'basic-logger';
 import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession, Filter } from 'mongodb';
 
 import {
+  compareFacets,
   convertTaxonomyToResponseFormat,
   convertTaxonomyToTrie,
   formatFacetMetaResponse,
   getManifests,
   joinUrl,
+  sortFacetsObject,
 } from './util';
 import { Query } from '../Query';
 import {
@@ -20,6 +22,7 @@ import {
   FacetOption,
   FacetAggRes,
   TrieFacet,
+  AmbiguousFacet,
 } from './types';
 
 const log = new Logger({
@@ -55,25 +58,14 @@ export class SearchIndex {
     this.responseFacets = [];
   }
 
-  async search(
-    query: Query,
-    searchProperty: string[] | null,
-    filters: Filter<Document>[],
-    pageNumber?: number,
-    combineFilters = false
-  ) {
-    const aggregationQuery = query.getAggregationQuery(searchProperty, filters, pageNumber, combineFilters);
+  async search(query: Query, searchProperty: string[] | null, filters: Filter<Document>[], pageNumber?: number) {
+    const aggregationQuery = query.getAggregationQuery(searchProperty, filters, pageNumber);
     const cursor = this.documents.aggregate(aggregationQuery);
     return cursor.toArray();
   }
 
-  async fetchFacets(
-    query: Query,
-    searchProperty: string[] | null,
-    filters: Filter<Document>[],
-    combineFilters = false
-  ) {
-    const metaAggregationQuery = query.getMetaQuery(searchProperty, this.responseFacets, filters, combineFilters);
+  async fetchFacets(query: Query, searchProperty: string[] | null, filters: Filter<Document>[]) {
+    const metaAggregationQuery = query.getMetaQuery(searchProperty, this.responseFacets, filters);
     const cursor = this.documents.aggregate(metaAggregationQuery);
     try {
       // TODO: re-implement
@@ -163,7 +155,7 @@ export class SearchIndex {
         assert.ok(manifest.manifestRevisionId);
 
         await session.withTransaction(async () => {
-          const upserts = composeUpserts(manifest, manifest.manifest.documents);
+          const upserts = composeUpserts(manifest, manifest.manifest.documents, this.trieFacets);
 
           // Upsert documents
           if (upserts.length > 0) {
@@ -231,7 +223,11 @@ const deleteStaleProperties = async (
   status.deleted += deleteResult.deletedCount === undefined ? 0 : deleteResult.deletedCount;
 };
 
-const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWriteOperation<DatabaseDocument>[] => {
+const composeUpserts = (
+  manifest: Manifest,
+  documents: Document[],
+  trieFacets: TrieFacet
+): AnyBulkWriteOperation<DatabaseDocument>[] => {
   return documents.map((document) => {
     assert.strictEqual(typeof document.slug, 'string');
     // DOP-3545 and DOP-3585
@@ -242,6 +238,10 @@ const composeUpserts = (manifest: Manifest, documents: Document[]): AnyBulkWrite
     // We need a slug field with no special chars for keyword search
     // and exact match, e.g. no "( ) { } [ ] ^ “ ~ * ? : \ /" present
     document.strippedSlug = document.slug.replaceAll('/', '');
+
+    if (document.facets) {
+      document.facets = sortFacetsObject(document.facets, trieFacets);
+    }
 
     const newDocument: DatabaseDocument = {
       ...document,

@@ -75,21 +75,24 @@ export type FacetAggRes = {
   };
 };
 
-export type FacetOption = {
-  type: 'facet-option';
+/**
+ * Base facet for a FacetOption or FacetValue. Compatible with search documents' facets
+ */
+export interface AmbiguousFacet {
   id: string; // used to verify against taxonomy
+  key: string;
   name: string; // used to display for front end
-  key: string;
-  options: FacetValue[];
-};
+}
 
-export type FacetValue = {
+export interface FacetOption extends AmbiguousFacet {
+  type: 'facet-option';
+  options: FacetValue[];
+}
+
+export interface FacetValue extends AmbiguousFacet {
   type: 'facet-value';
-  id: string;
-  name: string;
-  key: string;
   count?: number;
   facets: FacetOption[];
-};
+}
 
 export type FacetAggregationStage = { [key: string]: { type: 'string'; path: string } };
