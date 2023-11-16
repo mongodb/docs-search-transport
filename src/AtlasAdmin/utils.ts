@@ -24,8 +24,7 @@ export function getSynonymUpdateOperations(filePath: string): Array<AnyBulkWrite
 
     const synonymDocument: SynonymDocument = { mappingType: 'equivalent', synonyms, primary };
 
-    //ensures a document with a blank primary isn't added to synonyms
-    return { updateOne: { filter: { primary }, update: { $set: synonymDocument }, upsert: !!primary } };
+    return { updateOne: { filter: { primary }, update: { $set: synonymDocument }, upsert: true } };
   });
 }
 
