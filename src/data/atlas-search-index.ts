@@ -73,7 +73,7 @@ export const SearchIndex: IndexMappings = {
         multi: {
           synonymAnalyzer: {
             analyzer: 'synonym.whitespace',
-            type: 'string', 
+            type: 'string',
           },
         },
       },
