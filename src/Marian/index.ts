@@ -17,6 +17,11 @@ import { sortFacets } from '../SearchIndex/util';
 const STANDARD_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'deny',
+
+  // allow CORS via credentials
+  // https://kanopy.corp.mongodb.com/docs/security/corpsecure/#cors-simple-request-example
+  'access-control-allow-credentials': true,
+  'access-control-allow-methods': 'GET'
 };
 
 const log = new Logger({
