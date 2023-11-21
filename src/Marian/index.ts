@@ -21,7 +21,7 @@ const STANDARD_HEADERS = {
   // allow CORS via credentials
   // https://kanopy.corp.mongodb.com/docs/security/corpsecure/#cors-simple-request-example
   'access-control-allow-credentials': true,
-  'access-control-allow-methods': 'GET'
+  'access-control-allow-methods': 'GET',
 };
 
 const log = new Logger({
