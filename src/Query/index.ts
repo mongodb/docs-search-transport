@@ -10,6 +10,43 @@ function processPart(part: string): string[] {
   return tokenize(part, false);
 }
 
+//check type of parts
+function constructAgg(parts: any[]): object[] {
+  console.log("THE PARTS", parts);
+  const newParts: any[] = [];
+  for(var part of parts){ 
+    newParts.push({ compound: {
+      must: [part],
+      mustNot: [
+        {
+          text: {
+            query: 'Realm',
+            path: ['searchProperty']
+          }
+        }
+      ]
+     } 
+    },
+    //bury result where query matched clause AND in Realm docs
+      { compound: {
+      must: [
+        part,
+        {
+          text:{
+            query: 'Realm',
+            path: ['searchProperty']
+          }
+        }
+      ],
+      score: {"boost": {value: 0.5}}
+     } 
+    });
+    //push to the two compounds as one should clause to the array
+  }
+  console.log(newParts[0].compound, newParts[0].compound.mustNot, newParts[0].compound.must[0]);
+  return newParts;
+}
+
 /** A parsed search query. */
 export class Query {
   terms: Set<string>;
@@ -137,7 +174,8 @@ export class Query {
     });
 
     const compound: { should: any[]; must: any[]; filter?: any[]; minimumShouldMatch: number } = {
-      should: parts,
+      //each of the "text" elements of push need to be put inside another compound:{must[ and duplicated, one with realm and one without
+      should: constructAgg(parts),
       minimumShouldMatch: 1,
       must: [],
     };
@@ -190,7 +228,7 @@ export class Query {
       // each compound (as a whole) must be matched
       compound.must = compound.must.concat(filters);
     }
-
+    console.log("COMPOUND", compound);
     return compound;
   }
 
