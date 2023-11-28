@@ -12,16 +12,17 @@ function processPart(part: string): string[] {
 
 //check type of parts
 function constructAgg(parts: any[]): object[] {
-  console.log("THE PARTS", parts);
   const newParts: any[] = [];
   for(var part of parts){ 
-    newParts.push({ compound: {
+    //push to the two compounds for each part to the new
+    newParts.push(
+      { compound: {
       must: [part],
       mustNot: [
         {
           text: {
-            query: 'Realm',
-            path: ['searchProperty']
+            query: 'realm-master',
+            path: 'searchProperty'
           }
         }
       ]
@@ -33,17 +34,16 @@ function constructAgg(parts: any[]): object[] {
         part,
         {
           text:{
-            query: 'Realm',
-            path: ['searchProperty']
+            query: 'realm-master',
+            path: 'searchProperty'
           }
         }
       ],
-      score: {"boost": {value: 0.5}}
+       score: {"boost": {value: 0.8}}
      } 
-    });
-    //push to the two compounds as one should clause to the array
+    }
+    );
   }
-  console.log(newParts[0].compound, newParts[0].compound.mustNot, newParts[0].compound.must[0]);
   return newParts;
 }
 
@@ -228,7 +228,6 @@ export class Query {
       // each compound (as a whole) must be matched
       compound.must = compound.must.concat(filters);
     }
-    console.log("COMPOUND", compound);
     return compound;
   }
 
@@ -248,7 +247,7 @@ export class Query {
       },
     ];
 
-    console.log('Executing ' + JSON.stringify(agg));
+    console.log('Executing ' + JSON.stringify(agg) );
     return agg;
   }
 
