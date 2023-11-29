@@ -4,20 +4,20 @@ import { Document, FacetOption } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
 import { strippedMapping } from '../data/term-result-mappings';
 
-export class InvalidQuery extends Error { }
+export class InvalidQuery extends Error {}
 
 function processPart(part: string): string[] {
   return tokenize(part, false);
 }
 
-const BURIED_PROPERTIES= ['realm'];
+const BURIED_PROPERTIES = ['realm'];
 const BURIED_FACTOR = 0.8;
 
 //check type of parts
 function constructAgg(parts: any[]): object[] {
   const newParts: any[] = [];
   for (var part of parts) {
-    //push to two compounds for each part to the new array 
+    //push to two compounds for each part to the new array
     newParts.push(
       //if given query matches a "part" result not in BURIED_PROPERTY(ex: Realm) docs, score remains unaffected
       {
@@ -27,11 +27,11 @@ function constructAgg(parts: any[]): object[] {
             {
               text: {
                 query: BURIED_PROPERTIES,
-                path: 'searchProperty'
-              }
-            }
-          ]
-        }
+                path: 'searchProperty',
+              },
+            },
+          ],
+        },
       },
       //if given query matches a "part" result in BURIED_PROPERTY(ex: Realm) docs, bury that result
       {
@@ -42,11 +42,11 @@ function constructAgg(parts: any[]): object[] {
               text: {
                 query: BURIED_PROPERTIES,
                 path: 'searchProperty',
-              }
-            }
+              },
+            },
           ],
-          score: { "boost": { value: BURIED_FACTOR } },
-        }
+          score: { boost: { value: BURIED_FACTOR } },
+        },
       }
     );
   }
