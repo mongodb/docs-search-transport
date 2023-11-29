@@ -4,44 +4,50 @@ import { Document, FacetOption } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
 import { strippedMapping } from '../data/term-result-mappings';
 
-export class InvalidQuery extends Error {}
+export class InvalidQuery extends Error { }
 
 function processPart(part: string): string[] {
   return tokenize(part, false);
 }
 
+const BURIED_PROPERTIES= ['realm'];
+const BURIED_FACTOR = 0.8;
+
 //check type of parts
 function constructAgg(parts: any[]): object[] {
   const newParts: any[] = [];
-  for(var part of parts){ 
-    //push to the two compounds for each part to the new
+  for (var part of parts) {
+    //push to two compounds for each part to the new array 
     newParts.push(
-      { compound: {
-      must: [part],
-      mustNot: [
-        {
-          text: {
-            query: 'realm-master',
-            path: 'searchProperty'
-          }
+      //if given query matches a "part" result not in BURIED_PROPERTY(ex: Realm) docs, score remains unaffected
+      {
+        compound: {
+          must: [part],
+          mustNot: [
+            {
+              text: {
+                query: BURIED_PROPERTIES,
+                path: 'searchProperty'
+              }
+            }
+          ]
         }
-      ]
-     } 
-    },
-    //bury result where query matched clause AND in Realm docs
-      { compound: {
-      must: [
-        part,
-        {
-          text:{
-            query: 'realm-master',
-            path: 'searchProperty'
-          }
+      },
+      //if given query matches a "part" result in BURIED_PROPERTY(ex: Realm) docs, bury that result
+      {
+        compound: {
+          must: [
+            part,
+            {
+              text: {
+                query: BURIED_PROPERTIES,
+                path: 'searchProperty',
+              }
+            }
+          ],
+          score: { "boost": { value: BURIED_FACTOR } },
         }
-      ],
-       score: {"boost": {value: 0.8}}
-     } 
-    }
+      }
     );
   }
   return newParts;
@@ -247,7 +253,7 @@ export class Query {
       },
     ];
 
-    console.log('Executing ' + JSON.stringify(agg) );
+    console.log('Executing ' + JSON.stringify(agg));
     return agg;
   }
 
