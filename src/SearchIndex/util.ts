@@ -359,7 +359,8 @@ export async function getManifests(manifestSource: string): Promise<Manifest[]> 
     if (!bucketName.length || !prefix.length) {
       throw new Error('Bad bucket manifest source');
     }
-    manifests = await getManifestsFromS3(bucketName, prefix);
+
+    manifests = await getManifestsFromS3(bucketName, prefix.slice(1));
   } else if (parsed.protocol === 'dir:') {
     manifests = await getManifestsFromDirectory(parsed.pathname);
   } else {
