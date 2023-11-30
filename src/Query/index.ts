@@ -16,7 +16,7 @@ const BURIED_FACTOR = 0.8;
 //check type of parts
 function constructAgg(parts: any[]): object[] {
   const newParts: any[] = [];
-  for (var part of parts) {
+  for (const part of parts) {
     //push to two compounds for each part to the new array
     newParts.push(
       //if given query matches a "part" result not in BURIED_PROPERTY(ex: Realm) docs, score remains unaffected
