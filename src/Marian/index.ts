@@ -63,8 +63,7 @@ export default class Marian {
     let parsedUrl: URL;
     try {
       parsedUrl = new URL(url, `http://${req.headers?.host}`);
-    }
-    catch (e){
+    } catch (e) {
       console.error(`URL constructor could not create a URL with url ${url} and base ${req.headers?.host}`);
       console.trace();
       throw e;
@@ -297,26 +296,32 @@ export default class Marian {
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
-  
+
     let res: {
       count: number;
       facets: any[];
-    
-    }
+    };
     try {
       res = await this.index.fetchFacets(query, searchProperty, filters);
     } catch (e) {
-      console.error(`Error fetching facet metadata for query ${query}, with search property ${searchProperty}, and filters ${filters}. ${JSON.stringify(e)} `);
-      console.trace()
+      console.error(
+        `Error fetching facet metadata for query ${query}, with search property ${searchProperty}, and filters ${filters}. ${JSON.stringify(
+          e
+        )} `
+      );
+      console.trace();
       throw e;
     }
     try {
       res.facets = sortFacets(res.facets);
       return res;
-    }
-    catch(e){
-      console.error(`Error sorting metadata facets for query ${query}, with search property ${searchProperty}, and filters ${filters}. ${JSON.stringify(e)}`);
-      console.trace()
+    } catch (e) {
+      console.error(
+        `Error sorting metadata facets for query ${query}, with search property ${searchProperty}, and filters ${filters}. ${JSON.stringify(
+          e
+        )}`
+      );
+      console.trace();
       throw e;
     }
   }

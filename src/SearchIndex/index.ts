@@ -72,7 +72,11 @@ export class SearchIndex {
       const aggRes = await cursor.toArray();
       return formatFacetMetaResponse(aggRes[0] as FacetAggRes, this.trieFacets);
     } catch (e) {
-      log.error(`Error while fetching facets for query ${query}, with search property ${searchProperty}, and filters ${filters} ${JSON.stringify(e)}`);
+      log.error(
+        `Error while fetching facets for query ${query}, with search property ${searchProperty}, and filters ${filters} ${JSON.stringify(
+          e
+        )}`
+      );
       log.trace();
       throw e;
     }
