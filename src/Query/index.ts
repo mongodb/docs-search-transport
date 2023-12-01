@@ -13,8 +13,8 @@ function processPart(part: string): string[] {
 const BURIED_PROPERTIES = ['realm'];
 const BURIED_FACTOR = 0.8;
 
-//check type of parts
-function constructAgg(parts: any[]): object[] {
+// each $search operator is expanded into two compound operators so that certain properties are buried
+function constructBuryOperators(parts: any[]): object[] {
   const newParts: any[] = [];
   for (const part of parts) {
     //push to two compounds for each part to the new array
@@ -180,8 +180,7 @@ export class Query {
     });
 
     const compound: { should: any[]; must: any[]; filter?: any[]; minimumShouldMatch: number } = {
-      //each of the "text" elements of push need to be put inside another compound:{must[ and duplicated, one with realm and one without
-      should: constructAgg(parts),
+      should: constructBuryOperators(parts),
       minimumShouldMatch: 1,
       must: [],
     };
