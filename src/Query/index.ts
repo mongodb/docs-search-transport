@@ -10,6 +10,49 @@ function processPart(part: string): string[] {
   return tokenize(part, false);
 }
 
+const BURIED_PROPERTIES = ['realm'];
+const BURIED_FACTOR = 0.8;
+
+// each $search operator is expanded into two compound operators so that certain properties are buried
+function constructBuryOperators(parts: any[]): object[] {
+  const newParts: any[] = [];
+  for (const part of parts) {
+    //push to two compounds for each part to the new array
+    newParts.push(
+      //if given query matches a "part" result not in BURIED_PROPERTY(ex: Realm) docs, score remains unaffected
+      {
+        compound: {
+          must: [part],
+          mustNot: [
+            {
+              text: {
+                query: BURIED_PROPERTIES,
+                path: 'searchProperty',
+              },
+            },
+          ],
+        },
+      },
+      //if given query matches a "part" result in BURIED_PROPERTY(ex: Realm) docs, bury that result
+      {
+        compound: {
+          must: [
+            part,
+            {
+              text: {
+                query: BURIED_PROPERTIES,
+                path: 'searchProperty',
+              },
+            },
+          ],
+          score: { boost: { value: BURIED_FACTOR } },
+        },
+      }
+    );
+  }
+  return newParts;
+}
+
 /** A parsed search query. */
 export class Query {
   terms: Set<string>;
@@ -137,7 +180,7 @@ export class Query {
     });
 
     const compound: { should: any[]; must: any[]; filter?: any[]; minimumShouldMatch: number } = {
-      should: parts,
+      should: constructBuryOperators(parts),
       minimumShouldMatch: 1,
       must: [],
     };
@@ -190,7 +233,6 @@ export class Query {
       // each compound (as a whole) must be matched
       compound.must = compound.must.concat(filters);
     }
-
     return compound;
   }
 
