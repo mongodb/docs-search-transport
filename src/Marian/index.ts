@@ -12,10 +12,16 @@ import { AtlasAdminManager } from '../AtlasAdmin';
 import { setPropertyMapping } from '../SearchPropertyMapping';
 import { Query, InvalidQuery } from '../Query';
 import { extractFacetFilters } from '../Query/util';
+import { sortFacets } from '../SearchIndex/util';
 
 const STANDARD_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'deny',
+
+  // allow CORS via credentials
+  // https://kanopy.corp.mongodb.com/docs/security/corpsecure/#cors-simple-request-example
+  'access-control-allow-credentials': true,
+  'access-control-allow-methods': 'GET',
 };
 
 const log = new Logger({
@@ -287,7 +293,9 @@ export default class Marian {
     }
 
     try {
-      return this.index.fetchFacets(query, searchProperty, filters);
+      const res = await this.index.fetchFacets(query, searchProperty, filters);
+      res.facets = sortFacets(res.facets);
+      return res;
     } catch (e) {
       console.error(`Error fetching facet metadata: ${JSON.stringify(e)}`);
       throw e;
