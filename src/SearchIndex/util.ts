@@ -462,6 +462,9 @@ async function getManifestsFromS3(bucketName: string, prefix: string): Promise<M
   const manifests = [];
   for (const bucketEntry of result.Contents || []) {
     if (bucketEntry.Size === 0) {
+      if (!bucketEntry.Key?.endsWith('/')) {
+        log.error(new Error(`Got empty file: "${bucketEntry.Key}"`));
+      }
       continue;
     }
 
