@@ -42,7 +42,7 @@ steps:
         from_secret: ecr_secret_key
     when:
       event:
-        - tag
+        - push
 
   - name: deploy-staging
     image: quay.io/mongodb/drone-helm:v3
@@ -76,4 +76,4 @@ steps:
         from_secret: prod_kubernetes_token
     when:
       event:
-        - tag
+        - push
