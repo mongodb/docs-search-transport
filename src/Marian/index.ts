@@ -251,7 +251,6 @@ export default class Marian {
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
-
     const pageNumber = Number(parsedUrl.searchParams.get('page'));
     return this.index.search(query, searchProperty, filters, pageNumber);
   }
@@ -296,28 +295,13 @@ export default class Marian {
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
-
-    let res: {
-      count: number;
-      facets: any[];
-    };
     try {
-      res = await this.index.fetchFacets(query, searchProperty, filters);
-    } catch (e) {
-      console.error(
-        `Error fetching facet metadata for query ${query}, with search property ${searchProperty}, and filters ${filters}. ${JSON.stringify(
-          e
-        )} `
-      );
-      console.trace();
-      throw e;
-    }
-    try {
+      const res = await this.index.fetchFacets(query, searchProperty, filters);
       res.facets = sortFacets(res.facets);
       return res;
     } catch (e) {
       console.error(
-        `Error sorting metadata facets for query ${query}, with search property ${searchProperty}, and filters ${filters}. ${JSON.stringify(
+        `Error fetching facet metadata for query ${rawQuery}, with search property ${searchProperty}, and filters ${filters}. ${JSON.stringify(
           e
         )}`
       );
