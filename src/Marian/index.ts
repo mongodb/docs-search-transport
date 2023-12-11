@@ -60,10 +60,16 @@ export default class Marian {
     if (!url) {
       assert.fail('Assertion: Missing url');
     }
-    const parsedUrl = new URL(url, `http://${req.headers.host}`);
-
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url, `http://${req.headers?.host}`);
+    } catch (e) {
+      log.warn(`URL constructor could not create a URL with url ${url} and base ${req.headers?.host}`);
+      res.writeHead(500, {});
+      res.end('');
+      return;
+    }
     const pathname = (parsedUrl.pathname || '').replace(/\/+$/, '');
-
     if (pathname === '/search') {
       if (checkMethod(req, res, 'GET')) {
         this.handleSearch(parsedUrl, req, res);
@@ -246,7 +252,6 @@ export default class Marian {
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
-
     const pageNumber = Number(parsedUrl.searchParams.get('page'));
     return this.index.search(query, searchProperty, filters, pageNumber);
   }
@@ -260,7 +265,7 @@ export default class Marian {
       const toml = await res.text();
       return parse(toml);
     } catch (e) {
-      console.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
+      log.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);
       throw e;
     }
   }
@@ -291,13 +296,17 @@ export default class Marian {
     if (typeof searchProperty === 'string') {
       searchProperty = [searchProperty];
     }
-
     try {
       const res = await this.index.fetchFacets(query, searchProperty, filters);
       res.facets = sortFacets(res.facets);
       return res;
     } catch (e) {
-      console.error(`Error fetching facet metadata: ${JSON.stringify(e)}`);
+      log.error(
+        `Error fetching facet metadata for query ${rawQuery}, with search property ${searchProperty}, and filters ${filters}. ${JSON.stringify(
+          e
+        )}`
+      );
+      console.trace();
       throw e;
     }
   }
