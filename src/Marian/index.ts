@@ -64,9 +64,10 @@ export default class Marian {
     try {
       parsedUrl = new URL(url, `http://${req.headers?.host}`);
     } catch (e) {
-      console.error(`URL constructor could not create a URL with url ${url} and base ${req.headers?.host}`);
-      console.trace();
-      throw e;
+log.warn(`URL constructor could not create a URL with url ${url} and base ${req.headers?.host}`);
+res.writeHead(500, {});
+res.end('');
+return;
     }
     const pathname = (parsedUrl.pathname || '').replace(/\/+$/, '');
     if (pathname === '/search') {
