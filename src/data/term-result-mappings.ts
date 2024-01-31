@@ -2,7 +2,11 @@ const resultMapping: ResultMapping = {
   and: ['reference/operator/query/and', 'reference/operator/aggregation/and', 'reference/operator/query/all'],
   or: ['reference/operator/query/or', 'reference/operator/aggregation/or', 'reference/operator/query-logical'],
   in: ['reference/operator/query/in', 'reference/operator/aggregation/in', 'reference/method.db.collection.find'],
-  findbyid: ['reference/command/find', 'reference/method/db.collection.findOne', 'reference/method/db.collection.findAndModify'],
+  findbyid: [
+    'reference/command/find',
+    'reference/method/db.collection.findOne',
+    'reference/method/db.collection.findAndModify',
+  ],
   findbyidandupdate: [
     'reference/command/findAndModify',
     'reference/method/db.collection.findAndModify',
@@ -15,7 +19,11 @@ const resultMapping: ResultMapping = {
     'reference/operator/aggregation/and',
     'reference/operator/query/all',
   ],
-  'in operator': ['reference/operator/query/in', 'reference/operator/aggregation/in', 'reference/method.db.collection.find'],
+  'in operator': [
+    'reference/operator/query/in',
+    'reference/operator/aggregation/in',
+    'reference/method.db.collection.find',
+  ],
   'mongodb.conf': [
     'reference/configuration-options',
     'administration/configuration',
@@ -55,7 +63,11 @@ const resultMapping: ResultMapping = {
     'reference/map-reduce-to-aggregation-pipeline',
   ],
   aggregation: ['aggregation', 'core/aggregation-pipeline'],
-  projection: ['reference/operator/projection', 'reference/operator/aggregation/project', 'tutorial/project-fields-from-query-results/'],
+  projection: [
+    'reference/operator/projection',
+    'reference/operator/aggregation/project',
+    'tutorial/project-fields-from-query-results/',
+  ],
   operators: ['reference/operator/query', 'reference/operator/update', 'reference/operator/aggregation-pipeline'],
   set: [
     'reference/operator/update/set',
@@ -97,16 +109,16 @@ const resultMapping: ResultMapping = {
     'sdk/java/api/io/realm/mongodb/mongo/MongoClient',
   ],
   mongocli: ['command/mongocli', 'install', 'configure'],
-  connection: [
-    'reference/connection-string',
-    'reference/command/serverStatus',
-    'reference/command/connectionStatus',
-  ],
+  connection: ['reference/connection-string', 'reference/command/serverStatus', 'reference/command/connectionStatus'],
   contains: ['reference/operator/query/in', 'tutorial/query-arrays', 'reference/operator/aggregation/regexFindAll'],
   $contains: ['reference/operator/query/in', 'tutorial/query-arrays', 'reference/operator/aggregation/regexFindAll'],
   lt: ['reference/operator/query/lt', 'reference/operator/aggregation/lt', 'reference/operator/query/lte'],
   if: ['reference/operator/aggregation/cond', 'reference/operator/aggregation/switch', 'reference/operator/query/expr'],
-  $if: ['reference/operator/aggregation/cond', 'reference/operator/aggregation/switch', 'reference/operator/query/expr'],
+  $if: [
+    'reference/operator/aggregation/cond',
+    'reference/operator/aggregation/switch',
+    'reference/operator/query/expr',
+  ],
   order: ['reference/sql-comparison/', 'reference/method/cursor.sort', 'reference/operator/aggregation/sort'],
   max: ['/operator/update/max', 'reference/operator/aggregation/max', 'reference/operator/aggregation/maxN'],
   select: [
@@ -125,7 +137,11 @@ const resultMapping: ResultMapping = {
     'reference/operator/aggregation',
     'reference/operator/projection/positional',
   ],
-  $match: ['reference/operator/aggregation/match', 'reference/operator/query/elemMatch', 'reference/operator/aggregation/regexMatch'],
+  $match: [
+    'reference/operator/aggregation/match',
+    'reference/operator/query/elemMatch',
+    'reference/operator/aggregation/regexMatch',
+  ],
   $push: [
     'reference/operator/update/push',
     'reference/operator/aggregation/push',
@@ -151,7 +167,11 @@ const resultMapping: ResultMapping = {
   ],
   $pull: ['reference/operator/update/pull', 'reference/operator/update/pullAll', 'reference/operator/update'],
   $reduce: ['reference/operator/aggregation/reduce', 'reference/operator/aggregation'],
-  $all: ['reference/operator/query/all', 'reference/operator/aggregation/regexFindAll', 'reference/operator/update/pullAll'],
+  $all: [
+    'reference/operator/query/all',
+    'reference/operator/aggregation/regexFindAll',
+    'reference/operator/update/pullAll',
+  ],
   $facet: ['reference/operator/aggregation/facet', 'reference/operator/aggregation/bucket', 'atlas/atlas-search/facet'],
   $add: [
     'reference/operator/aggregation/add',
