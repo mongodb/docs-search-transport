@@ -34,6 +34,12 @@ $ npm run search-transport
 
 The server will be running on port 8080. To make a query, make a request to `localhost:8080/search?q=<your query here>` using the browser, Postman, etc.
 
+Available query parameters:
+- (required) `q` - string to be queried (e.g. `findbyidandupdate`)
+- (optional) `searchProperty` - which docs property the query should be refined by (e.g. `manual`)
+- (optional) `page` - which page of results to display (e.g. `2`)
+- (optional) `facets` - a list of selected facets/subfacets in the format `target_product>product>subproduct`
+
 A node debugger (ie. [chrome developer tools](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients)) can be connected to the built JS files.
 
 ## Staging
