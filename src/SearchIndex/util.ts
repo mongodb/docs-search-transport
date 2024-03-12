@@ -16,6 +16,7 @@ import {
   FacetAggRes,
   FacetOption,
   FacetValue,
+  FacetMeta,
   AmbiguousFacet,
 } from './types';
 import { TaxonomyEntity } from '../SearchIndex/types';
@@ -35,10 +36,10 @@ function convertTitleCase(name: string, property: string): string {
   return name.replace(/^[_-]*(.)|[_-]+(.)/g, (s, c, d) => (c ? c.toUpperCase() : ' ' + d.toUpperCase()));
 }
 
-export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: TrieFacet) {
+export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: TrieFacet): FacetMeta {
   const facets: FacetOption[] = convertToFacetOptions(facetAggRes.facet, taxonomyTrie);
 
-  return {
+  return <FacetMeta>{
     count: facetAggRes.count['lowerBound'],
     facets: facets,
   };
@@ -167,6 +168,7 @@ export function convertTaxonomyToTrie(taxonomy: Taxonomy): TrieFacet {
     name: '',
   };
 
+  // TODO: any
   function addToRes(entityList: TaxonomyEntity[], ref: { [key: string]: any }, property: string) {
     ref[property] = {
       name: convertTitleCase(property, property), // convert snakecase to title case

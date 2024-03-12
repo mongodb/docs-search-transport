@@ -75,6 +75,11 @@ export type FacetAggRes = {
   };
 };
 
+export type FacetMeta = {
+  count: number;
+  facets: FacetOption[];
+};
+
 /**
  * Base facet for a FacetOption or FacetValue. Compatible with search documents' facets
  */
