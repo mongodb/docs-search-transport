@@ -22,6 +22,7 @@ const DEFAULT_DATABASE_NAME = 'search';
 const GROUP_KEY = 'GROUP_ID';
 const ADMIN_API_KEY = 'ATLAS_ADMIN_API_KEY';
 const ADMIN_PUB_KEY = 'ATLAS_ADMIN_PUB_KEY';
+const TAXONOMY_URL = 'TAXONOMY_URL';
 
 function help(): void {
   console.error(`Usage: search-transport [--create-indexes] [--load-manifests]
@@ -33,6 +34,7 @@ The following environment variables are used:
 * ${GROUP_KEY}
 * ${ADMIN_API_KEY}
 * ${ADMIN_PUB_KEY}
+* ${TAXONOMY_URL}
 `);
 }
 
@@ -42,6 +44,7 @@ function verifyAndGetEnvVars() {
   const groupId = process.env[GROUP_KEY];
   const adminPubKey = process.env[ADMIN_PUB_KEY];
   const adminPrivKey = process.env[ADMIN_API_KEY];
+  const taxonomyUrl = process.env[TAXONOMY_URL];
 
   if (!manifestUri || !atlasUri || !groupId || !adminPrivKey || !adminPubKey) {
     if (!manifestUri) {
@@ -59,7 +62,9 @@ function verifyAndGetEnvVars() {
     if (!adminPubKey) {
       console.error(`Missing ${ADMIN_PUB_KEY}`);
     }
-    // TODO: add taxonomy url
+    if (!taxonomyUrl) {
+      console.error(`Missing ${TAXONOMY_URL}`);
+    }
     help();
     process.exit(1);
   }
