@@ -101,3 +101,5 @@ export interface FacetValue extends AmbiguousFacet {
 }
 
 export type FacetAggregationStage = { [key: string]: { type: 'string'; path: string } };
+
+export type RefObj = { [key: string]: { name: string } } | Record<string, any> | TrieFacet;

@@ -18,6 +18,7 @@ import {
   FacetValue,
   FacetMeta,
   AmbiguousFacet,
+  RefObj,
 } from './types';
 import { TaxonomyEntity } from '../SearchIndex/types';
 
@@ -168,8 +169,7 @@ export function convertTaxonomyToTrie(taxonomy: Taxonomy): TrieFacet {
     name: '',
   };
 
-  // TODO: any
-  function addToRes(entityList: TaxonomyEntity[], ref: { [key: string]: any }, property: string) {
+  function addToRes(entityList: TaxonomyEntity[], ref: RefObj, property: string) {
     ref[property] = {
       name: convertTitleCase(property, property), // convert snakecase to title case
     };
