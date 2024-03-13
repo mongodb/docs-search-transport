@@ -3,6 +3,7 @@ import { getFacetAggregationStages, getProjectionAndFormatStages, tokenize } fro
 import { Document, FacetOption } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
 import { strippedMapping } from '../data/term-result-mappings';
+import { Part, CompoundPart, Must } from './types';
 
 export class InvalidQuery extends Error {}
 
@@ -14,8 +15,8 @@ const BURIED_PROPERTIES = ['realm'];
 const BURIED_FACTOR = 0.8;
 
 // each $search operator is expanded into two compound operators so that certain properties are buried
-function constructBuryOperators(parts: any[]): object[] {
-  const newParts: any[] = [];
+function constructBuryOperators(parts: Part[]): CompoundPart[] {
+  const newParts: CompoundPart[] = [];
   for (const part of parts) {
     //push to two compounds for each part to the new array
     newParts.push(
@@ -104,7 +105,7 @@ export class Query {
 
   getCompound(searchProperty: string[] | null, filters: Filter<Document>[]) {
     const terms = Array.from(this.terms);
-    const parts: any[] = [];
+    const parts: Part[] = [];
     const searchPropertyMapping = getPropertyMapping();
 
     // if we need to boost for matching slug on an exact rawQuery match
@@ -179,7 +180,7 @@ export class Query {
       },
     });
 
-    const compound: { should: any[]; must: any[]; filter?: any[]; minimumShouldMatch: number } = {
+    const compound: { should: CompoundPart[]; must: Must[]; filter?: any[]; minimumShouldMatch: number } = {
       should: constructBuryOperators(parts),
       minimumShouldMatch: 1,
       must: [],
@@ -256,7 +257,7 @@ export class Query {
     return agg;
   }
 
-  getAggregationQuery(searchProperty: string[] | null, filters: Filter<Document>[], page?: number): any[] {
+  getAggregationQuery(searchProperty: string[] | null, filters: Filter<Document>[], page?: number): Filter<Document>[] {
     if (page && page < 1) {
       throw new InvalidQuery('Invalid page');
     }
