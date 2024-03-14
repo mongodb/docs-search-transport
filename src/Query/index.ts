@@ -3,7 +3,7 @@ import { getFacetAggregationStages, getProjectionAndFormatStages, tokenize } fro
 import { Document, FacetOption } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
 import { strippedMapping } from '../data/term-result-mappings';
-import { Part, CompoundPart, Must } from './types';
+import { Part, CompoundPart, Compound } from './types';
 
 export class InvalidQuery extends Error {}
 
@@ -180,7 +180,7 @@ export class Query {
       },
     });
 
-    const compound: { should: CompoundPart[]; must: Must[]; filter?: any[]; minimumShouldMatch: number } = {
+    const compound: Compound = {
       should: constructBuryOperators(parts),
       minimumShouldMatch: 1,
       must: [],

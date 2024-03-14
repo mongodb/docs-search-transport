@@ -45,4 +45,10 @@ type Equals = {
   };
 };
 
-export type Must = Phrase | Equals | Filter<Document>;
+type Must = Phrase | Equals | Filter<Document>;
+
+export type Compound = {
+  should: CompoundPart[];
+  must: Must[];
+  minimumShouldMatch: number;
+};
