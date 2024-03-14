@@ -169,13 +169,13 @@ export function convertTaxonomyToTrie(taxonomy: Taxonomy): TrieFacet {
     name: '',
   };
 
-  function addToRes(entityList: TaxonomyEntity[], ref: RefObj, property: string) {
+  function addToRes(entityList: TaxonomyEntity[], ref: TrieFacet, property: string) {
     ref[property] = {
       name: convertTitleCase(property, property), // convert snakecase to title case
     };
-    ref = ref[property];
+    ref = ref[property] as TrieFacet;
     for (const taxEntity of entityList) {
-      const entity: Record<string, any> = {
+      const entity: TrieFacet = {
         name: taxEntity['display_name'] || convertTitleCase(taxEntity['name'], property),
       };
       if (property === 'versions' && taxEntity['stable']) {
@@ -195,7 +195,7 @@ export function convertTaxonomyToTrie(taxonomy: Taxonomy): TrieFacet {
     if (stringKey === 'name') {
       continue;
     }
-    addToRes(taxonomy[stringKey], res as object, stringKey);
+    addToRes(taxonomy[stringKey], res, stringKey);
   }
   return res;
 }
