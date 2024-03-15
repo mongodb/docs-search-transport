@@ -16,6 +16,7 @@ import {
   FacetAggRes,
   FacetOption,
   FacetValue,
+  FacetMeta,
   AmbiguousFacet,
 } from './types';
 import { TaxonomyEntity } from '../SearchIndex/types';
@@ -35,10 +36,10 @@ function convertTitleCase(name: string, property: string): string {
   return name.replace(/^[_-]*(.)|[_-]+(.)/g, (s, c, d) => (c ? c.toUpperCase() : ' ' + d.toUpperCase()));
 }
 
-export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: TrieFacet) {
+export function formatFacetMetaResponse(facetAggRes: FacetAggRes, taxonomyTrie: TrieFacet): FacetMeta {
   const facets: FacetOption[] = convertToFacetOptions(facetAggRes.facet, taxonomyTrie);
 
-  return {
+  return <FacetMeta>{
     count: facetAggRes.count['lowerBound'],
     facets: facets,
   };
@@ -167,13 +168,13 @@ export function convertTaxonomyToTrie(taxonomy: Taxonomy): TrieFacet {
     name: '',
   };
 
-  function addToRes(entityList: TaxonomyEntity[], ref: { [key: string]: any }, property: string) {
+  function addToRes(entityList: TaxonomyEntity[], ref: TrieFacet, property: string) {
     ref[property] = {
       name: convertTitleCase(property, property), // convert snakecase to title case
     };
-    ref = ref[property];
+    ref = ref[property] as TrieFacet;
     for (const taxEntity of entityList) {
-      const entity: Record<string, any> = {
+      const entity: TrieFacet = {
         name: taxEntity['display_name'] || convertTitleCase(taxEntity['name'], property),
       };
       if (property === 'versions' && taxEntity['stable']) {
@@ -193,7 +194,7 @@ export function convertTaxonomyToTrie(taxonomy: Taxonomy): TrieFacet {
     if (stringKey === 'name') {
       continue;
     }
-    addToRes(taxonomy[stringKey], res as object, stringKey);
+    addToRes(taxonomy[stringKey], res, stringKey);
   }
   return res;
 }

@@ -3,11 +3,12 @@ import assert from 'assert';
 import Logger from 'basic-logger';
 import http from 'http';
 import { parse } from 'toml';
+import { Document } from 'mongodb';
 
 import { checkAllowedOrigin, checkMethod } from './util';
 import { StatusResponse } from './types';
 import { SearchIndex } from '../SearchIndex';
-import { Taxonomy } from '../SearchIndex/types';
+import { FacetMeta, Taxonomy } from '../SearchIndex/types';
 import { AtlasAdminManager } from '../AtlasAdmin';
 import { setPropertyMapping } from '../SearchPropertyMapping';
 import { Query, InvalidQuery } from '../Query';
@@ -233,7 +234,7 @@ export default class Marian {
     res.end(responseBody);
   }
 
-  private async fetchResults(parsedUrl: URL): Promise<any[]> {
+  private async fetchResults(parsedUrl: URL): Promise<Document[]> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
 
     if (!rawQuery) {
@@ -283,7 +284,7 @@ export default class Marian {
     res.end(responseBody);
   }
 
-  private async fetchFacetMeta(parsedUrl: URL): Promise<any> {
+  private async fetchFacetMeta(parsedUrl: URL): Promise<FacetMeta> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
     if (!rawQuery || !rawQuery.length) {
       throw new InvalidQuery();
