@@ -18,7 +18,6 @@ import {
   FacetValue,
   FacetMeta,
   AmbiguousFacet,
-  RefObj,
 } from './types';
 import { TaxonomyEntity } from '../SearchIndex/types';
 
