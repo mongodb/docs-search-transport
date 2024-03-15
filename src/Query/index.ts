@@ -1,4 +1,4 @@
-import { Filter } from 'mongodb';
+import { Filter, Document as mdbDocument } from 'mongodb';
 import { getFacetAggregationStages, getProjectionAndFormatStages, tokenize } from './util';
 import { Document, FacetOption } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
@@ -103,7 +103,7 @@ export class Query {
     }
   }
 
-  getCompound(searchProperty: string[] | null, filters: Filter<Document>[]) {
+  getCompound(searchProperty: string[] | null, filters: Filter<Document>[]): Compound {
     const terms = Array.from(this.terms);
     const parts: Part[] = [];
     const searchPropertyMapping = getPropertyMapping();
@@ -237,8 +237,8 @@ export class Query {
     return compound;
   }
 
-  getMetaQuery(searchProperty: string[] | null, taxonomy: FacetOption[], filters: Filter<Document>[]) {
-    const compound = this.getCompound(searchProperty, filters);
+  getMetaQuery(searchProperty: string[] | null, taxonomy: FacetOption[], filters: Filter<Document>[]): mdbDocument[] {
+    const compound: Compound = this.getCompound(searchProperty, filters);
 
     const facets = getFacetAggregationStages(taxonomy);
 
@@ -257,13 +257,13 @@ export class Query {
     return agg;
   }
 
-  getAggregationQuery(searchProperty: string[] | null, filters: Filter<Document>[], page?: number): Filter<Document>[] {
+  getAggregationQuery(searchProperty: string[] | null, filters: Filter<Document>[], page?: number): mdbDocument[] {
     if (page && page < 1) {
       throw new InvalidQuery('Invalid page');
     }
     const compound = this.getCompound(searchProperty, filters);
 
-    const agg: Filter<Document>[] = [
+    const agg: mdbDocument[] = [
       {
         $search: {
           compound,

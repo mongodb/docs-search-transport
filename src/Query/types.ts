@@ -1,5 +1,4 @@
-import { Filter } from 'mongodb';
-import { Document } from '../SearchIndex/types';
+import { Document } from 'mongodb';
 
 type PathObj = {
   value: string;
@@ -45,7 +44,7 @@ type Equals = {
   };
 };
 
-type Must = Phrase | Equals | Filter<Document>;
+type Must = Phrase | Equals | Document;
 
 export type Compound = {
   should: CompoundPart[];
