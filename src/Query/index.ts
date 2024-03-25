@@ -195,7 +195,7 @@ export class Query {
           query: terms.join(' '),
           score: {
             boost: {
-              value: 50,
+              value: 10,
             },
           },
         },
