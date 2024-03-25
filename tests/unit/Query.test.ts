@@ -33,7 +33,7 @@ describe('Query', () => {
     deepStrictEqual(query.phrases, ['officially supported']);
   });
 
-  it('should look for the phrase as a compound should with a boost', () => {
+  it('should query a multi word phrase as its whole and boost its score', () => {
     const query = new Query('max disk iops');
     const compound = query.getCompound(null, []);
     const phrase = compound.should.find((compoundPart) => {
