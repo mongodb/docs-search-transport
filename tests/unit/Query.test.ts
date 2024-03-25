@@ -1,6 +1,6 @@
 import { deepStrictEqual, ok } from 'assert';
 import { Query } from '../../src/Query';
-import { Phrase, CompoundPart } from '../../src/Query/types';
+import { CompoundPart } from '../../src/Query/types';
 
 describe('Query', () => {
   it('should parse a single term', () => {
