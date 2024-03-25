@@ -187,18 +187,20 @@ export class Query {
     };
     const searchPropertyNames = Object.keys(searchPropertyMapping);
 
-    // DOP-3976: phrases found in conjunction should have additional score boost
-    compound.should.push({
-      phrase: {
-        path: ['paragraphs', 'text', 'headings'],
-        query: terms.join(' '),
-        score: {
-          boost: {
-            value: 50,
+    // DOP-3976: phrases found in conjunction should have additional score boost if they are found in order
+    if (terms.length > 1) {
+      compound.should.push({
+        phrase: {
+          path: ['paragraphs', 'text', 'headings'],
+          query: terms.join(' '),
+          score: {
+            boost: {
+              value: 50,
+            },
           },
         },
-      },
-    });
+      });
+    }
 
     // if user requested searchProperty, must match this property name
     // allowing mix usage of searchProperty and facets
