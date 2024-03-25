@@ -22,18 +22,23 @@ export type Part = {
   };
 };
 
-export type CompoundPart = {
-  compound: {
-    must: Part[];
-    mustNot?: Part[];
-    score?: Score;
-  };
-};
+export type CompoundPart =
+  | Part
+  | Phrase
+  | {
+      compound: {
+        must: Part[];
+        mustNot?: Part[];
+        score?: Score;
+      };
+    };
 
-type Phrase = {
+export type Phrase = {
   phrase: {
     path: string | string[];
     query: string | string[];
+    slop?: number;
+    score?: Score;
   };
 };
 
