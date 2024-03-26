@@ -197,7 +197,7 @@ export class Query {
           slop: maxLength,
           score: {
             boost: {
-              value: 15,
+              value: 25,
             },
           },
         },
