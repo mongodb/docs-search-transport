@@ -189,13 +189,15 @@ export class Query {
 
     // DOP-3976: phrases found in conjunction should have additional score boost if they are found in order
     if (terms.length > 1) {
+      const maxLength: number = terms.reduce((max, term) => Math.max(max, term.length), 0);
       compound.should.push({
         phrase: {
           path: ['paragraphs', 'text', 'headings'],
           query: terms.join(' '),
+          slop: maxLength,
           score: {
             boost: {
-              value: 10,
+              value: 15,
             },
           },
         },
