@@ -320,6 +320,8 @@ export default class Marian {
     }
   }
 
+  // anything with /zh-cn for now.
+  // ie. /zh-cn/search?q=test
   private async handleTranslationRequest(req: http.IncomingMessage, res: http.ServerResponse) {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -328,17 +330,18 @@ export default class Marian {
     };
 
     // extract headers (minus auth headers)
+    // take out kanopy header
     const { cookie, ...ogHeaders } = req.headers;
 
     // extract path and query params
+    // ie. /zh-cn/search?q=test
     const url = req.url || '';
 
     // call smartling API
     const SMARTLING_URL = new URL(url, `https://mongodbdocs.sl.smartling.com/`);
+    // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
     try {
       const smartlingRes = await fetch(SMARTLING_URL.toString(), ogHeaders as RequestInit);
-      log.info('check headers')
-      log.info(ogHeaders)
       if (smartlingRes.status !== 200) {
         log.error(
           `Error while fetching smartling request ${SMARTLING_URL.toString()} with status code ${
