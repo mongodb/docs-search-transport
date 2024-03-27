@@ -337,11 +337,13 @@ export default class Marian {
     const SMARTLING_URL = new URL(url, `https://mongodbdocs.sl.smartling.com/`);
     try {
       const smartlingRes = await fetch(SMARTLING_URL.toString(), ogHeaders as RequestInit);
+      log.info('check headers')
+      log.info(ogHeaders)
       if (smartlingRes.status !== 200) {
         log.error(
-          `Error while fetching smartling request with status code ${smartlingRes.status}: ${JSON.stringify(
-            smartlingRes.statusText
-          )}`
+          `Error while fetching smartling request ${SMARTLING_URL.toString()} with status code ${
+            smartlingRes.status
+          }: ${JSON.stringify(smartlingRes.statusText)}`
         );
         res.writeHead(smartlingRes.status, smartlingRes.statusText);
         res.end();
