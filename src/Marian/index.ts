@@ -14,8 +14,6 @@ import { setPropertyMapping } from '../SearchPropertyMapping';
 import { Query, InvalidQuery } from '../Query';
 import { extractFacetFilters } from '../Query/util';
 import { sortFacets } from '../SearchIndex/util';
-import { Readable  } from 'stream';
-import type { ReadableStream } from 'stream/web';
 
 const STANDARD_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
@@ -26,8 +24,6 @@ const STANDARD_HEADERS = {
   'access-control-allow-credentials': true,
   'access-control-allow-methods': 'GET',
 };
-
-const LANGUAGE_PREFIXES = ['zh-cn', 'pt-br', 'ko-kr'];
 
 const log = new Logger({
   showTimestamp: true,
@@ -94,10 +90,6 @@ export default class Marian {
     } else if (pathname === '/v2/status') {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatusV2(req, res);
-      }
-    } else if (LANGUAGE_PREFIXES.some((prefix) => pathname.includes(prefix))) {
-      if (checkMethod(req, res, 'GET')) {
-        this.handleTranslationRequest(req, res);
       }
     } else {
       res.writeHead(400, {});
@@ -317,37 +309,6 @@ export default class Marian {
       );
       console.trace();
       throw e;
-    }
-  }
-
-  private async handleTranslationRequest(req: http.IncomingMessage, res: http.ServerResponse) {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Vary: 'Accept-Encoding, Origin',
-      'Cache-Control': 'public,max-age=120,must-revalidate',
-    };
-
-    // extract headers (minus auth headers)
-    const { cookie, ...ogHeaders } = req.headers;
-
-    // extract path and query params
-    const url = req.url || '';
-
-    // call smartling API
-    const SMARTLING_URL = new URL(url, `https://mongodbdocs.sl.smartling.com/`);
-    try {
-      const smartlingRes = await fetch(SMARTLING_URL.toString(), ogHeaders as RequestInit);
-      if (smartlingRes.status !== 200) {
-        log.error(`Error while fetching smartling request with status code ${smartlingRes.status}: ${JSON.stringify(smartlingRes.statusText)}`)
-        res.writeHead(smartlingRes.status, smartlingRes.statusText);
-        res.end();
-        return;
-      }
-      const result = await new Response(smartlingRes.body).text();
-      res.writeHead(200, headers);
-      res.end(result);
-    } catch (e) {
-      log.error(`Error while fetching smartling request : ${JSON.stringify(e)}`);
     }
   }
 }
