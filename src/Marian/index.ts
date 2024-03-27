@@ -14,7 +14,7 @@ import { setPropertyMapping } from '../SearchPropertyMapping';
 import { Query, InvalidQuery } from '../Query';
 import { extractFacetFilters } from '../Query/util';
 import { sortFacets } from '../SearchIndex/util';
-import { Readable } from 'stream';
+import { Readable  } from 'stream';
 import type { ReadableStream } from 'stream/web';
 
 const STANDARD_HEADERS = {
@@ -338,11 +338,7 @@ export default class Marian {
     try {
       const smartlingRes = await fetch(SMARTLING_URL.toString(), ogHeaders as RequestInit);
       if (smartlingRes.status !== 200) {
-        log.error(
-          `Error while fetching smartling request with status code ${smartlingRes.status}: ${JSON.stringify(
-            smartlingRes.statusText
-          )}`
-        );
+        log.error(`Error while fetching smartling request with status code ${smartlingRes.status}: ${JSON.stringify(smartlingRes.statusText)}`)
         res.writeHead(smartlingRes.status, smartlingRes.statusText);
         res.end();
         return;
