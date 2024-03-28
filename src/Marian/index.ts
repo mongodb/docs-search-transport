@@ -331,7 +331,7 @@ export default class Marian {
 
     // extract headers (minus auth headers)
     // take out kanopy header
-    const { cookie, 'x-kanopy-internal-authorization': kanopyInternal, ...ogHeaders } = req.headers;
+    // const { cookie, kanopyInterna 'x-kanopy-internal-authorization', ...ogHeaders } = req.headers;
 
     // extract path and query params
     // ie. /zh-cn/search?q=test
@@ -340,8 +340,10 @@ export default class Marian {
     // call smartling API
     const SMARTLING_URL = new URL(url, `https://mongodbdocs.sl.smartling.com`);
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
+    console.log(`check request headers ${JSON.stringify(req.headers)}`);
+    
     try {
-      const smartlingRes = await fetch(SMARTLING_URL.toString(), ogHeaders as RequestInit);
+      const smartlingRes = await fetch(SMARTLING_URL.toString(), req.headers as RequestInit);
       if (smartlingRes.status !== 200) {
         log.error(
           `Error while fetching smartling request ${SMARTLING_URL.toString()} with status code ${
