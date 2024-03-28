@@ -1,5 +1,6 @@
-import { deepStrictEqual } from 'assert';
+import { deepStrictEqual, ok } from 'assert';
 import { Query } from '../../src/Query';
+import { CompoundPart } from '../../src/Query/types';
 
 describe('Query', () => {
   it('should parse a single term', () => {
@@ -30,5 +31,17 @@ describe('Query', () => {
     const query = new Query('"officially supported');
     deepStrictEqual(query.terms, new Set(['officially', 'supported']));
     deepStrictEqual(query.phrases, ['officially supported']);
+  });
+
+  it('should query a multi word phrase as its whole and boost its score', () => {
+    const query = new Query('max disk iops');
+    const compound = query.getCompound(null, []);
+    const phrase = compound.should.find((compoundPart) => {
+      return (
+        typeof compoundPart['phrase' as keyof CompoundPart] === 'object' &&
+        typeof compoundPart['phrase' as keyof CompoundPart]['score'] === 'object'
+      );
+    });
+    ok(phrase);
   });
 });
