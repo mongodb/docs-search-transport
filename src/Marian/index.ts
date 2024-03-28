@@ -331,14 +331,14 @@ export default class Marian {
 
     // extract headers (minus auth headers)
     // take out kanopy header
-    const { cookie, ...ogHeaders } = req.headers;
+    const { cookie, 'x-kanopy-internal-authorization': kanopyInternal, ...ogHeaders } = req.headers;
 
     // extract path and query params
     // ie. /zh-cn/search?q=test
     const url = req.url || '';
 
     // call smartling API
-    const SMARTLING_URL = new URL(url, `mongodbdocs.sl.smartling.com`);
+    const SMARTLING_URL = new URL(url, `https://mongodbdocs.sl.smartling.com`);
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
     try {
       const smartlingRes = await fetch(SMARTLING_URL.toString(), ogHeaders as RequestInit);
