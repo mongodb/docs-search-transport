@@ -23,7 +23,7 @@ describe('Synchronization', function () {
 
   before(function (done) {
     client.connect().then(async () => {
-      index = new SearchIndex(PATH_STATE_1, client, DB);
+      index = new SearchIndex(PATH_STATE_1, 'docs-search-indexes-test', 'search-indexes/preprd', client, DB);
       done();
     });
   });

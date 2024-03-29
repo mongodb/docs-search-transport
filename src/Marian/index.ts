@@ -91,6 +91,10 @@ export default class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatusV2(req, res);
       }
+    } else if (pathname === '/manifests') {
+      if (checkMethod(req, res, 'GET')) {
+        this.handleManifests(req, res);
+      }
     } else {
       res.writeHead(400, {});
       res.end('');
@@ -310,5 +314,31 @@ export default class Marian {
       console.trace();
       throw e;
     }
+  }
+
+  private async handleManifests(req: http.IncomingMessage, res: http.ServerResponse) {
+    const headers = {
+      'Content-Type': 'application/json',
+      Vary: 'Accept-Encoding, Origin',
+      Pragma: 'no-cache',
+    };
+    Object.assign(headers, STANDARD_HEADERS);
+
+    checkAllowedOrigin(req.headers.origin, headers);
+
+    if (this.index.manifests === null) {
+      res.writeHead(503, headers);
+      res.end('');
+      return;
+    }
+
+    const response = {
+      manifests: this.index.manifests.map((manifest) =>
+        new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString()
+      ),
+    };
+
+    res.writeHead(200, headers);
+    res.end(JSON.stringify(response));
   }
 }
