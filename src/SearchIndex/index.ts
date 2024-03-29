@@ -32,6 +32,7 @@ const log = new Logger({
 export class SearchIndex {
   currentlyIndexing: boolean;
   manifestSource: string;
+  manifestUrlPrefix: string;
   manifests: Manifest[] | null;
 
   client: MongoClient;
@@ -42,10 +43,11 @@ export class SearchIndex {
   trieFacets: TrieFacet;
   responseFacets: FacetOption[];
 
-  constructor(manifestSource: string, client: MongoClient, databaseName: string) {
+  constructor(manifestSource: string, s3Bucket: string, s3Path: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;
     this.manifestSource = manifestSource;
     this.manifests = null;
+    this.manifestUrlPrefix = `https://` + `${s3Bucket}.s3.us-east-2.amazonaws.com/${s3Path}`.replace(/\/+/, '/');
 
     this.client = client;
     this.db = client.db(databaseName);

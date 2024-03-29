@@ -16,6 +16,9 @@ import { SearchIndex } from './SearchIndex';
 process.title = 'search-transport';
 
 const MANIFEST_URI_KEY = 'MANIFEST_URI';
+
+const S3_BUCKET_KEY = 'S3_BUCKET';
+const S3_PATH_KEY = 'S3_PATH';
 const ATLAS_URI_KEY = 'ATLAS_URI';
 const DATABASE_NAME_KEY = 'ATLAS_DATABASE';
 const DEFAULT_DATABASE_NAME = 'search';
@@ -29,6 +32,8 @@ function help(): void {
 
 The following environment variables are used:
 * ${MANIFEST_URI_KEY}
+* ${S3_BUCKET_KEY}
+* ${S3_PATH_KEY}
 * ${ATLAS_URI_KEY}
 * ${DATABASE_NAME_KEY} (defaults to "search")
 * ${GROUP_KEY}
@@ -40,15 +45,23 @@ The following environment variables are used:
 
 function verifyAndGetEnvVars() {
   const manifestUri = process.env[MANIFEST_URI_KEY];
+  const s3Bucket = process.env[S3_BUCKET_KEY];
+  const s3Path = process.env[S3_PATH_KEY];
   const atlasUri = process.env[ATLAS_URI_KEY];
   const groupId = process.env[GROUP_KEY];
   const adminPubKey = process.env[ADMIN_PUB_KEY];
   const adminPrivKey = process.env[ADMIN_API_KEY];
   const taxonomyUrl = process.env[TAXONOMY_URL];
 
-  if (!manifestUri || !atlasUri || !groupId || !adminPrivKey || !adminPubKey) {
+  if (!manifestUri || !s3Bucket || !atlasUri || !groupId || !adminPrivKey || !adminPubKey || !s3Path) {
     if (!manifestUri) {
       console.error(`Missing ${MANIFEST_URI_KEY}`);
+    }
+    if (!s3Bucket) {
+      console.error(`Missing ${S3_BUCKET_KEY}`);
+    }
+    if (!s3Path) {
+      console.error(`Missing ${S3_PATH_KEY}`);
     }
     if (!atlasUri) {
       console.error(`Missing ${ATLAS_URI_KEY}`);
@@ -71,6 +84,8 @@ function verifyAndGetEnvVars() {
 
   return {
     manifestUri,
+    s3Bucket,
+    s3Path,
     atlasUri,
     groupId,
     adminPubKey,
@@ -91,7 +106,7 @@ async function main() {
     process.exit(1);
   }
 
-  const { manifestUri, atlasUri, groupId, adminPubKey, adminPrivKey } = verifyAndGetEnvVars();
+  const { manifestUri, s3Bucket, s3Path, atlasUri, groupId, adminPubKey, adminPrivKey } = verifyAndGetEnvVars();
 
   let databaseName = DEFAULT_DATABASE_NAME;
   const envDBName = process.env[DATABASE_NAME_KEY];
@@ -100,7 +115,7 @@ async function main() {
   }
 
   const client = await MongoClient.connect(atlasUri);
-  const searchIndex = new SearchIndex(manifestUri, client, databaseName);
+  const searchIndex = new SearchIndex(manifestUri, s3Bucket, s3Path, client, databaseName);
 
   if (process.argv.includes('--create-indexes')) {
     await searchIndex.createRecommendedIndexes();
