@@ -61,7 +61,7 @@ function verifyAndGetEnvVars() {
       console.error(`Missing ${S3_BUCKET_KEY}`);
     }
     if (!s3Path) {
-      console.error(`Missing ${S3_BUCKET_KEY}`);
+      console.error(`Missing ${S3_PATH_KEY}`);
     }
     if (!atlasUri) {
       console.error(`Missing ${ATLAS_URI_KEY}`);
