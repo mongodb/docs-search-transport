@@ -197,6 +197,18 @@ export class Query {
           slop: maxLength,
           score: {
             boost: {
+              value: 5,
+            },
+          },
+        },
+      });
+
+      compound.should.push({
+        phrase: {
+          path: ['paragraphs', 'text', 'headings'],
+          query: terms.join(' '),
+          score: {
+            boost: {
               value: 25,
             },
           },
