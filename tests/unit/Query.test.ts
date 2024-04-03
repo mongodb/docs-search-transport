@@ -1,4 +1,4 @@
-import { deepStrictEqual } from 'assert';
+import { deepStrictEqual, ok } from 'assert';
 import { Query } from '../../src/Query';
 
 describe('Query', () => {
@@ -30,5 +30,13 @@ describe('Query', () => {
     const query = new Query('"officially supported');
     deepStrictEqual(query.terms, new Set(['officially', 'supported']));
     deepStrictEqual(query.phrases, ['officially supported']);
+  });
+
+  it('should handle boosts on terms that are predefined in constant', () => {
+    const nonExistingTermQuery = new Query('constructor').getCompound(null, []);
+    ok((nonExistingTermQuery.should[0].compound.must[0].text?.score?.boost?.value as unknown as number) !== 100);
+    const existingTermQuery = new Query('aggregation').getCompound(null, []);
+    ok(existingTermQuery.should[0].compound.must[0].text?.score?.boost !== undefined);
+    ok((existingTermQuery.should[0].compound.must[0].text?.score?.boost?.value as unknown as number) === 100);
   });
 });
