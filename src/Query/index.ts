@@ -114,7 +114,7 @@ export class Query {
       parts.push({
         text: {
           path: 'strippedSlug',
-          query: strippedMapping[this.rawQuery.trim()],
+          query: boostedStrings,
           score: { boost: { value: 100 } },
         },
       });
