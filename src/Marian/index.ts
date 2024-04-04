@@ -350,7 +350,8 @@ export default class Marian {
           `Error while fetching smartling request ${SMARTLING_URL.toString()} with status code ${
             smartlingRes.status
           }: ${JSON.stringify(smartlingRes.statusText)}`
-        );
+          );
+        log.error(smartlingRes)
         res.writeHead(smartlingRes.status, smartlingRes.statusText);
         res.end();
         return;
@@ -360,6 +361,7 @@ export default class Marian {
       res.end(result);
     } catch (e) {
       log.error(`Error while fetching smartling request : ${JSON.stringify(e)}`);
+      log.error(e);
     }
   }
 }
