@@ -30,7 +30,6 @@ steps:
       ref:
         - 'refs/heads/DOP-*'
 
-steps:
   - name: publish-staging
     image: plugins/ecr
     settings:
