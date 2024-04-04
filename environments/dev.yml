@@ -1,7 +1,7 @@
 ingress:
   enabled: true
   hosts:
-    - docs-search-transport.docs.dev.corp.mongodb.com
+    - docs-search-transport-dev.docs.staging.corp.mongodb.com
 
 env:
   MANIFEST_URI: 's3://docs-search-indexes-test/search-indexes/preprd/'
