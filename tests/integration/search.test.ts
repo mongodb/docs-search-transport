@@ -19,7 +19,13 @@ describe('Searching', function () {
 
   before('Loading test data', async function () {
     await client.connect();
-    index = new SearchIndex('dir:tests/integration/search_test_data/', client, TEST_DATABASE);
+    index = new SearchIndex(
+      'dir:tests/integration/search_test_data/',
+      'docs-search-indexes-test',
+      'search-indexes/preprd',
+      client,
+      TEST_DATABASE
+    );
     const result = await index.load({} as Taxonomy, 'dir:tests/integration/search_test_data/');
     await index.createRecommendedIndexes();
 

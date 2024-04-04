@@ -1,6 +1,6 @@
 import { deepStrictEqual, ok } from 'assert';
 import { Query } from '../../src/Query';
-import { CompoundPart } from '../../src/Query/types';
+import { CompoundPart, NestedCompound } from '../../src/Query/types';
 
 describe('Query', () => {
   it('should parse a single term', () => {
@@ -43,5 +43,13 @@ describe('Query', () => {
       );
     });
     ok(phrase);
+  });
+  
+  it('should handle boosts on terms that are predefined in constant', () => {
+    const nonExistingTermQuery = new Query('constructor').getCompound(null, []);
+    ok((nonExistingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost?.value === undefined);
+    const existingTermQuery = new Query('aggregation').getCompound(null, []);
+    ok((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost !== undefined);
+    ok(((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost?.value as unknown as number) === 100);
   });
 });

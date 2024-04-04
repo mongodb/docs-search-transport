@@ -24,6 +24,8 @@ export function startServer(path: string, done: () => void): { child: child_proc
       ATLAS_ADMIN_PUB_KEY: process.env.ATLAS_ADMIN_PUB_KEY,
       POOL_ATLAS_URI: process.env.ATLAS_URI,
       TAXONOMY_URL: process.env.TAXONOMY_URL,
+      S3_BUCKET: 'docs-search-indexes-test',
+      S3_PATH: 'search-indexes/preprd',
     },
   });
   child.stdout?.setEncoding('utf8');

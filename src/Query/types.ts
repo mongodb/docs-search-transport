@@ -22,16 +22,15 @@ export type Part = {
   };
 };
 
-export type CompoundPart =
-  | Part
-  | Phrase
-  | {
-      compound: {
-        must: Part[];
-        mustNot?: Part[];
-        score?: Score;
-      };
-    };
+export type NestedCompound = {
+  compound: {
+    must: Part[];
+    mustNot?: Part[];
+    score?: Score;
+  };
+};
+
+export type CompoundPart = Part | Phrase | NestedCompound;
 
 export type Phrase = {
   phrase: {
