@@ -22,7 +22,7 @@ export type Part = {
   };
 };
 
-export type CompoundPart = {
+export type NestedCompound = {
   compound: {
     must: Part[];
     mustNot?: Part[];
@@ -30,10 +30,14 @@ export type CompoundPart = {
   };
 };
 
-type Phrase = {
+export type CompoundPart = Part | Phrase | NestedCompound;
+
+export type Phrase = {
   phrase: {
     path: string | string[];
     query: string | string[];
+    slop?: number;
+    score?: Score;
   };
 };
 
