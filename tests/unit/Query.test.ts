@@ -1,5 +1,6 @@
 import { deepStrictEqual, ok } from 'assert';
 import { Query } from '../../src/Query';
+import { CompoundPart, NestedCompound } from '../../src/Query/types';
 
 describe('Query', () => {
   it('should parse a single term', () => {
@@ -32,11 +33,26 @@ describe('Query', () => {
     deepStrictEqual(query.phrases, ['officially supported']);
   });
 
+  it('should query a multi word phrase as its whole and boost its score', () => {
+    const query = new Query('max disk iops');
+    const compound = query.getCompound(null, []);
+    const phrase = compound.should.find((compoundPart) => {
+      return (
+        typeof compoundPart['phrase' as keyof CompoundPart] === 'object' &&
+        typeof compoundPart['phrase' as keyof CompoundPart]['score'] === 'object'
+      );
+    });
+    ok(phrase);
+  });
+
   it('should handle boosts on terms that are predefined in constant', () => {
     const nonExistingTermQuery = new Query('constructor').getCompound(null, []);
-    ok(nonExistingTermQuery.should[0].compound.must[0].text?.score?.boost?.value === undefined);
+    ok((nonExistingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost?.value === undefined);
     const existingTermQuery = new Query('aggregation').getCompound(null, []);
-    ok(existingTermQuery.should[0].compound.must[0].text?.score?.boost !== undefined);
-    ok((existingTermQuery.should[0].compound.must[0].text?.score?.boost?.value as unknown as number) === 100);
+    ok((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost !== undefined);
+    ok(
+      ((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost
+        ?.value as unknown as number) === 100
+    );
   });
 });
