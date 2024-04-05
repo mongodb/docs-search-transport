@@ -32,6 +32,11 @@ describe('Searching', function () {
       await index.createRecommendedIndexes();
       console.log('created recommended indexes');
       console.log(result);
+      // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
+      if (result && (result.deleted || result.updated.length > 0)) {
+        this.timeout(8000);
+        return new Promise((resolve) => setTimeout(resolve, 5000));
+      }
     } catch (e) {
       console.error(e);
     }
@@ -40,7 +45,7 @@ describe('Searching', function () {
   // Test variants of searchProperty
   it('should properly handle incorrect urls in manifests', async () => {
     let result = await index.search(new Query('manual'), ['manual-v5.1'], []);
-    strictEqual(result[0].url, 'https://docs.mongodb.com/v5.1/index.html');
+    strictEqual(result[0]?.url, 'https://docs.mongodb.com/v5.1/index.html');
   });
 
   after(async function () {
