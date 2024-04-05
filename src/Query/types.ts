@@ -30,7 +30,7 @@ export type CompoundPart = {
   };
 };
 
-type Phrase = {
+export type Phrase = {
   phrase: {
     path: string | string[];
     query: string | string[];
