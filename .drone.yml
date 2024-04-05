@@ -18,8 +18,7 @@ steps:
       registry: 795250896452.dkr.ecr.us-east-1.amazonaws.com
       repo: 795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME}
       tags:
-        - git-${DRONE_COMMIT_SHA:0:7}
-        - latest
+        - git-${DRONE_COMMIT_SHA:0:7}-dev
       access_key:
         from_secret: ecr_access_key
       secret_key:
@@ -37,8 +36,7 @@ steps:
       registry: 795250896452.dkr.ecr.us-east-1.amazonaws.com
       repo: 795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME}
       tags:
-        - git-${DRONE_COMMIT_SHA:0:7}
-        - latest
+        - git-${DRONE_COMMIT_SHA:0:7}-staging
       access_key:
         from_secret: ecr_access_key
       secret_key:
