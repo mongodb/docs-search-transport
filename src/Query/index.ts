@@ -188,6 +188,35 @@ export class Query {
     };
     const searchPropertyNames = Object.keys(searchPropertyMapping);
 
+    // DOP-3976: phrases found in conjunction should have additional score boost if they are found in order
+    if (terms.length > 1) {
+      const maxLength: number = terms.reduce((max, term) => Math.max(max, term.length), 0);
+      compound.should.push({
+        phrase: {
+          path: ['paragraphs', 'text', 'headings'],
+          query: terms.join(' '),
+          slop: maxLength,
+          score: {
+            boost: {
+              value: 5,
+            },
+          },
+        },
+      });
+
+      compound.should.push({
+        phrase: {
+          path: ['paragraphs', 'text', 'headings'],
+          query: terms.join(' '),
+          score: {
+            boost: {
+              value: 25,
+            },
+          },
+        },
+      });
+    }
+
     // if user requested searchProperty, must match this property name
     // allowing mix usage of searchProperty and facets
     if (searchProperty !== null && searchProperty.length !== 0) {
