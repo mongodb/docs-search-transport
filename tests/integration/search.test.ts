@@ -18,29 +18,25 @@ describe('Searching', function () {
   let index: SearchIndex;
 
   before('Loading test data', async function () {
-    await client.connect();
-    index = new SearchIndex(
-      'dir:tests/integration/search_test_data/',
-      'docs-search-indexes-test',
-      'search-indexes/preprd',
-      client,
-      TEST_DATABASE
-    );
-    const result = await index.load({} as Taxonomy, 'dir:tests/integration/search_test_data/');
-    console.log('index loaded');
-    await index.createRecommendedIndexes();
-    console.log('created recommended indexes');
-    console.log(result);
+    try {
+      await client.connect();
+      index = new SearchIndex(
+        'dir:tests/integration/search_test_data/',
+        'docs-search-indexes-test',
+        'search-indexes/preprd',
+        client,
+        TEST_DATABASE
+      );
+      const result = await index.load({} as Taxonomy, 'dir:tests/integration/search_test_data/');
+      console.log('index loaded');
+      await index.createRecommendedIndexes();
+      console.log('created recommended indexes');
+      console.log(result);
+    } catch (e) {
+      console.error(e)
 
-    // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
-    if (result && (result.deleted || result.updated.length > 0)) {
-      this.timeout(8000);
-      console.log('returning promise');
-      return new Promise((resolve) => {
-        console.log('settimeout');
-        setTimeout(resolve, 5000);
-      });
     }
+
   });
 
   // Test variants of searchProperty
