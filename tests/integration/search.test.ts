@@ -29,12 +29,17 @@ describe('Searching', function () {
     const result = await index.load({} as Taxonomy, 'dir:tests/integration/search_test_data/');
     console.log('index loaded');
     await index.createRecommendedIndexes();
-    console.log('created recommended loaded');
+    console.log('created recommended indexes');
+    console.log(result);
 
     // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
     if (result && (result.deleted || result.updated.length > 0)) {
       this.timeout(8000);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      console.log('returning promise');
+      return new Promise((resolve) => {
+        console.log('settimeout');
+        setTimeout(resolve, 5000);
+      });
     }
   });
 
