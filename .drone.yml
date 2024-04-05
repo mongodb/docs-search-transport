@@ -6,9 +6,9 @@ name: default
 trigger:
   ref:
     include:
-      - "refs/tags/v*"
-      - "refs/heads/main"
-      - "refs/heads/DOP-*"
+      - 'refs/tags/v*'
+      - 'refs/heads/main'
+      - 'refs/heads/DOP-*'
 
 steps:
   - name: publish-dev
@@ -28,7 +28,7 @@ steps:
       event:
         - push
       ref:
-        - "refs/heads/DOP-*"
+        - 'refs/heads/DOP-*'
 
   - name: publish-staging
     image: plugins/ecr
@@ -47,7 +47,7 @@ steps:
       event:
         - push
       ref:
-        - "refs/heads/main"
+        - 'refs/heads/main'
 
   - name: publish-prod
     image: plugins/ecr
@@ -75,7 +75,7 @@ steps:
       namespace: docs
       release: docs-search-transport-dev
       values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=docs-search-transport-dev.docs.staging.corp.mongodb.com
-      values_files: ["environments/all.yml", "environments/dev.yml"]
+      values_files: ['environments/all.yml', 'environments/dev.yml']
       api_server: https://api.staging.corp.mongodb.com
       kubernetes_token:
         from_secret: staging_kubernetes_token
@@ -83,7 +83,7 @@ steps:
       event:
         - push
       ref:
-        - "refs/heads/DOP-*"
+        - 'refs/heads/DOP-*'
 
   - name: deploy-staging
     image: quay.io/mongodb/drone-helm:v3
@@ -94,7 +94,7 @@ steps:
       namespace: docs
       release: docs-search-transport
       values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=docs-search-transport.docs.staging.corp.mongodb.com
-      values_files: ["environments/all.yml", "environments/staging.yml"]
+      values_files: ['environments/all.yml', 'environments/staging.yml']
       api_server: https://api.staging.corp.mongodb.com
       kubernetes_token:
         from_secret: staging_kubernetes_token
@@ -102,7 +102,7 @@ steps:
       event:
         - push
       ref:
-        - "refs/heads/main"
+        - 'refs/heads/main'
 
   - name: deploy-prod
     image: quay.io/mongodb/drone-helm:v3
@@ -113,7 +113,7 @@ steps:
       namespace: docs
       release: docs-search-transport
       values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=docs-search-transport.docs.prod.corp.mongodb.com
-      values_files: ["environments/all.yml", "environments/prod.yml"]
+      values_files: ['environments/all.yml', 'environments/prod.yml']
       api_server: https://api.prod.corp.mongodb.com
       kubernetes_token:
         from_secret: prod_kubernetes_token
