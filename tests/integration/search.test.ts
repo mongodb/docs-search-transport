@@ -33,10 +33,8 @@ describe('Searching', function () {
       console.log('created recommended indexes');
       console.log(result);
     } catch (e) {
-      console.error(e)
-
+      console.error(e);
     }
-
   });
 
   // Test variants of searchProperty
