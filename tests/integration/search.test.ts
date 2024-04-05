@@ -27,9 +27,9 @@ describe('Searching', function () {
       TEST_DATABASE
     );
     const result = await index.load({} as Taxonomy, 'dir:tests/integration/search_test_data/');
-    console.log('index loaded')
+    console.log('index loaded');
     await index.createRecommendedIndexes();
-    console.log('created recommended loaded')
+    console.log('created recommended loaded');
 
     // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
     if (result && (result.deleted || result.updated.length > 0)) {
