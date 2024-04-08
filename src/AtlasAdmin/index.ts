@@ -128,7 +128,8 @@ export class AtlasAdminManager {
 
       return data;
     } catch (e) {
-      log.error(`Error while updating search index: ${JSON.stringify(e)}`);
+      log.error(`Error while updating search index`);
+      log.error(e);
       throw e;
     }
   }

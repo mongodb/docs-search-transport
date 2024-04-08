@@ -152,7 +152,7 @@ export class Query {
     parts.push({
       text: {
         query: terms,
-        path: { value: 'headings', multi: 'whitespace' },
+        path: { value: 'headings', multi: 'preserveDollars' },
         score: { boost: { value: 5 } },
       },
     });
@@ -168,7 +168,7 @@ export class Query {
     parts.push({
       text: {
         query: terms,
-        path: { value: 'title', multi: 'whitespace' },
+        path: { value: 'title', multi: 'preserveDollars' },
         score: { boost: { value: 10 } },
       },
     });

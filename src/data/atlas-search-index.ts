@@ -52,8 +52,8 @@ export const SearchIndex: IndexMappings = {
       headings: {
         analyzer: 'lucene.english',
         multi: {
-          whitespace: {
-            analyzer: 'custom.whitespace',
+          preserveDollars: {
+            analyzer: 'preserveDollars',
             store: false,
             type: 'string',
           },
@@ -102,8 +102,8 @@ export const SearchIndex: IndexMappings = {
       title: {
         analyzer: 'lucene.english',
         multi: {
-          whitespace: {
-            analyzer: 'custom.whitespace',
+          preserveDollars: {
+            analyzer: 'preserveDollars',
             store: false,
             type: 'string',
           },
@@ -142,22 +142,17 @@ export const SearchIndex: IndexMappings = {
       tokenFilters: [{ type: 'lowercase' }],
     },
     {
-      charFilters: [],
-      name: 'custom.whitespace',
-      tokenFilters: [
+      name: 'preserveDollars',
+      charFilters: [
         {
-          matches: 'all',
-          pattern: '^(?!\\$)\\w+',
-          replacement: '',
-          type: 'regex',
-        },
-        {
-          type: 'stopword',
-          tokens: [''],
+          type: 'mapping',
+          mappings: {
+            $: '__dollar_',
+          },
         },
       ],
       tokenizer: {
-        type: 'whitespace',
+        type: 'standard',
       },
     },
   ],
