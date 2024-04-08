@@ -184,7 +184,13 @@ export class Query {
     parts.push({
       text: {
         query: terms,
-        path: 'facets',
+        path: [
+          'facets.genre',
+          'facets.programming_language',
+          'facets.target_product',
+          'facets.target_product>atlas>sub_product',
+          'facets.target_product>realm>sub_product',
+        ],
         score: { boost: { value: 10 } },
       },
     });
