@@ -75,15 +75,6 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
       },
     };
 
-    // if subproduct, remove parent
-    if (drilldownKeyIdx > -1) {
-      const parent = key.slice(drilldownKeyIdx + 1, key.indexOf('>', drilldownKeyIdx + 1));
-      const indexOfParent = queryParamLists[baseFacet].compound.should.findIndex(
-        (element: Phrase) => element.phrase.query === parent
-      );
-      if (indexOfParent > -1) queryParamLists[baseFacet].compound.should.splice(indexOfParent, 1);
-    }
-
     queryParamLists[baseFacet]['compound']['should'].push({
       phrase: {
         query: value,
