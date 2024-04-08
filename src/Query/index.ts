@@ -181,6 +181,14 @@ export class Query {
       },
     });
 
+    parts.push({
+      text: {
+        query: terms,
+        path: 'facets',
+        score: { boost: { value: 10 } },
+      },
+    });
+
     const compound: Compound = {
       should: constructBuryOperators(parts),
       minimumShouldMatch: 1,

@@ -77,7 +77,6 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
 
     // if subproduct, remove parent
     if (drilldownKeyIdx > -1) {
-      // retrieve parent product from key
       const parent = key.slice(drilldownKeyIdx + 1, key.indexOf('>', drilldownKeyIdx + 1));
       const indexOfParent = queryParamLists[baseFacet].compound.should.findIndex(
         (element: Phrase) => element.phrase.query === parent
