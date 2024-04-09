@@ -58,8 +58,11 @@ describe('Query', () => {
   });
 
   it('should have as many clauses as filters passed into the query', () => {
-    const searchParams = new URLSearchParams(`q=test&facets.target_product=atlas&facets.target_product=drivers`);
+    const searchParams = new URLSearchParams(
+      `q=test&facets.target_product=atlas&facets.target_product=drivers&facets.programming_language=go`
+    );
     const filters = extractFacetFilters(searchParams);
-    ok(filters[0].compound.should.length === 2);
+    const clauses = filters.reduceRight((sum, filter) => sum + filter.compound.should.length, 0);
+    ok(clauses === 3);
   });
 });
