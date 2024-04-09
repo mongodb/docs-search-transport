@@ -59,10 +59,12 @@ describe('Query', () => {
 
   it('should have as many clauses as filters passed into the query', () => {
     const searchParams = new URLSearchParams(
-      `q=test&facets.target_product=atlas&facets.target_product=drivers&facets.programming_language=go`
+      `q=test&facets.target_product=drivers&facets.target_product>atlas>sub_product=atlas-cli&facets.programming_language=go`
     );
     const filters = extractFacetFilters(searchParams);
-    const clauses = filters.reduceRight((sum, filter) => sum + filter.compound.should.length, 0);
-    ok(clauses === 3);
+    const and = filters.length;
+    // count number of OR clauses in each compound
+    const or = filters.map((filter) => filter.compound.should.length);
+    ok(and === 2 && or[0] === 2 && or[1] === 1);
   });
 });
