@@ -14,8 +14,6 @@ import { setPropertyMapping } from '../SearchPropertyMapping';
 import { Query, InvalidQuery } from '../Query';
 import { extractFacetFilters } from '../Query/util';
 import { sortFacets } from '../SearchIndex/util';
-import { Readable } from 'stream';
-import type { ReadableStream } from 'stream/web';
 
 const STANDARD_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
@@ -340,18 +338,16 @@ export default class Marian {
     // call smartling API
     const SMARTLING_URL = new URL(url, `https://mongodbdocs.sl.smartling.com`);
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
-    ogHeaders['host'] = 'docs-search-transport.docs.staging.corp.mongodb.com';
-    console.log(`check request headers ${JSON.stringify(ogHeaders)}`);
-    
+
     try {
-      const smartlingRes = await fetch(SMARTLING_URL.toString(), ogHeaders as RequestInit);
+      const smartlingRes = await fetch(SMARTLING_URL.toString(), { headers: ogHeaders } as RequestInit);
       if (smartlingRes.status !== 200) {
         log.error(
           `Error while fetching smartling request ${SMARTLING_URL.toString()} with status code ${
             smartlingRes.status
           }: ${JSON.stringify(smartlingRes.statusText)}`
-          );
-        log.error(smartlingRes)
+        );
+        log.error(smartlingRes);
         res.writeHead(smartlingRes.status, smartlingRes.statusText);
         res.end();
         return;
