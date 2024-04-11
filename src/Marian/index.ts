@@ -337,7 +337,7 @@ export default class Marian {
     const url = req.url || '';
 
     // call smartling API
-    const SMARTLING_URL = new URL('', `mongodbdocs.sl.smartling.com`);
+    const SMARTLING_URL = new URL('/', `https://mongodbdocs.sl.smartling.com`);
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
     const reqOptions: http.RequestOptions = {
@@ -346,17 +346,22 @@ export default class Marian {
       path: req.url,
       method: 'GET',
     };
-    const httpReq = http.request(reqOptions, (res) => {
-      log.info(`http req status code ${res.statusCode}`);
-
-      res.on('data', (chunk) => {
-        log.info(`Chunk: ${chunk}`);
+    try {
+      const httpReq = http.request(reqOptions, (res) => {
+        log.info(`http req status code ${res.statusCode}`);
+  
+        res.on('data', (chunk) => {
+          log.info(`Chunk: ${chunk}`);
+        });
       });
-    });
-    httpReq.on('error', (e) => {
-      log.error('error on http req');
+      httpReq.on('error', (e) => {
+        log.error('error on http req');
+        log.error(e);
+      });
+    } catch (e) {
+      log.error('error while making http request')
       log.error(e);
-    });
+    }
 
     try {
       const smartlingRes = await fetch(SMARTLING_URL.toString(), reqOptions as unknown as RequestInit);
