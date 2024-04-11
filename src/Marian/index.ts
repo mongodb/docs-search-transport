@@ -336,12 +336,15 @@ export default class Marian {
     const url = req.url || '';
 
     // call smartling API
-    const SMARTLING_URL = new URL(url, `https://mongodbdocs.sl.smartling.com`);
+    const SMARTLING_URL = new URL('', `https://mongodbdocs.sl.smartling.com`);
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
     const reqOptions = {
-      headers: { ...req.headers, host: 'docs-search-transport.docs.staging.corp.mongodb.com' },
+      headers: { ...req.headers },
     };
+
+    console.log('check reqOptions');
+    console.log(reqOptions);
 
     try {
       const smartlingRes = await fetch(SMARTLING_URL.toString(), reqOptions as unknown as RequestInit);
