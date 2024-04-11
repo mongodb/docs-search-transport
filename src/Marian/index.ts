@@ -60,6 +60,9 @@ export default class Marian {
 
   handle(req: http.IncomingMessage, res: http.ServerResponse): void {
     const url = req.url;
+    log.info('handle request');
+    log.info(req.headers);
+
     if (!url) {
       assert.fail('Assertion: Missing url');
     }
@@ -337,6 +340,7 @@ export default class Marian {
 
     // call smartling API
     const SMARTLING_URL = new URL('', `https://mongodbdocs.sl.smartling.com`);
+    const test_local_url = new URL('search', `https://docs-search-transport.docs.staging.corp.mongodb.com`);
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
     const reqOptions = {
@@ -344,10 +348,10 @@ export default class Marian {
     };
 
     try {
-      const smartlingRes = await fetch(SMARTLING_URL.toString(), reqOptions as unknown as RequestInit);
+      const smartlingRes = await fetch(test_local_url.toString(), reqOptions as unknown as RequestInit);
       if (smartlingRes.status !== 200) {
         log.error(
-          `Error while fetching smartling request ${SMARTLING_URL.toString()} with status code ${
+          `Error while fetching local request ${test_local_url.toString()} with status code ${
             smartlingRes.status
           }: ${JSON.stringify(smartlingRes.statusText)}`
         );
