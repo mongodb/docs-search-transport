@@ -4,6 +4,7 @@ import Logger from 'basic-logger';
 import http from 'http';
 import { parse } from 'toml';
 import { Document } from 'mongodb';
+import fetch, { RequestInit } from 'node-fetch';
 
 import { checkAllowedOrigin, checkMethod } from './util';
 import { StatusResponse } from './types';
@@ -60,9 +61,6 @@ export default class Marian {
 
   handle(req: http.IncomingMessage, res: http.ServerResponse): void {
     const url = req.url;
-    log.info('handle request');
-    log.info(req.headers);
-
     if (!url) {
       assert.fail('Assertion: Missing url');
     }
@@ -339,19 +337,32 @@ export default class Marian {
     const url = req.url || '';
 
     // call smartling API
-    const SMARTLING_URL = new URL('', `https://mongodbdocs.sl.smartling.com`);
-    const test_local_url = new URL('search', `https://docs-search-transport.docs.staging.corp.mongodb.com`);
+    const SMARTLING_URL = new URL('', `mongodbdocs.sl.smartling.com`);
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
-    const reqOptions = {
+    const reqOptions: http.RequestOptions = {
       headers: { ...req.headers, host: 'docs-search-transport.docs.staging.corp.mongodb.com' },
+      hostname: 'mongodbdocs.sl.smartling.com',
+      path: req.url,
+      method: 'GET',
     };
+    const httpReq = http.request(reqOptions, (res) => {
+      log.info(`http req status code ${res.statusCode}`);
+
+      res.on('data', (chunk) => {
+        log.info(`Chunk: ${chunk}`);
+      });
+    });
+    httpReq.on('error', (e) => {
+      log.error('error on http req');
+      log.error(e);
+    });
 
     try {
-      const smartlingRes = await fetch(test_local_url.toString(), reqOptions as unknown as RequestInit);
+      const smartlingRes = await fetch(SMARTLING_URL.toString(), reqOptions as unknown as RequestInit);
       if (smartlingRes.status !== 200) {
         log.error(
-          `Error while fetching local request ${test_local_url.toString()} with status code ${
+          `Error while fetching local request ${SMARTLING_URL.toString()} with status code ${
             smartlingRes.status
           }: ${JSON.stringify(smartlingRes.statusText)}`
         );
@@ -360,7 +371,7 @@ export default class Marian {
         res.end();
         return;
       }
-      const result = await new Response(smartlingRes.body).text();
+      const result = new Response(await smartlingRes.json());
       res.writeHead(200, headers);
       res.end(result);
     } catch (e) {
