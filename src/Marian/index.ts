@@ -340,11 +340,8 @@ export default class Marian {
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
     const reqOptions = {
-      headers: { ...req.headers },
+      headers: { ...req.headers, host: 'docs-search-transport.docs.staging.corp.mongodb.com' },
     };
-
-    console.log('check reqOptions');
-    console.log(reqOptions);
 
     try {
       const smartlingRes = await fetch(SMARTLING_URL.toString(), reqOptions as unknown as RequestInit);
