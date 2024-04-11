@@ -339,8 +339,12 @@ export default class Marian {
     const SMARTLING_URL = new URL(url, `https://mongodbdocs.sl.smartling.com`);
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
+    const reqOptions = {
+      headers: { ...req.headers, host: 'docs-search-transport.docs.staging.corp.mongodb.com' },
+    };
+
     try {
-      const smartlingRes = await fetch(SMARTLING_URL.toString(), { headers: ogHeaders } as RequestInit);
+      const smartlingRes = await fetch(SMARTLING_URL.toString(), reqOptions as unknown as RequestInit);
       if (smartlingRes.status !== 200) {
         log.error(
           `Error while fetching smartling request ${SMARTLING_URL.toString()} with status code ${
@@ -356,7 +360,7 @@ export default class Marian {
       res.writeHead(200, headers);
       res.end(result);
     } catch (e) {
-      log.error(`Error while fetching smartling request : ${JSON.stringify(e)}`);
+      log.error(`Error while fetching smartling request :`);
       log.error(e);
     }
   }
