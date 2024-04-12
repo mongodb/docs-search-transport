@@ -353,7 +353,7 @@ export default class Marian {
 
     const reqOptions: http.RequestOptions = {
       headers: { ...req.headers },
-      hostname: 'mongodbdocs.sl.smartling.com',
+      hostname: 'www.mongodbdocs.sl.smartling.com',
       path: req.url,
       method: 'GET',
     };
@@ -365,7 +365,6 @@ export default class Marian {
         log.info(proxyRes)
         proxyRes.pipe(userRes);
       });
-      userRes.pipe(proxyReq);
 
       proxyReq.on('error', (e) => {
         log.error('error on http req');
