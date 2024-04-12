@@ -369,7 +369,7 @@ export default class Marian {
           responseData += chunk;
         });
 
-        proxyReq.on('end', () => {
+        proxyRes.on('end', () => {
           log.info('on proxyReq end');
           try {
             log.info(JSON.stringify(responseData));
