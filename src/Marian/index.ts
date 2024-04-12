@@ -74,6 +74,7 @@ export default class Marian {
       return;
     }
     const pathname = (parsedUrl.pathname || '').replace(/\/+$/, '');
+    console.log('check pathname ', pathname);
     if (pathname === '/search') {
       if (checkMethod(req, res, 'GET')) {
         this.handleSearch(parsedUrl, req, res);
@@ -323,6 +324,7 @@ export default class Marian {
   // anything with /zh-cn for now.
   // ie. /zh-cn/search?q=test
   private async handleTranslationRequest(req: http.IncomingMessage, userRes: http.ServerResponse) {
+    log.info('handleTranslationRequest');
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Vary: 'Accept-Encoding, Origin',
