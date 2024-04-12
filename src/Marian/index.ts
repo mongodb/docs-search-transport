@@ -365,7 +365,7 @@ export default class Marian {
         log.info(proxyRes)
         proxyRes.pipe(userRes);
       });
-      userRes.pipe(proxyReq);
+      // userRes.pipe(proxyReq);
 
       proxyReq.on('error', (e) => {
         log.error('error on http req');
