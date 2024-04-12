@@ -81,6 +81,7 @@ export default class Marian {
       }
     } else if (pathname === '/status') {
       if (checkMethod(req, res, 'GET')) {
+        console.log("RR test /status");
         this.handleStatus(parsedUrl, req, res);
       }
     } else if (pathname === '/v2/search/meta') {
