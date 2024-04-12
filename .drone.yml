@@ -102,6 +102,7 @@ steps:
         - push
       ref:
         - 'refs/heads/main'
+        - 'refs/heads/DOP-4488'
 
   - name: deploy-prod
     image: quay.io/mongodb/drone-helm:v3
