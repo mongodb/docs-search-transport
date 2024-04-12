@@ -362,7 +362,7 @@ export default class Marian {
       const proxyReq = http.request(reqOptions, (proxyRes) => {
         log.info(`http req status code ${proxyRes.statusCode}`);
         log.info('proxyRes');
-        log.info(proxyRes);
+        // log.info(proxyRes);
         // proxyRes.pipe(userRes);
         let responseData = '';
         proxyRes.on('data', (chunk) => {
@@ -370,6 +370,13 @@ export default class Marian {
         });
 
         proxyReq.on('end', () => {
+          log.info('on proxyReq end');
+          try {
+            log.info(JSON.stringify(responseData));
+          } catch (e) {
+            log.error('error when trying to stringify');
+            log.error(e);
+          }
           userRes.writeHead(200);
           userRes.end(responseData);
         });
