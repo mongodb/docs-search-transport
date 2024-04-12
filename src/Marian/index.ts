@@ -184,7 +184,8 @@ export default class Marian {
     checkAllowedOrigin(req.headers.origin, headers);
 
     if (this.index.manifests === null) {
-      res.writeHead(503, headers);
+      // res.writeHead(503, headers);
+      res.writeHead(200);
       res.end('');
       return;
     }
