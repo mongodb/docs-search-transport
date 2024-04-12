@@ -16,6 +16,7 @@ import { setPropertyMapping } from '../SearchPropertyMapping';
 import { Query, InvalidQuery } from '../Query';
 import { extractFacetFilters } from '../Query/util';
 import { sortFacets } from '../SearchIndex/util';
+import { hostname } from 'os';
 
 const STANDARD_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
@@ -352,10 +353,15 @@ export default class Marian {
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
     const reqOptions: https.RequestOptions = {
-      headers: { ...req.headers, "Accept": "application/json" },
+      headers: { ...req.headers, Accept: 'application/json' },
       hostname: 'mongodbdocs.sl.smartling.com',
       path: req.url,
       method: 'GET',
+      checkServerIdentity: (hostname, cert) => {
+        console.log('check hostname ', hostname);
+        console.log(cert);
+        return undefined;
+      },
     };
 
     try {
