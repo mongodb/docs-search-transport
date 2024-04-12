@@ -196,7 +196,7 @@ export default class Marian {
 
   async load(initLoad = true) {
     let taxonomy: Taxonomy;
-    console.log(`initLoad ${initLoad}`)
+    console.log(`initLoad ${initLoad}`);
     try {
       // TODO: include taxonomy url in verifyEnvVars after it has been released
       taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
@@ -322,7 +322,7 @@ export default class Marian {
 
   // anything with /zh-cn for now.
   // ie. /zh-cn/search?q=test
-  private async handleTranslationRequest(req: http.IncomingMessage, res: http.ServerResponse) {
+  private async handleTranslationRequest(req: http.IncomingMessage, userRes: http.ServerResponse) {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       Vary: 'Accept-Encoding, Origin',
@@ -347,10 +347,13 @@ export default class Marian {
       path: req.url,
       method: 'GET',
     };
+    console.log('check reqOptions');
+    console.log(reqOptions);
+
     try {
       const httpReq = http.request(reqOptions, (res) => {
         log.info(`http req status code ${res.statusCode}`);
-  
+
         res.on('data', (chunk) => {
           log.info(`Chunk: ${chunk}`);
         });
@@ -359,8 +362,11 @@ export default class Marian {
         log.error('error on http req');
         log.error(e);
       });
+      userRes.pipe(httpReq, {
+        end: true,
+      });
     } catch (e) {
-      log.error('error while making http request')
+      log.error('error while making http request');
       log.error(e);
     }
 
@@ -373,13 +379,13 @@ export default class Marian {
           }: ${JSON.stringify(smartlingRes.statusText)}`
         );
         log.error(smartlingRes);
-        res.writeHead(smartlingRes.status, smartlingRes.statusText);
-        res.end();
+        userRes.writeHead(smartlingRes.status, smartlingRes.statusText);
+        userRes.end();
         return;
       }
       const result = new Response(await smartlingRes.json());
-      res.writeHead(200, headers);
-      res.end(result);
+      userRes.writeHead(200, headers);
+      userRes.end(result);
     } catch (e) {
       log.error(`Error while fetching smartling request :`);
       log.error(e);
