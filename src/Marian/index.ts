@@ -196,6 +196,7 @@ export default class Marian {
 
   async load(initLoad = true) {
     let taxonomy: Taxonomy;
+    console.log(`initLoad ${initLoad}`)
     try {
       // TODO: include taxonomy url in verifyEnvVars after it has been released
       taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
