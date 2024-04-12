@@ -352,7 +352,7 @@ export default class Marian {
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
     const reqOptions: http.RequestOptions = {
-      headers: { ...req.headers },
+      headers: { ...req.headers, "Accept": "application/json" },
       hostname: 'mongodbdocs.sl.smartling.com',
       path: req.url,
       method: 'GET',
