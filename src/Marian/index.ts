@@ -2,6 +2,7 @@ import assert from 'assert';
 // @ts-ignore
 import Logger from 'basic-logger';
 import http from 'http';
+import https from 'https';
 import { parse } from 'toml';
 import { Document } from 'mongodb';
 import fetch, { RequestInit } from 'node-fetch';
@@ -356,24 +357,22 @@ export default class Marian {
       path: req.url,
       method: 'GET',
     };
-    console.log('check reqOptions');
-    console.log(reqOptions);
 
     try {
-      const httpReq = http.request(reqOptions, (res) => {
-        log.info(`http req status code ${res.statusCode}`);
-
-        res.on('data', (chunk) => {
-          log.info(`Chunk: ${chunk}`);
-        });
+      const proxyReq = https.request(reqOptions, (proxyRes) => {
+        log.info(`http req status code ${proxyRes.statusCode}`);
+        proxyRes.pipe(userRes);
       });
-      httpReq.on('error', (e) => {
+      // userRes.pipe(proxyReq);
+
+      proxyReq.on('error', (e) => {
         log.error('error on http req');
         log.error(e);
+        userRes.writeHead(500);
+        userRes.end('proxy error');
       });
-      // userRes.pipe(httpReq, {
-      //   end: true,
-      // });
+
+      proxyReq.end();
     } catch (e) {
       log.error('error while making http request');
       log.error(e);
