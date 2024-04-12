@@ -379,27 +379,28 @@ export default class Marian {
       log.error('error while making http request');
       log.error(e);
     }
+    userRes.end();
 
-    try {
-      const smartlingRes = await fetch(SMARTLING_URL.toString(), reqOptions as unknown as RequestInit);
-      if (smartlingRes.status !== 200) {
-        log.error(
-          `Error while fetching local request ${SMARTLING_URL.toString()} with status code ${
-            smartlingRes.status
-          }: ${JSON.stringify(smartlingRes.statusText)}`
-        );
-        log.error(smartlingRes);
-        userRes.writeHead(smartlingRes.status, smartlingRes.statusText);
-        userRes.end();
-        return;
-      }
-      const result = new Response(await smartlingRes.json());
-      userRes.writeHead(200, headers);
-      userRes.end(result);
-    } catch (e) {
-      log.error(`Error while fetching smartling request :`);
-      log.error(e);
-    }
+    // try {
+    //   const smartlingRes = await fetch(SMARTLING_URL.toString(), reqOptions as unknown as RequestInit);
+    //   if (smartlingRes.status !== 200) {
+    //     log.error(
+    //       `Error while fetching local request ${SMARTLING_URL.toString()} with status code ${
+    //         smartlingRes.status
+    //       }: ${JSON.stringify(smartlingRes.statusText)}`
+    //     );
+    //     log.error(smartlingRes);
+    //     userRes.writeHead(smartlingRes.status, smartlingRes.statusText);
+    //     userRes.end();
+    //     return;
+    //   }
+    //   const result = new Response(await smartlingRes.json());
+    //   userRes.writeHead(200, headers);
+    //   userRes.end(result);
+    // } catch (e) {
+    //   log.error(`Error while fetching smartling request :`);
+    //   log.error(e);
+    // }
   }
 
   private async handleManifests(req: http.IncomingMessage, res: http.ServerResponse) {
