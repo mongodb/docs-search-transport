@@ -109,11 +109,12 @@ export class Query {
     const searchPropertyMapping = getPropertyMapping();
 
     // if we need to boost for matching slug on an exact rawQuery match
-    if (strippedMapping[this.rawQuery.trim()]) {
+    const boostedStrings = strippedMapping[this.rawQuery.trim()];
+    if (Array.isArray(boostedStrings) && typeof boostedStrings[0] === 'string') {
       parts.push({
         text: {
           path: 'strippedSlug',
-          query: strippedMapping[this.rawQuery.trim()],
+          query: boostedStrings,
           score: { boost: { value: 100 } },
         },
       });
@@ -186,6 +187,35 @@ export class Query {
       must: [],
     };
     const searchPropertyNames = Object.keys(searchPropertyMapping);
+
+    // DOP-3976: phrases found in conjunction should have additional score boost if they are found in order
+    if (terms.length > 1) {
+      const maxLength: number = terms.reduce((max, term) => Math.max(max, term.length), 0);
+      compound.should.push({
+        phrase: {
+          path: ['paragraphs', 'text', 'headings'],
+          query: terms.join(' '),
+          slop: maxLength,
+          score: {
+            boost: {
+              value: 5,
+            },
+          },
+        },
+      });
+
+      compound.should.push({
+        phrase: {
+          path: ['paragraphs', 'text', 'headings'],
+          query: terms.join(' '),
+          score: {
+            boost: {
+              value: 25,
+            },
+          },
+        },
+      });
+    }
 
     // if user requested searchProperty, must match this property name
     // allowing mix usage of searchProperty and facets

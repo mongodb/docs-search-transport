@@ -17,26 +17,38 @@ describe('Searching', function () {
   const client = new MongoClient(connectionString);
   let index: SearchIndex;
 
-  before('Loading test data', async function () {
-    await client.connect();
-    index = new SearchIndex('dir:tests/integration/search_test_data/', client, TEST_DATABASE);
-    const result = await index.load({} as Taxonomy, 'dir:tests/integration/search_test_data/');
-    await index.createRecommendedIndexes();
-
-    // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
-    if (result && (result.deleted || result.updated.length > 0)) {
-      this.timeout(8000);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+  this.beforeAll('Loading test data', async function () {
+    try {
+      await client.connect();
+      index = new SearchIndex(
+        'dir:tests/integration/search_test_data/',
+        'docs-search-indexes-test',
+        'search-indexes/preprd',
+        client,
+        TEST_DATABASE
+      );
+      const result = await index.load({} as Taxonomy, 'dir:tests/integration/search_test_data/');
+      console.log('index loaded');
+      await index.createRecommendedIndexes();
+      console.log('created recommended indexes');
+      console.log(result);
+      // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
+      if (result && (result.deleted || result.updated.length > 0)) {
+        this.timeout(20000);
+        return new Promise((resolve) => setTimeout(resolve, 10000));
+      }
+    } catch (e) {
+      console.error(e);
     }
   });
 
   // Test variants of searchProperty
   it('should properly handle incorrect urls in manifests', async () => {
     let result = await index.search(new Query('manual'), ['manual-v5.1'], []);
-    strictEqual(result[0].url, 'https://docs.mongodb.com/v5.1/index.html');
+    strictEqual(result[0]?.url, 'https://docs.mongodb.com/v5.1/index.html');
   });
 
-  after(async function () {
+  this.afterAll(async function () {
     // await client.db(TEST_DATABASE).collection("documents").deleteMany({})
     await client.close();
   });

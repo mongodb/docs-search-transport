@@ -99,6 +99,10 @@ export default class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleTranslationRequest(req, res);
       }
+    } else if (pathname === '/manifests') {
+      if (checkMethod(req, res, 'GET')) {
+        this.handleManifests(req, res);
+      }
     } else {
       res.writeHead(400, {});
       res.end('');
@@ -119,6 +123,8 @@ export default class Marian {
     try {
       results = await this.fetchResults(parsedUrl);
     } catch (err) {
+      log.error(`Error while handling search:`);
+      log.error(err);
       if (err instanceof InvalidQuery) {
         res.writeHead(400, headers);
         res.end(err.message);
@@ -392,5 +398,31 @@ export default class Marian {
       log.error(`Error while fetching smartling request :`);
       log.error(e);
     }
+  }
+
+  private async handleManifests(req: http.IncomingMessage, res: http.ServerResponse) {
+    const headers = {
+      'Content-Type': 'application/json',
+      Vary: 'Accept-Encoding, Origin',
+      Pragma: 'no-cache',
+    };
+    Object.assign(headers, STANDARD_HEADERS);
+
+    checkAllowedOrigin(req.headers.origin, headers);
+
+    if (this.index.manifests === null) {
+      res.writeHead(503, headers);
+      res.end('');
+      return;
+    }
+
+    const response = {
+      manifests: this.index.manifests.map((manifest) =>
+        new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString()
+      ),
+    };
+
+    res.writeHead(200, headers);
+    res.end(JSON.stringify(response));
   }
 }
