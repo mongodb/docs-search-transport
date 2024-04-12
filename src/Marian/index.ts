@@ -395,7 +395,6 @@ export default class Marian {
       log.error('error while making http request');
       log.error(e);
     }
-    userRes.end();
 
     // try {
     //   const smartlingRes = await fetch(SMARTLING_URL.toString(), reqOptions as unknown as RequestInit);
