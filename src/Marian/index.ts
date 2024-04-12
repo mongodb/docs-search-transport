@@ -351,7 +351,7 @@ export default class Marian {
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
     const reqOptions: http.RequestOptions = {
-      headers: { ...req.headers, host: 'docs-search-transport.docs.staging.corp.mongodb.com' },
+      headers: { ...req.headers },
       hostname: 'mongodbdocs.sl.smartling.com',
       path: req.url,
       method: 'GET',
@@ -371,9 +371,9 @@ export default class Marian {
         log.error('error on http req');
         log.error(e);
       });
-      userRes.pipe(httpReq, {
-        end: true,
-      });
+      // userRes.pipe(httpReq, {
+      //   end: true,
+      // });
     } catch (e) {
       log.error('error while making http request');
       log.error(e);
