@@ -361,6 +361,8 @@ export default class Marian {
     try {
       const proxyReq = http.request(reqOptions, (proxyRes) => {
         log.info(`http req status code ${proxyRes.statusCode}`);
+        log.info('proxyRes')
+        log.info(proxyRes)
         proxyRes.pipe(userRes);
       });
       // userRes.pipe(proxyReq);
