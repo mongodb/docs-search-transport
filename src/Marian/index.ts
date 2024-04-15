@@ -360,7 +360,7 @@ export default class Marian {
         return undefined;
       },
     };
-    console.log('check reqOptions')
+    console.log('check reqOptions');
     console.log(reqOptions);
 
     try {
