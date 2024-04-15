@@ -8,17 +8,17 @@ trigger:
     include:
       - 'refs/tags/v*'
       - 'refs/heads/main'
+      - 'refs/heads/DOP-*'
 
 steps:
-  - name: publish-staging
+  - name: publish-dev
     image: plugins/ecr
     settings:
       create_repository: true
       registry: 795250896452.dkr.ecr.us-east-1.amazonaws.com
       repo: 795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME}
       tags:
-        - git-${DRONE_COMMIT_SHA:0:7}
-        - latest
+        - git-${DRONE_COMMIT_SHA:0:7}-dev
       access_key:
         from_secret: ecr_access_key
       secret_key:
@@ -26,6 +26,26 @@ steps:
     when:
       event:
         - push
+      ref:
+        - 'refs/heads/DOP-*'
+
+  - name: publish-staging
+    image: plugins/ecr
+    settings:
+      create_repository: true
+      registry: 795250896452.dkr.ecr.us-east-1.amazonaws.com
+      repo: 795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME}
+      tags:
+        - git-${DRONE_COMMIT_SHA:0:7}-staging
+      access_key:
+        from_secret: ecr_access_key
+      secret_key:
+        from_secret: ecr_secret_key
+    when:
+      event:
+        - push
+      ref:
+        - 'refs/heads/main'
 
   - name: publish-prod
     image: plugins/ecr
@@ -44,6 +64,25 @@ steps:
       event:
         - tag
 
+  - name: deploy-dev
+    image: quay.io/mongodb/drone-helm:v3
+    settings:
+      chart: mongodb/web-app
+      chart_version: 4.12.3
+      add_repos: [mongodb=https://10gen.github.io/helm-charts]
+      namespace: docs
+      release: docs-search-transport-dev
+      values: image.tag=git-${DRONE_COMMIT_SHA:0:7}-dev,image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=docs-search-transport-dev.docs.staging.corp.mongodb.com
+      values_files: ['environments/all.yml', 'environments/dev.yml']
+      api_server: https://api.staging.corp.mongodb.com
+      kubernetes_token:
+        from_secret: staging_kubernetes_token
+    when:
+      event:
+        - push
+      ref:
+        - 'refs/heads/DOP-*'
+
   - name: deploy-staging
     image: quay.io/mongodb/drone-helm:v3
     settings:
@@ -52,7 +91,7 @@ steps:
       add_repos: [mongodb=https://10gen.github.io/helm-charts]
       namespace: docs
       release: docs-search-transport
-      values: image.tag=git-${DRONE_COMMIT_SHA:0:7},image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=docs-search-transport.docs.staging.corp.mongodb.com
+      values: image.tag=git-${DRONE_COMMIT_SHA:0:7}-staging,image.repository=795250896452.dkr.ecr.us-east-1.amazonaws.com/docs/${DRONE_REPO_NAME},ingress.enabled=true,ingress.hosts[0]=docs-search-transport.docs.staging.corp.mongodb.com
       values_files: ['environments/all.yml', 'environments/staging.yml']
       api_server: https://api.staging.corp.mongodb.com
       kubernetes_token:
@@ -60,6 +99,8 @@ steps:
     when:
       event:
         - push
+      ref:
+        - 'refs/heads/main'
 
   - name: deploy-prod
     image: quay.io/mongodb/drone-helm:v3

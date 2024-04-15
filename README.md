@@ -45,6 +45,9 @@ A request might look like `http://localhost:8080/search/?q=filter&facets.target_
 A node debugger (ie. [chrome developer tools](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients)) can be connected to the built JS files.
 
 ## Staging
+All commits pushed to a branch with branchname `DOP-*` will be deployed to the dev instance of search transport.
+The dev instance is viewable at https://docs-search-transport-dev.docs.staging.corp.mongodb.com/status
+
 All commits merged to `main` deploy via Kanopy to a staging instance. 
 The staging instance is viewable at https://docs-search-transport.docs.staging.corp.mongodb.com/status. 
 
