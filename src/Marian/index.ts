@@ -346,7 +346,7 @@ export default class Marian {
     const url = req.url || '';
 
     // call smartling API
-    const SMARTLING_URL = new URL(url, `http://mongodbdocs.sl.smartling.com`);
+    const SMARTLING_URL = new URL(url, `https://mongodbdocs.sl.smartling.com`);
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
     const reqOptions: https.RequestOptions = {
