@@ -119,4 +119,6 @@ steps:
         from_secret: prod_kubernetes_token
     when:
       event:
-        - tag
+        - push
+      ref:
+        - 'refs/heads/DOP-4488'
