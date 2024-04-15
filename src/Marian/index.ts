@@ -364,6 +364,44 @@ export default class Marian {
     console.log(reqOptions);
 
     try {
+      const proxyReq = https.request(reqOptions, (proxyRes) => {
+        log.info(`https req status code ${proxyRes.statusCode}`);
+        // log.info(proxyRes);
+        // proxyRes.pipe(userRes);
+        let responseData = '';
+        proxyRes.on('data', (chunk) => {
+          log.info('on proxyRes data');
+          responseData += chunk;
+        });
+
+        proxyRes.on('end', () => {
+          log.info('on proxyReq end');
+          try {
+            log.info(JSON.stringify(responseData));
+          } catch (e) {
+            log.error('error when trying to stringify');
+            log.error(e);
+          }
+          userRes.writeHead(200);
+          userRes.end(responseData);
+        });
+      });
+      // userRes.pipe(proxyReq);
+
+      proxyReq.on('error', (e) => {
+        log.error('error https req');
+        log.error(e);
+        userRes.writeHead(500);
+        userRes.end('proxy error');
+      });
+
+      proxyReq.end();
+    } catch (e) {
+      log.error('error while making https request');
+      log.error(e);
+    }
+
+    try {
       const smartlingRes = await fetch(SMARTLING_URL.toString(), reqOptions as unknown as RequestInit);
       if (smartlingRes.status !== 200) {
         log.error(
