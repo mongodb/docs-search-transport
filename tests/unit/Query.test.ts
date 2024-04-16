@@ -1,6 +1,7 @@
 import { deepStrictEqual, ok } from 'assert';
 import { Query } from '../../src/Query';
 import { CompoundPart, NestedCompound } from '../../src/Query/types';
+import { extractFacetFilters } from '../../src/Query/util';
 
 describe('Query', () => {
   it('should parse a single term', () => {
@@ -54,5 +55,16 @@ describe('Query', () => {
       ((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost
         ?.value as unknown as number) === 100
     );
+  });
+
+  it('should have as many clauses as filters passed into the query', () => {
+    const searchParams = new URLSearchParams(
+      `q=test&facets.target_product=drivers&facets.target_product>atlas>sub_product=atlas-cli&facets.programming_language=go`
+    );
+    const filters = extractFacetFilters(searchParams);
+    const and = filters.length;
+    // count number of OR clauses in each compound
+    const or = filters.map((filter) => filter.compound.should.length);
+    ok(and === 2 && or[0] === 2 && or[1] === 1);
   });
 });

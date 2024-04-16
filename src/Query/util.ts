@@ -2,6 +2,8 @@ import { Filter } from 'mongodb';
 
 import { Document, FacetAggregationStage, FacetOption } from '../SearchIndex/types';
 
+import { Phrase } from './types';
+
 const atomicPhraseMap: Record<string, string> = {
   ops: 'manager',
   cloud: 'manager',
@@ -67,11 +69,12 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
     const drilldownKeyIdx = key.indexOf('>');
     const baseFacet = drilldownKeyIdx > -1 ? key.slice(0, drilldownKeyIdx) : key;
 
-    queryParamLists[baseFacet] = queryParamLists[key] || {
+    queryParamLists[baseFacet] = queryParamLists[baseFacet] || {
       compound: {
         should: [],
       },
     };
+
     queryParamLists[baseFacet]['compound']['should'].push({
       phrase: {
         query: value,
@@ -79,7 +82,6 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
       },
     });
   }
-
   return Object.values(queryParamLists);
 };
 
