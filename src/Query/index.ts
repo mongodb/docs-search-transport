@@ -108,22 +108,30 @@ export class Query {
     const parts: Part[] = [];
     const searchPropertyMapping = getPropertyMapping();
 
+    // DOP-3934 - test without having this hardcoded matches
     // if we need to boost for matching slug on an exact rawQuery match
-    const boostedStrings = strippedMapping[this.rawQuery.trim()];
-    if (Array.isArray(boostedStrings) && typeof boostedStrings[0] === 'string') {
-      parts.push({
-        text: {
-          path: 'strippedSlug',
-          query: boostedStrings,
-          score: { boost: { value: 100 } },
-        },
-      });
-    }
+    // const boostedStrings = strippedMapping[this.rawQuery.trim()];
+    // if (Array.isArray(boostedStrings) && typeof boostedStrings[0] === 'string') {
+    //   parts.push({
+    //     text: {
+    //       path: 'strippedSlug',
+    //       query: boostedStrings,
+    //       score: { boost: { value: 100 } },
+    //     },
+    //   });
+    // }
 
     parts.push({
       text: {
         query: terms,
-        path: ['code.lang', 'paragraphs', 'code.value', 'text', { value: 'code.value', multi: 'simple' }],
+        path: [
+          'code.lang',
+          'paragraphs',
+          'code.value',
+          'text',
+          { value: 'code.value', multi: 'simple' },
+          { value: 'paragraphs', multi: 'whitespace' },
+        ],
       },
     });
 
