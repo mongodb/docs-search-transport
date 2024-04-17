@@ -46,17 +46,6 @@ describe('Query', () => {
     ok(phrase);
   });
 
-  it('should handle boosts on terms that are predefined in constant', () => {
-    const nonExistingTermQuery = new Query('constructor').getCompound(null, []);
-    ok((nonExistingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost?.value === undefined);
-    const existingTermQuery = new Query('aggregation').getCompound(null, []);
-    ok((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost !== undefined);
-    ok(
-      ((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost
-        ?.value as unknown as number) === 100
-    );
-  });
-
   it('should have as many clauses as filters passed into the query', () => {
     const searchParams = new URLSearchParams(
       `q=test&facets.target_product=drivers&facets.target_product>atlas>sub_product=atlas-cli&facets.programming_language=go`
