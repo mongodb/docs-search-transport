@@ -352,7 +352,7 @@ export default class Marian {
     const SMARTLING_URL = new URL(url, `http://mongodbdocs.sl.smartling.com`);
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
-    const reqOptions: https.RequestOptions = {
+    const reqOptions: http.RequestOptions = {
       headers: { ...req.headers, Accept: 'application/json' },
       hostname: 'mongodbdocs.sl.smartling.com',
       path: req.url,
@@ -363,7 +363,7 @@ export default class Marian {
     
 
     try {
-      const proxyReq = https.request(reqOptions, (proxyRes) => {
+      const proxyReq = http.request(reqOptions, (proxyRes) => {
         log.info(`http req status code ${proxyRes.statusCode}`);
         log.info('proxyRes');
         // log.info(proxyRes);
