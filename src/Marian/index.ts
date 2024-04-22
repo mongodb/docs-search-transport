@@ -357,11 +357,6 @@ export default class Marian {
       hostname: 'mongodbdocs.sl.smartling.com',
       path: req.url,
       method: 'GET',
-      checkServerIdentity: (hostname, cert) => {
-        console.log('check hostname ', hostname);
-        console.log(cert);
-        return undefined;
-      },
     };
     console.log('check reqOptions')
     console.log(reqOptions);
