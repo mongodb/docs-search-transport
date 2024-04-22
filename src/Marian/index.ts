@@ -16,6 +16,7 @@ import { setPropertyMapping } from '../SearchPropertyMapping';
 import { Query, InvalidQuery } from '../Query';
 import { extractFacetFilters } from '../Query/util';
 import { sortFacets } from '../SearchIndex/util';
+import { hostname } from 'os';
 
 const STANDARD_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
@@ -75,6 +76,7 @@ export default class Marian {
       return;
     }
     const pathname = (parsedUrl.pathname || '').replace(/\/+$/, '');
+    console.log('check pathname ', pathname);
     if (pathname === '/search') {
       if (checkMethod(req, res, 'GET')) {
         this.handleSearch(parsedUrl, req, res);
@@ -95,7 +97,7 @@ export default class Marian {
       if (checkMethod(req, res, 'GET')) {
         this.handleStatusV2(req, res);
       }
-    } else if (LANGUAGE_PREFIXES.some((prefix) => pathname.startsWith(`/${prefix}`))) {
+    } else if (LANGUAGE_PREFIXES.some((prefix) => pathname.includes(prefix))) {
       if (checkMethod(req, res, 'GET')) {
         this.handleTranslationRequest(req, res);
       }
@@ -184,7 +186,8 @@ export default class Marian {
     checkAllowedOrigin(req.headers.origin, headers);
 
     if (this.index.manifests === null) {
-      res.writeHead(503, headers);
+      // res.writeHead(503, headers);
+      res.writeHead(200);
       res.end('');
       return;
     }
@@ -346,7 +349,7 @@ export default class Marian {
     const url = req.url || '';
 
     // call smartling API
-    const SMARTLING_URL = new URL(url, `https://mongodbdocs.sl.smartling.com`);
+    const SMARTLING_URL = new URL(url, `http://mongodbdocs.sl.smartling.com`);
     // ie. https://mongodbdocs.sl.smartling.com/zh-cn/search?q=test
 
     const reqOptions: https.RequestOptions = {
@@ -354,14 +357,53 @@ export default class Marian {
       hostname: 'mongodbdocs.sl.smartling.com',
       path: req.url,
       method: 'GET',
-      // checkServerIdentity: (hostname, cert) => {
-      //   console.log('check hostname ', hostname);
-      //   console.log(cert);
-      //   return undefined;
-      // },
+      checkServerIdentity: (hostname, cert) => {
+        console.log('check hostname ', hostname);
+        console.log(cert);
+        return undefined;
+      },
     };
-    console.log('check reqOptions');
+    console.log('check reqOptions')
     console.log(reqOptions);
+    
+
+    try {
+      const proxyReq = https.request(reqOptions, (proxyRes) => {
+        log.info(`http req status code ${proxyRes.statusCode}`);
+        log.info('proxyRes');
+        // log.info(proxyRes);
+        // proxyRes.pipe(userRes);
+        let responseData = '';
+        proxyRes.on('data', (chunk) => {
+          responseData += chunk;
+        });
+
+        proxyRes.on('end', () => {
+          log.info('on proxyReq end');
+          try {
+            log.info(JSON.stringify(responseData));
+          } catch (e) {
+            log.error('error when trying to stringify');
+            log.error(e);
+          }
+          userRes.writeHead(200);
+          userRes.end(responseData);
+        });
+      });
+      // userRes.pipe(proxyReq);
+
+      proxyReq.on('error', (e) => {
+        log.error('error on http req');
+        log.error(e);
+        userRes.writeHead(500);
+        userRes.end('proxy error');
+      });
+
+      proxyReq.end();
+    } catch (e) {
+      log.error('error while making http request');
+      log.error(e);
+    }
 
     try {
       const smartlingRes = await fetch(SMARTLING_URL.toString(), reqOptions as unknown as RequestInit);

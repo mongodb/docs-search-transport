@@ -63,9 +63,7 @@ steps:
         from_secret: ecr_secret_key
     when:
       event:
-        - push
-      ref:
-        - 'refs/heads/DOP-4488'
+        - tag
 
   - name: deploy-dev
     image: quay.io/mongodb/drone-helm:v3
@@ -121,6 +119,4 @@ steps:
         from_secret: prod_kubernetes_token
     when:
       event:
-        - push
-      ref:
-        - 'refs/heads/DOP-4488'
+        - tag
