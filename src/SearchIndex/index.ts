@@ -20,6 +20,7 @@ import {
   RefreshInfo,
   Taxonomy,
   FacetOption,
+  FacetValue,
   FacetAggRes,
   TrieFacet,
   AmbiguousFacet,
@@ -60,8 +61,15 @@ export class SearchIndex {
     this.responseFacets = [];
   }
 
-  async search(query: Query, searchProperty: string[] | null, filters: Filter<Document>[], pageNumber?: number) {
-    const aggregationQuery = query.getAggregationQuery(searchProperty, filters, pageNumber);
+  async search(
+    query: Query,
+    searchProperty: string[] | null,
+    filters: Filter<Document>[],
+    pageNumber?: number /*taxonomy*/
+  ) {
+    //console.log('UMMMMM TRIEFACET', JSON.stringify(this.trieFacets, null, 2));
+    //console.log('RESPONSEFACETSBABEY', JSON.stringify(this.responseFacets, null, 2));
+    const aggregationQuery = query.getAggregationQuery(searchProperty, filters, this.responseFacets, pageNumber);
     const cursor = this.documents.aggregate(aggregationQuery);
     return cursor.toArray();
   }
@@ -265,4 +273,24 @@ const composeUpserts = (
       },
     };
   });
+};
+
+// similar to atlas admin getFacetKeys but this one is not
+// specific to taxonomy type
+export const getFacetKeysFromResponseFacets = (facets: FacetOption[]): string[] => {
+  const keySet: Set<string> = new Set();
+  const facetOptionKeys = (arr: FacetOption[]) => {
+    arr.map((facet) => {
+      keySet.add(facet.key);
+      if (facet.options?.length) facetValueKeys(facet.options);
+    });
+  };
+  const facetValueKeys = (arr: FacetValue[]) => {
+    arr.map((facet) => {
+      keySet.add(facet.key);
+      if (facet.facets?.length) facetOptionKeys(facet.facets);
+    });
+  };
+  facetOptionKeys(facets);
+  return Array.from(keySet);
 };

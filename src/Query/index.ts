@@ -4,6 +4,7 @@ import { Document, FacetOption } from '../SearchIndex/types';
 import { getPropertyMapping } from '../SearchPropertyMapping';
 import { strippedMapping } from '../data/term-result-mappings';
 import { Part, CompoundPart, Compound } from './types';
+import { getFacetKeysFromResponseFacets } from '../SearchIndex';
 
 export class InvalidQuery extends Error {}
 
@@ -103,7 +104,7 @@ export class Query {
     }
   }
 
-  getCompound(searchProperty: string[] | null, filters: Filter<Document>[]): Compound {
+  getCompound(searchProperty: string[] | null, filters: Filter<Document>[], taxonomy: FacetOption[]): Compound {
     const terms = Array.from(this.terms);
     const parts: Part[] = [];
     const searchPropertyMapping = getPropertyMapping();
@@ -188,16 +189,12 @@ export class Query {
       },
     });
 
+    const facetNames = getFacetKeysFromResponseFacets(taxonomy).map((facet) => `facets.${facet}`);
+
     parts.push({
       text: {
         query: terms,
-        path: [
-          'facets.genre',
-          'facets.programming_language',
-          'facets.target_product',
-          'facets.target_product>atlas>sub_product',
-          'facets.target_product>realm>sub_product',
-        ],
+        path: facetNames,
         score: { boost: { value: 10 } },
       },
     });
@@ -289,7 +286,9 @@ export class Query {
   }
 
   getMetaQuery(searchProperty: string[] | null, taxonomy: FacetOption[], filters: Filter<Document>[]): mdbDocument[] {
-    const compound: Compound = this.getCompound(searchProperty, filters);
+    const compound: Compound = this.getCompound(searchProperty, filters, taxonomy);
+
+    //console.log('TAXONOMY', taxonomy);
 
     const facets = getFacetAggregationStages(taxonomy);
 
@@ -308,11 +307,16 @@ export class Query {
     return agg;
   }
 
-  getAggregationQuery(searchProperty: string[] | null, filters: Filter<Document>[], page?: number): mdbDocument[] {
+  getAggregationQuery(
+    searchProperty: string[] | null,
+    filters: Filter<Document>[],
+    taxonomy: FacetOption[],
+    page?: number
+  ): mdbDocument[] {
     if (page && page < 1) {
       throw new InvalidQuery('Invalid page');
     }
-    const compound = this.getCompound(searchProperty, filters);
+    const compound = this.getCompound(searchProperty, filters, taxonomy);
 
     const agg: mdbDocument[] = [
       {
