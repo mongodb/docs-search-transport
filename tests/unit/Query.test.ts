@@ -36,7 +36,7 @@ describe('Query', () => {
 
   it('should query a multi word phrase as its whole and boost its score', () => {
     const query = new Query('max disk iops');
-    const compound = query.getCompound(null, []);
+    const compound = query.getCompound(null, [], []);
     const phrase = compound.should.find((compoundPart) => {
       return (
         typeof compoundPart['phrase' as keyof CompoundPart] === 'object' &&
@@ -47,9 +47,9 @@ describe('Query', () => {
   });
 
   it('should handle boosts on terms that are predefined in constant', () => {
-    const nonExistingTermQuery = new Query('constructor').getCompound(null, []);
+    const nonExistingTermQuery = new Query('constructor').getCompound(null, [], []);
     ok((nonExistingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost?.value === undefined);
-    const existingTermQuery = new Query('aggregation').getCompound(null, []);
+    const existingTermQuery = new Query('aggregation').getCompound(null, [], []);
     ok((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost !== undefined);
     ok(
       ((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost
