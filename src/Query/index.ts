@@ -288,8 +288,6 @@ export class Query {
   getMetaQuery(searchProperty: string[] | null, taxonomy: FacetOption[], filters: Filter<Document>[]): mdbDocument[] {
     const compound: Compound = this.getCompound(searchProperty, filters, taxonomy);
 
-    //console.log('TAXONOMY', taxonomy);
-
     const facets = getFacetAggregationStages(taxonomy);
 
     const agg = [

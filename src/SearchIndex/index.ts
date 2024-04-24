@@ -61,14 +61,7 @@ export class SearchIndex {
     this.responseFacets = [];
   }
 
-  async search(
-    query: Query,
-    searchProperty: string[] | null,
-    filters: Filter<Document>[],
-    pageNumber?: number /*taxonomy*/
-  ) {
-    //console.log('UMMMMM TRIEFACET', JSON.stringify(this.trieFacets, null, 2));
-    //console.log('RESPONSEFACETSBABEY', JSON.stringify(this.responseFacets, null, 2));
+  async search(query: Query, searchProperty: string[] | null, filters: Filter<Document>[], pageNumber?: number) {
     const aggregationQuery = query.getAggregationQuery(searchProperty, filters, this.responseFacets, pageNumber);
     const cursor = this.documents.aggregate(aggregationQuery);
     return cursor.toArray();
