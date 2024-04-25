@@ -3,6 +3,10 @@ import { Query } from '../../src/Query';
 import { SearchIndex } from '../../src/SearchIndex';
 import { Taxonomy } from '../../src/SearchIndex/types';
 import { MongoClient } from 'mongodb';
+import { sampleFacetOption } from '../resources/utils-data';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 const TEST_DATABASE = 'search-test';
 
@@ -28,6 +32,9 @@ describe('Searching', function () {
         TEST_DATABASE
       );
       const result = await index.load({} as Taxonomy, 'dir:tests/integration/search_test_data/');
+      // manually set index response facets to ensure test doesn't
+      // fail due to empty facet text match
+      index.responseFacets = sampleFacetOption;
       console.log('index loaded');
       await index.createRecommendedIndexes();
       console.log('created recommended indexes');
