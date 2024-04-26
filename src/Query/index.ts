@@ -188,10 +188,12 @@ export class Query {
       },
     });
 
+    const facetNames = facetKeys.map((facet) => `facets.${facet}`);
+
     parts.push({
       text: {
         query: terms,
-        path: facetKeys,
+        path: facetNames,
         score: { boost: { value: 10 } },
       },
     });
