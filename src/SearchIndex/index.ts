@@ -20,11 +20,11 @@ import {
   RefreshInfo,
   Taxonomy,
   FacetOption,
-  FacetValue,
   FacetAggRes,
   TrieFacet,
-  AmbiguousFacet,
 } from './types';
+
+import { getFacetKeys } from '../AtlasAdmin/utils';
 
 const log = new Logger({
   showTimestamp: true,
@@ -43,6 +43,8 @@ export class SearchIndex {
   unindexable: Collection<DatabaseDocument>;
   trieFacets: TrieFacet;
   responseFacets: FacetOption[];
+  taxonomy: Taxonomy | null;
+  facetKeys: string[];
 
   constructor(manifestSource: string, s3Bucket: string, s3Path: string, client: MongoClient, databaseName: string) {
     this.currentlyIndexing = false;
@@ -59,16 +61,18 @@ export class SearchIndex {
       name: '',
     };
     this.responseFacets = [];
+    this.taxonomy = null;
+    this.facetKeys = [];
   }
 
   async search(query: Query, searchProperty: string[] | null, filters: Filter<Document>[], pageNumber?: number) {
-    const aggregationQuery = query.getAggregationQuery(searchProperty, filters, this.responseFacets, pageNumber);
+    const aggregationQuery = query.getAggregationQuery(searchProperty, filters, this.facetKeys, pageNumber);
     const cursor = this.documents.aggregate(aggregationQuery);
     return cursor.toArray();
   }
 
   async fetchFacets(query: Query, searchProperty: string[] | null, filters: Filter<Document>[]) {
-    const metaAggregationQuery = query.getMetaQuery(searchProperty, this.responseFacets, filters);
+    const metaAggregationQuery = query.getMetaQuery(searchProperty, this.responseFacets, filters, this.facetKeys);
     const cursor = this.documents.aggregate(metaAggregationQuery);
     try {
       // TODO: re-implement
@@ -86,8 +90,10 @@ export class SearchIndex {
   }
 
   async load(taxonomy: Taxonomy, manifestSource?: string, refreshManifests = true): Promise<RefreshInfo | undefined> {
+    this.taxonomy = taxonomy;
     this.responseFacets = convertTaxonomyToResponseFormat(taxonomy);
     this.trieFacets = convertTaxonomyToTrie(taxonomy);
+    this.facetKeys = getFacetKeys(taxonomy);
     if (!refreshManifests) {
       return;
     }
@@ -266,24 +272,4 @@ const composeUpserts = (
       },
     };
   });
-};
-
-// similar to atlas admin getFacetKeys but this one is not
-// specific to taxonomy type
-export const getFacetKeysFromResponseFacets = (facets: FacetOption[]): string[] => {
-  const keySet: Set<string> = new Set();
-  const facetOptionKeys = (arr: FacetOption[]) => {
-    arr.map((facet) => {
-      keySet.add(facet.key);
-      if (facet.options?.length) facetValueKeys(facet.options);
-    });
-  };
-  const facetValueKeys = (arr: FacetValue[]) => {
-    arr.map((facet) => {
-      keySet.add(facet.key);
-      if (facet.facets?.length) facetOptionKeys(facet.facets);
-    });
-  };
-  facetOptionKeys(facets);
-  return Array.from(keySet);
 };
