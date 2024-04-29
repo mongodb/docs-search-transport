@@ -297,3 +297,11 @@ export const sampleFacetOption = [
     ],
   },
 ] as FacetOption[];
+
+export const sampleFacetKeys = [
+  'genre',
+  'target_product>atlas>sub_product',
+  'target_product>realm>sub_product',
+  'target_product',
+  'programming_language',
+];
