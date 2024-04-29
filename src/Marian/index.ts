@@ -116,7 +116,7 @@ export default class Marian {
       results = await this.fetchResults(parsedUrl);
     } catch (err) {
       log.error(`Error while handling search:`);
-      log.error(JSON.stringify(err));
+      log.error(String(err));
       if (err instanceof InvalidQuery) {
         res.writeHead(400, headers);
         res.end(err.message);
