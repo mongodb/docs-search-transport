@@ -351,7 +351,7 @@ export default class Marian {
     const closeTags = '></a>';
     for (let manifest of this.index.manifests) {
       const manifestUrl = new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString();
-      manifestList += openTags + manifestUrl + closeTags;
+      manifestList.concat(manifestUrl);
     }
 
     const response = this.index.manifests.length + '<html><body>' + manifestList + '</body></html>';
