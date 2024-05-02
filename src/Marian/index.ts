@@ -346,15 +346,17 @@ export default class Marian {
       return;
     }
 
-    let manifestList = '';
+    const manifestList = '';
+    const otherList = 'start';
     const openTags = '<a href=';
     const closeTags = '></a>';
     for (let manifest of this.index.manifests) {
       const manifestUrl = new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString();
       manifestList.concat(manifestUrl);
+      otherList.concat('Middle');
     }
 
-    const response = this.index.manifests.length + '<html><body>' + manifestList + '</body></html>';
+    const response = this.index.manifests.length + otherList + '<html><body>' + '</body></html>';
     console.log(manifestList);
     console.log('Hello there');
 
