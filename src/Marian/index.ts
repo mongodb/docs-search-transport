@@ -346,9 +346,18 @@ export default class Marian {
       return;
     }
 
-    const response = this.formatManifests(this.index.manifests);
+    let manifestList = '';
+    const openTags = '<a href=';
+    const closeTags = '></a>';
+    for (let manifest of this.index.manifests) {
+      const manifestUrl = new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString();
+      manifestList += openTags + manifestUrl + closeTags;
+    }
+
+    console.log(manifestList);
+    console.log('Hello');
 
     res.writeHead(200, headers);
-    res.end(response);
+    res.end(manifestList);
   }
 }
