@@ -316,18 +316,19 @@ export default class Marian {
     }
   }
 
+  //change format of tags so that url is also in each anchor tag
   private formatManifests = () => {
     //   return 'hello thrice';
     // };
     let manifestList = '';
     const openTags = '<a href=';
     const closeTags = '></a>';
-    // if (this.index.manifests) {
-    //   for (let manifest of this.index.manifests) {
-    //     const manifestUrl = new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString();
-    //     manifestList += openTags + manifestUrl + closeTags;
-    //   }
-    // }
+    if (this.index.manifests) {
+      for (let manifest of this.index.manifests) {
+        const manifestUrl = new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString();
+        manifestList += openTags + manifestUrl + closeTags;
+      }
+    }
     return '<html><body> ${manifestList} </body></html>';
   };
 
