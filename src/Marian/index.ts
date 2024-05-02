@@ -346,6 +346,6 @@ export default class Marian {
     };
 
     res.writeHead(200, headers);
-    res.end(JSON.stringify(response));
+    res.end(response());
   }
 }
