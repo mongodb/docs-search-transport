@@ -356,7 +356,7 @@ export default class Marian {
 
     const response = this.index.manifests.length + '<html><body>' + manifestList + '</body></html>';
     console.log(manifestList);
-    console.log('Hello again');
+    console.log('Hello there');
 
     res.writeHead(200, headers);
     res.end(response);
