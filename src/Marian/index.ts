@@ -329,7 +329,7 @@ export default class Marian {
         manifestList += openTags + manifestUrl + closeTags;
       }
     }
-    return '<html><body> ${manifestList} </body></html>';
+    return '<html><body>' + manifestList + '</body></html>';
   };
 
   private async handleManifests(req: http.IncomingMessage, res: http.ServerResponse) {
