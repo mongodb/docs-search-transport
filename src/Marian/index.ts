@@ -317,7 +317,7 @@ export default class Marian {
   }
 
   //change format of tags so that url is also in each anchor tag
-  private formatManifests = (manifests) => {
+  private formatManifests = (manifests: any) => {
     //   return 'hello thrice';
     // };
     let manifestList = '';
