@@ -4,7 +4,6 @@ import Logger from 'basic-logger';
 import http from 'http';
 import { parse } from 'toml';
 import { Document } from 'mongodb';
-
 import { checkAllowedOrigin, checkMethod } from './util';
 import { StatusResponse } from './types';
 import { SearchIndex } from '../SearchIndex';
@@ -319,7 +318,7 @@ export default class Marian {
 
   private async handleManifests(req: http.IncomingMessage, res: http.ServerResponse) {
     const headers = {
-      'Content-Type': 'application/json',
+      'Content-Type': 'text/html',
       Vary: 'Accept-Encoding, Origin',
       Pragma: 'no-cache',
     };
@@ -333,10 +332,17 @@ export default class Marian {
       return;
     }
 
-    const response = {
-      manifests: this.index.manifests.map((manifest) =>
-        new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString()
-      ),
+    const response = () => {
+      let manifestList = '';
+      const openTags = '<a href=';
+      const closeTags = '></a>'
+      if (this.index.manifests){
+        for (let manifest of this.index.manifests) {
+          const manifestUrl = new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString();
+          manifestList += openTags + manifestUrl+closeTags;
+        }
+    }
+      return `<html><body> ${manifestList} </body></html>`
     };
 
     res.writeHead(200, headers);
