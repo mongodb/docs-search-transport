@@ -355,7 +355,7 @@ export default class Marian {
     }
 
     console.log(manifestList);
-    console.log('Hello');
+    console.log('Hello again');
 
     res.writeHead(200, headers);
     res.end(manifestList);
