@@ -354,10 +354,11 @@ export default class Marian {
       manifestList += openTags + manifestUrl + closeTags;
     }
 
+    const response = this.index.manifests.length + '<html><body>' + manifestList + '</body></html>';
     console.log(manifestList);
     console.log('Hello again');
 
     res.writeHead(200, headers);
-    res.end(manifestList);
+    res.end(response);
   }
 }
