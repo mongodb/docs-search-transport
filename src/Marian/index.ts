@@ -356,11 +356,10 @@ export default class Marian {
         `${this.index.manifestUrlPrefix}/${this.index.manifests[i].searchProperty}.json`
       ).toString();
       manifestList.concat(manifestUrl);
-      otherList += 'Middle';
       endList = 'end';
     }
 
-    const response = this.index.manifests.length + otherList + endList + '<html><body>' + '</body></html>';
+    const response = this.index.manifests.length + manifestList + endList + '<html><body>' + '</body></html>';
     console.log(manifestList);
     console.log('Hello there');
 
