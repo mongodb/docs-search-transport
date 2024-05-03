@@ -350,8 +350,10 @@ export default class Marian {
     const otherList = 'start';
     const openTags = '<a href=';
     const closeTags = '></a>';
-    for (let manifest of this.index.manifests) {
-      const manifestUrl = new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString();
+    for (let i = 0; i < this.index.manifests.length; i++) {
+      const manifestUrl = new URL(
+        `${this.index.manifestUrlPrefix}/${this.index.manifests[i].searchProperty}.json`
+      ).toString();
       manifestList.concat(manifestUrl);
       otherList.concat('Middle');
     }
