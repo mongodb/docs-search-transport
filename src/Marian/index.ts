@@ -347,7 +347,7 @@ export default class Marian {
     }
 
     const manifestList = '';
-    const otherList = 'start';
+    let otherList = 'start';
     const openTags = '<a href=';
     const closeTags = '></a>';
     for (let i = 0; i < this.index.manifests.length; i++) {
@@ -355,7 +355,7 @@ export default class Marian {
         `${this.index.manifestUrlPrefix}/${this.index.manifests[i].searchProperty}.json`
       ).toString();
       manifestList.concat(manifestUrl);
-      otherList.concat('Middle');
+      otherList += 'Middle';
     }
 
     const response = this.index.manifests.length + otherList + '<html><body>' + '</body></html>';
