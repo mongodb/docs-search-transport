@@ -348,6 +348,7 @@ export default class Marian {
 
     const manifestList = '';
     let otherList = 'start';
+    let endList = 'gah';
     const openTags = '<a href=';
     const closeTags = '></a>';
     for (let i = 0; i < this.index.manifests.length; i++) {
@@ -356,9 +357,10 @@ export default class Marian {
       ).toString();
       manifestList.concat(manifestUrl);
       otherList += 'Middle';
+      endList = 'end';
     }
 
-    const response = this.index.manifests.length + otherList + '<html><body>' + '</body></html>';
+    const response = this.index.manifests.length + otherList + endList + '<html><body>' + '</body></html>';
     console.log(manifestList);
     console.log('Hello there');
 
