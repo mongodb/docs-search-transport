@@ -354,7 +354,7 @@ export default class Marian {
       const manifestUrl = new URL(
         `${this.index.manifestUrlPrefix}/${this.index.manifests[i].searchProperty}.json`
       ).toString();
-      manifestList += manifestUrl;
+      manifestList += 'hi' + manifestUrl;
       endList = 'end';
     }
 
