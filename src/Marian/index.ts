@@ -346,8 +346,7 @@ export default class Marian {
       return;
     }
 
-    const manifestList = '';
-    let otherList = 'start';
+    let manifestList = '';
     let endList = 'gah';
     const openTags = '<a href=';
     const closeTags = '></a>';
@@ -355,7 +354,7 @@ export default class Marian {
       const manifestUrl = new URL(
         `${this.index.manifestUrlPrefix}/${this.index.manifests[i].searchProperty}.json`
       ).toString();
-      manifestList.concat(manifestUrl);
+      manifestList += manifestUrl;
       endList = 'end';
     }
 
