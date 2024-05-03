@@ -347,14 +347,12 @@ export default class Marian {
     }
 
     let manifestList = '';
-    let endList = 'gah';
     const openTags = '<a href=';
-    const hrefClose = '>  ';
-    const closeTags = '  </a>';
-    for (let i = 0; i < this.index.manifests.length; i++) {
-      const manifestUrl = new URL(
-        `${this.index.manifestUrlPrefix}/${this.index.manifests[i].searchProperty}.json`
-      ).toString();
+    const hrefClose = '>';
+    const closeTags = '</a>';
+    const urlPrefix = this.index.manifestUrlPrefix;
+    for (let manifest of this.index.manifests) {
+      const manifestUrl = new URL(`${urlPrefix}/${manifest.searchProperty}.json`).toString();
       manifestList += openTags + manifestUrl + hrefClose + manifestUrl + closeTags;
     }
 
