@@ -349,7 +349,7 @@ export default class Marian {
     let manifestList = '';
     let endList = 'gah';
     const openTags = '<a href=';
-    const hrefClose = '>';
+    const hrefClose = ' >';
     const closeTags = '</a>';
     for (let i = 0; i < this.index.manifests.length; i++) {
       const manifestUrl = new URL(
