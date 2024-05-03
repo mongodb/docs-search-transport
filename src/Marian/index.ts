@@ -349,8 +349,8 @@ export default class Marian {
     let manifestList = '';
     let endList = 'gah';
     const openTags = '<a href=';
-    const hrefClose = ' >';
-    const closeTags = '</a>';
+    const hrefClose = '>  ';
+    const closeTags = '  </a>';
     for (let i = 0; i < this.index.manifests.length; i++) {
       const manifestUrl = new URL(
         `${this.index.manifestUrlPrefix}/${this.index.manifests[i].searchProperty}.json`
@@ -358,9 +358,7 @@ export default class Marian {
       manifestList += openTags + manifestUrl + hrefClose + manifestUrl + closeTags;
     }
 
-    const response = endList + '<html><body>' + manifestList + '</body></html>';
-    console.log(manifestList);
-    console.log('Hello there');
+    const response = '<html><body>' + manifestList + '</body></html>';
 
     res.writeHead(200, headers);
     res.end(response);
