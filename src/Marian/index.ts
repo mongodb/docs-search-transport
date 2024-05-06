@@ -316,20 +316,6 @@ export default class Marian {
     }
   }
 
-  //change format of tags so that url is also in each anchor tag
-  private formatManifests = (manifests: any) => {
-    //   return 'hello thrice';
-    // };
-    let manifestList = '';
-    const openTags = '<a href=';
-    const closeTags = '></a>';
-    for (let manifest of manifests) {
-      const manifestUrl = new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString();
-      manifestList += openTags + manifestUrl + closeTags;
-    }
-    return manifests.length + '<html><body>' + manifestList + '</body></html>';
-  };
-
   private async handleManifests(req: http.IncomingMessage, res: http.ServerResponse) {
     const headers = {
       'Content-Type': 'text/html',
