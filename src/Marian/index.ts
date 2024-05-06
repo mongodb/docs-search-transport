@@ -333,16 +333,16 @@ export default class Marian {
     }
 
     let manifestList = '';
-    const openTags = '<a href=';
+    const openTags = '<div><a href=';
     const hrefClose = '>';
-    const closeTags = '</a>';
+    const closeTags = '</a><div> \n';
     const urlPrefix = this.index.manifestUrlPrefix;
     for (let manifest of this.index.manifests) {
       const manifestUrl = new URL(`${urlPrefix}/${manifest.searchProperty}.json`).toString();
       manifestList += openTags + manifestUrl + hrefClose + manifestUrl + closeTags;
     }
 
-    const response = '<html><body>' + manifestList + '</body></html>';
+    const response = '<html><body>' + manifestList + '</body></html> \n';
 
     res.writeHead(200, headers);
     res.end(response);
