@@ -335,7 +335,7 @@ export default class Marian {
     let manifestList = '';
     const openTags = '<div><a href=';
     const hrefClose = '>';
-    const closeTags = '</a></div> \n';
+    const closeTags = '</a><div> \n';
     const urlPrefix = this.index.manifestUrlPrefix;
     for (let manifest of this.index.manifests) {
       const manifestUrl = new URL(`${urlPrefix}/${manifest.searchProperty}.json`).toString();
