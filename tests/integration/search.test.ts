@@ -3,6 +3,10 @@ import { Query } from '../../src/Query';
 import { SearchIndex } from '../../src/SearchIndex';
 import { Taxonomy } from '../../src/SearchIndex/types';
 import { MongoClient } from 'mongodb';
+import { sampleFacetKeys } from '../resources/utils-data';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 const TEST_DATABASE = 'search-test';
 
@@ -28,13 +32,16 @@ describe('Searching', function () {
         TEST_DATABASE
       );
       const result = await index.load({} as Taxonomy, 'dir:tests/integration/search_test_data/');
+      // manually set facets to ensure test doesn't
+      // fail due to empty facet text match
+      index.facetKeys = sampleFacetKeys;
       console.log('index loaded');
       await index.createRecommendedIndexes();
       console.log('created recommended indexes');
       console.log(result);
       // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
       if (result && (result.deleted || result.updated.length > 0)) {
-        this.timeout(20000);
+        this.timeout(30000);
         return new Promise((resolve) => setTimeout(resolve, 10000));
       }
     } catch (e) {

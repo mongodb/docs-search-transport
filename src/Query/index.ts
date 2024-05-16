@@ -103,7 +103,7 @@ export class Query {
     }
   }
 
-  getCompound(searchProperty: string[] | null, filters: Filter<Document>[]): Compound {
+  getCompound(searchProperty: string[] | null, filters: Filter<Document>[], facetKeys: string[]): Compound {
     const terms = Array.from(this.terms);
     const parts: Part[] = [];
     const searchPropertyMapping = getPropertyMapping();
@@ -188,16 +188,12 @@ export class Query {
       },
     });
 
+    const facetNames = facetKeys.map((facet) => `facets.${facet}`);
+
     parts.push({
       text: {
         query: terms,
-        path: [
-          'facets.genre',
-          'facets.programming_language',
-          'facets.target_product',
-          'facets.target_product>atlas>sub_product',
-          'facets.target_product>realm>sub_product',
-        ],
+        path: facetNames,
         score: { boost: { value: 10 } },
       },
     });
@@ -288,8 +284,13 @@ export class Query {
     return compound;
   }
 
-  getMetaQuery(searchProperty: string[] | null, taxonomy: FacetOption[], filters: Filter<Document>[]): mdbDocument[] {
-    const compound: Compound = this.getCompound(searchProperty, filters);
+  getMetaQuery(
+    searchProperty: string[] | null,
+    taxonomy: FacetOption[],
+    filters: Filter<Document>[],
+    facetKeys: string[]
+  ): mdbDocument[] {
+    const compound: Compound = this.getCompound(searchProperty, filters, facetKeys);
 
     const facets = getFacetAggregationStages(taxonomy);
 
@@ -308,11 +309,16 @@ export class Query {
     return agg;
   }
 
-  getAggregationQuery(searchProperty: string[] | null, filters: Filter<Document>[], page?: number): mdbDocument[] {
+  getAggregationQuery(
+    searchProperty: string[] | null,
+    filters: Filter<Document>[],
+    facetKeys: string[],
+    page?: number
+  ): mdbDocument[] {
     if (page && page < 1) {
       throw new InvalidQuery('Invalid page');
     }
-    const compound = this.getCompound(searchProperty, filters);
+    const compound = this.getCompound(searchProperty, filters, facetKeys);
 
     const agg: mdbDocument[] = [
       {

@@ -4,7 +4,6 @@ import Logger from 'basic-logger';
 import http from 'http';
 import { parse } from 'toml';
 import { Document } from 'mongodb';
-
 import { checkAllowedOrigin, checkMethod } from './util';
 import { StatusResponse } from './types';
 import { SearchIndex } from '../SearchIndex';
@@ -115,8 +114,8 @@ export default class Marian {
     try {
       results = await this.fetchResults(parsedUrl);
     } catch (err) {
-      log.error(`Error while handling search:`);
-      log.error(err);
+      log.error(`Error while handling search from URL ${String(parsedUrl)}:`);
+      log.error(String(err));
       if (err instanceof InvalidQuery) {
         res.writeHead(400, headers);
         res.end(err.message);
@@ -196,7 +195,6 @@ export default class Marian {
   async load(initLoad = true) {
     let taxonomy: Taxonomy;
     try {
-      // TODO: include taxonomy url in verifyEnvVars after it has been released
       taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
       await setPropertyMapping();
       if (!initLoad) {
@@ -320,7 +318,7 @@ export default class Marian {
 
   private async handleManifests(req: http.IncomingMessage, res: http.ServerResponse) {
     const headers = {
-      'Content-Type': 'application/json',
+      'Content-Type': 'text/html',
       Vary: 'Accept-Encoding, Origin',
       Pragma: 'no-cache',
     };
@@ -334,13 +332,19 @@ export default class Marian {
       return;
     }
 
-    const response = {
-      manifests: this.index.manifests.map((manifest) =>
-        new URL(`${this.index.manifestUrlPrefix}/${manifest.searchProperty}.json`).toString()
-      ),
-    };
+    let manifestList = '';
+    const openTags = '<div><a href=';
+    const hrefClose = '>';
+    const closeTags = '</a></div> \n';
+    const urlPrefix = this.index.manifestUrlPrefix;
+    for (let manifest of this.index.manifests) {
+      const manifestUrl = new URL(`${urlPrefix}/${manifest.searchProperty}.json`).toString();
+      manifestList += openTags + manifestUrl + hrefClose + manifestUrl + closeTags;
+    }
+
+    const response = '<html><body>' + manifestList + '</body></html> \n';
 
     res.writeHead(200, headers);
-    res.end(JSON.stringify(response));
+    res.end(response);
   }
 }
