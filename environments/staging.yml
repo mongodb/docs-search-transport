@@ -13,6 +13,6 @@ env:
 
 resources:
   limits:
-    memory: 800Mi
+    memory: 1400Mi
   requests:
-    memory: 600Mi
+    memory: 1200Mi
