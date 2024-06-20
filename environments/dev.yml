@@ -1,11 +1,11 @@
 ingress:
   enabled: true
   hosts:
-    - docs-search-transport.docs.staging.corp.mongodb.com
+    - docs-search-transport-dev.docs.staging.corp.mongodb.com
 
 env:
   MANIFEST_URI: 's3://docs-search-indexes-test/search-indexes/preprd/'
-  ATLAS_DATABASE: 'search-staging'
+  ATLAS_DATABASE: 'search-test'
   ATLAS_ADMIN_PUB_KEY: 'dgrhrxpv'
   POOL_DB: 'pool_test'
   S3_BUCKET: docs-search-indexes-test
