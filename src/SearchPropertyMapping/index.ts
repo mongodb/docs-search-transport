@@ -29,7 +29,7 @@ const addSearchProperties = (
   branches: Branches[]
 ) => {
   branches.forEach((branch) => {
-    if (!branch.active) {
+    if (!branch.active || branch.noIndexing) {
       return;
     }
 
