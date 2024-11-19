@@ -9,6 +9,7 @@ export interface Branches {
   versionSelectorLabel: string;
   urlSlug?: string | undefined;
   gitBranchName?: string;
+  noIndexing?: boolean;
 }
 
 export interface Repo {
