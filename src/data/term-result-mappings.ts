@@ -227,7 +227,7 @@ const resultMapping: ResultMapping = {
     'atlas/data-federation/supported-unsupported/pipeline/merge',
     'reference/operator/aggregation/mergeObjects',
   ],
-  'queryable encryption': ['core/queryable-encryption']
+  'queryable encryption': ['core/queryable-encryption'],
 };
 
 // Strips the result mapping of any '/' characters
