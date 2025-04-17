@@ -228,6 +228,7 @@ const resultMapping: ResultMapping = {
     'reference/operator/aggregation/mergeObjects',
   ],
   'queryable encryption': ['core/queryable-encryption'],
+  'realm': ['atlas/device-sdks/deprecation/'],
 };
 
 // Strips the result mapping of any '/' characters
