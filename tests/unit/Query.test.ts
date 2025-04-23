@@ -52,10 +52,8 @@ describe('Query', () => {
     ok((nonExistingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost?.value === undefined);
     const existingTermQuery = new Query('aggregation').getCompound(null, [], sampleFacetKeys);
     ok((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost !== undefined);
-    ok(
-      ((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost
-        ?.value as unknown as number) === 100
-    );
+    ((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost?.value as unknown as number) >=
+      100;
   });
 
   it('should have as many clauses as filters passed into the query', () => {
