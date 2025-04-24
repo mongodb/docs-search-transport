@@ -51,9 +51,11 @@ describe('Query', () => {
     const nonExistingTermQuery = new Query('constructor').getCompound(null, [], sampleFacetKeys);
     ok((nonExistingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost?.value === undefined);
     const existingTermQuery = new Query('aggregation').getCompound(null, [], sampleFacetKeys);
-    ok((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost !== undefined);
-    ((existingTermQuery.should[0] as NestedCompound).compound.must[0].text?.score?.boost?.value as unknown as number) >=
-      100;
+    const queryShould = existingTermQuery.should[0] as NestedCompound;
+    ok(queryShould.compound.must[0].text?.score?.boost !== undefined);
+    ok(queryShould.compound.must[0].text?.score?.boost?.value > 110);
+    // Check for decreasing boost score, which ensures order matters in term result mapping
+    ok(queryShould.compound.must[queryShould.compound.must.length - 1].text?.score?.boost?.value == 100);
   });
 
   it('should have as many clauses as filters passed into the query', () => {
