@@ -1,3 +1,5 @@
+// Order matters: earlier entries in each array will boost higher than later
+// entries.
 const resultMapping: ResultMapping = {
   and: ['reference/operator/query/and', 'reference/operator/aggregation/and', 'reference/operator/query/all'],
   or: ['reference/operator/query/or', 'reference/operator/aggregation/or', 'reference/operator/query-logical'],

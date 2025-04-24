@@ -111,13 +111,17 @@ export class Query {
     // if we need to boost for matching slug on an exact rawQuery match
     const boostedStrings = strippedMapping[this.rawQuery.trim()];
     if (Array.isArray(boostedStrings) && typeof boostedStrings[0] === 'string') {
-      parts.push({
-        text: {
-          path: 'strippedSlug',
-          query: boostedStrings,
-          score: { boost: { value: 100 } },
-        },
-      });
+      parts.push(
+        ...boostedStrings.map((boostedString, i) => ({
+          text: {
+            path: 'strippedSlug',
+            query: [boostedString],
+            // Boost each entry slightly higher than the next so that entry
+            // order is respected in results
+            score: { boost: { value: 100 + 10 * (boostedStrings.length - i) } },
+          },
+        }))
+      );
     }
 
     parts.push({
