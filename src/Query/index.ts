@@ -11,7 +11,17 @@ function processPart(part: string): string[] {
   return tokenize(part, false);
 }
 
-const BURIED_PROPERTIES = ['realm'];
+const BURIED_PROPERTIES = [
+  'realm',
+  'AtlasGov-master',
+  'php-library-current',
+  'php-library-master',
+  'php-library-upcoming',
+  'php-library-v1.16',
+  'docs-php-library-fix-search',
+  'docs-php-library-master',
+];
+
 const BURIED_FACTOR = 0.8;
 
 // each $search operator is expanded into two compound operators so that certain properties are buried
