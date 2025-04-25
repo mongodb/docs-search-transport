@@ -116,6 +116,23 @@ export class Query {
   getCompound(searchProperty: string[] | null, filters: Filter<Document>[], facetKeys: string[]): Compound {
     const terms = Array.from(this.terms);
     const parts: Part[] = [];
+    const searchPropertyMapping = getPropertyMapping();
+
+    // if we need to boost for matching slug on an exact rawQuery match
+    const boostedStrings = strippedMapping[this.rawQuery.trim()];
+    if (Array.isArray(boostedStrings) && typeof boostedStrings[0] === 'string') {
+      parts.push(
+        ...boostedStrings.map((boostedString, i) => ({
+          text: {
+            path: 'strippedSlug',
+            query: [boostedString],
+            // Boost each entry slightly higher than the next so that entry
+            // order is respected in results
+            score: { boost: { value: 100 + 10 * (boostedStrings.length - i) } },
+          },
+        }))
+      );
+    }
 
     parts.push({
       text: {
@@ -200,29 +217,6 @@ export class Query {
       minimumShouldMatch: 1,
       must: [],
     };
-
-    const searchPropertyMapping = getPropertyMapping();
-
-    // if we need to boost for matching slug on an exact rawQuery match
-    const boostedStrings = strippedMapping[this.rawQuery.trim()];
-    if (Array.isArray(boostedStrings) && typeof boostedStrings[0] === 'string') {
-      compound.must.push(
-        ...boostedStrings.map((boostedString, i) => ({
-          text: {
-            path: 'strippedSlug',
-            query: [boostedString],
-            // Boost each entry slightly higher than the next so that entry
-            // order is respected in results
-            score: {
-              boost: {
-                value: 100 + 10 * (boostedStrings.length - i),
-              },
-            },
-          },
-        }))
-      );
-    }
-
     const searchPropertyNames = Object.keys(searchPropertyMapping);
 
     // DOP-3976: phrases found in conjunction should have additional score boost if they are found in order
