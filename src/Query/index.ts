@@ -125,7 +125,7 @@ export class Query {
         ...boostedStrings.map((boostedString, i) => ({
           text: {
             path: 'strippedSlug',
-            query: [boostedString],
+            query: boostedString,
             // Boost each entry slightly higher than the next so that entry
             // order is respected in results
             score: { boost: { value: 1000000 + 10 * (boostedStrings.length - i) } },
@@ -341,6 +341,7 @@ export class Query {
           tracking: {
             searchTerms: this.rawQuery,
           },
+          scoreDetails: true,
         },
       },
     ];
