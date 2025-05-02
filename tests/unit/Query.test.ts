@@ -1,4 +1,4 @@
-import { deepStrictEqual, ok, strictEqual } from 'assert';
+import { deepStrictEqual, ok } from 'assert';
 import { Query } from '../../src/Query';
 import { CompoundPart, NestedCompound } from '../../src/Query/types';
 import { extractFacetFilters } from '../../src/Query/util';
