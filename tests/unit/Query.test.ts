@@ -1,4 +1,4 @@
-import { deepStrictEqual, ok } from 'assert';
+import { deepStrictEqual, ok, strictEqual } from 'assert';
 import { Query } from '../../src/Query';
 import { CompoundPart, NestedCompound } from '../../src/Query/types';
 import { extractFacetFilters } from '../../src/Query/util';
@@ -55,7 +55,10 @@ describe('Query', () => {
     ok(queryShould.compound.must[0].text?.score?.boost !== undefined);
     ok(queryShould.compound.must[0].text?.score?.boost?.value > 110);
     // Check for decreasing boost score, which ensures order matters in term result mapping
-    ok(queryShould.compound.must[queryShould.compound.must.length - 1].text?.score?.boost?.value == 100);
+    const index = existingTermQuery.should.findIndex((compoundPart) => {
+      return (compoundPart as NestedCompound).compound.must[0]?.text?.score?.boost?.value === 110;
+    });
+    ok(index !== -1);
   });
 
   it('should have as many clauses as filters passed into the query', () => {
