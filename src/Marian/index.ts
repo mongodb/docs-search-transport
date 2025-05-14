@@ -243,11 +243,11 @@ export default class Marian {
 
     if (!rawQuery) {
       // allow blank query for facet data only
-      throw new InvalidQuery();
+      throw new InvalidQuery('No query found');
     }
 
     if (rawQuery.length > MAXIMUM_QUERY_LENGTH) {
-      throw new InvalidQuery();
+      throw new InvalidQuery(`Query is too long: "${rawQuery}"`);
     }
 
     const filters = extractFacetFilters(parsedUrl.searchParams);
@@ -291,7 +291,7 @@ export default class Marian {
   private async fetchFacetMeta(parsedUrl: URL): Promise<FacetMeta> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
     if (!rawQuery || !rawQuery.length) {
-      throw new InvalidQuery();
+      throw new InvalidQuery('No query found');
     }
 
     const filters = extractFacetFilters(parsedUrl.searchParams);

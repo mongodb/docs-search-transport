@@ -103,7 +103,7 @@ export class Query {
       }
     }
     if (!this.terms.size) {
-      throw new InvalidQuery();
+      throw new InvalidQuery(`No terms found for query: "${queryString}"`);
     }
   }
 
