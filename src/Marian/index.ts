@@ -120,8 +120,7 @@ export default class Marian {
         res.end(err.message);
         return;
       }
-      log.error(`Unhandled error while handling search from URL ${String(parsedUrl)}:`);
-      log.error(String(err));
+      log.error(`Unhandled error while handling search from URL ${String(parsedUrl)}: ${String(err)}`);
       res.writeHead(500, headers);
       res.end();
       return;
