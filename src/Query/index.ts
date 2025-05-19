@@ -5,6 +5,7 @@ import { getPropertyMapping } from '../SearchPropertyMapping';
 import { strippedMapping } from '../data/term-result-mappings';
 import { Part, CompoundPart, Compound } from './types';
 
+// InvalidQuery should be an "expected" error in the context of the application
 export class InvalidQuery extends Error {}
 
 function processPart(part: string): string[] {
@@ -103,7 +104,7 @@ export class Query {
       }
     }
     if (!this.terms.size) {
-      throw new InvalidQuery();
+      throw new InvalidQuery(`No terms found for query: "${queryString}"`);
     }
   }
 
