@@ -4,7 +4,6 @@ import Logger from 'basic-logger';
 import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession, Filter } from 'mongodb';
 
 import {
-  compareFacets,
   convertTaxonomyToResponseFormat,
   convertTaxonomyToTrie,
   formatFacetMetaResponse,

@@ -268,6 +268,7 @@ export default class Marian {
       }
       const res = await fetch(url);
       const toml = await res.text();
+
       return parse(toml);
     } catch (e) {
       log.error(`Error while fetching taxonomy: ${JSON.stringify(e)}`);

@@ -53,6 +53,7 @@ function verifyAndGetEnvVars() {
   const adminPrivKey = process.env[ADMIN_API_KEY];
   const taxonomyUrl = process.env[TAXONOMY_URL];
 
+
   if (!manifestUri || !s3Bucket || !atlasUri || !groupId || !adminPrivKey || !adminPubKey || !s3Path) {
     if (!manifestUri) {
       console.error(`Missing ${MANIFEST_URI_KEY}`);

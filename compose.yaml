@@ -1,0 +1,23 @@
+services:
+  transport:
+    build: .
+    ports:
+      - "8000:8080"
+    env_file: .env
+    environment:
+        ATLAS_URI: "mongodb://user:pass@atlas:27019/?directConnection=true"
+        POOL_ATLAS_URI: "mongodb://user:pass@atlas:27019/?directConnection=true"
+    depends_on:
+      - atlas
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /src
+  atlas:
+    image: mongodb/mongodb-atlas-local:latest
+    ports:
+      - 27019:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=pass
