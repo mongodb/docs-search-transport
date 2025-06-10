@@ -21,7 +21,7 @@ describe('Searching', function () {
   const client = new MongoClient(connectionString);
   let index: SearchIndex;
 
-  this.beforeAll('Loading test data', async function () {
+  this.beforeAll('Loading test data', async function (done) {
     try {
       await client.connect();
       index = new SearchIndex(
@@ -44,7 +44,11 @@ describe('Searching', function () {
       //   this.timeout(30000);
       //   return new Promise((resolve) => setTimeout(resolve, 10000));
       // }
-      return new Promise((resolve) => setTimeout(resolve, 10000));
+      setTimeout(() => {
+        done();
+        return Promise.resolve();
+      }, 10000);
+      // return new Promise((resolve) => setTimeout(resolve, 10000));
     } catch (e) {
       console.error(e);
     }
