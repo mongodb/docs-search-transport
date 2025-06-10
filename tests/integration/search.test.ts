@@ -44,11 +44,8 @@ describe('Searching', function () {
       //   this.timeout(30000);
       //   return new Promise((resolve) => setTimeout(resolve, 10000));
       // }
-      setTimeout(() => {
-        done();
-        return Promise.resolve();
-      }, 10000);
-      // return new Promise((resolve) => setTimeout(resolve, 10000));
+      done();
+      // return new Promise((resolve) => setTimeout(done, 10000));
     } catch (e) {
       console.error(e);
     }
