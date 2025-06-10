@@ -3,8 +3,8 @@ import assert from 'assert';
 import Logger from 'basic-logger';
 import { MongoClient, Collection, TransactionOptions, AnyBulkWriteOperation, Db, ClientSession, Filter } from 'mongodb';
 
+import { IncomingHttpHeaders } from 'http';
 import {
-  compareFacets,
   convertTaxonomyToResponseFormat,
   convertTaxonomyToTrie,
   formatFacetMetaResponse,
@@ -25,6 +25,7 @@ import {
 } from './types';
 
 import { getFacetKeys } from '../AtlasAdmin/utils';
+import { QueryDocument } from '../Query/types';
 
 const log = new Logger({
   showTimestamp: true,
@@ -40,6 +41,7 @@ export class SearchIndex {
   db: Db;
   lastRefresh: RefreshInfo | null;
   documents: Collection<DatabaseDocument>;
+  userQueryCollection: Collection<QueryDocument>;
   unindexable: Collection<DatabaseDocument>;
   trieFacets: TrieFacet;
   responseFacets: FacetOption[];
@@ -56,6 +58,7 @@ export class SearchIndex {
     this.db = client.db(databaseName);
     this.documents = this.db.collection<DatabaseDocument>('documents');
     this.unindexable = this.db.collection<DatabaseDocument>('unindexable');
+    this.userQueryCollection = this.db.collection<QueryDocument>('query');
     this.lastRefresh = null;
     this.trieFacets = {
       name: '',
@@ -65,9 +68,17 @@ export class SearchIndex {
     this.facetKeys = [];
   }
 
-  async search(query: Query, searchProperty: string[] | null, filters: Filter<Document>[], pageNumber?: number) {
+  async search(
+    query: Query,
+    searchProperty: string[] | null,
+    filters: Filter<Document>[],
+    rawQuery: string,
+    reqHeaders: IncomingHttpHeaders,
+    pageNumber?: number
+  ) {
     const aggregationQuery = query.getAggregationQuery(searchProperty, filters, this.facetKeys, pageNumber);
     const cursor = this.documents.aggregate(aggregationQuery);
+    this.saveUserQuery(rawQuery, reqHeaders);
     return cursor.toArray();
   }
 
@@ -131,6 +142,15 @@ export class SearchIndex {
       { key: { searchProperty: 1, manifestRevisionId: 1 } },
       { key: { searchProperty: 1, slug: 1 } },
     ]);
+  }
+
+  async saveUserQuery(parsedQuery: string, reqHeaders: IncomingHttpHeaders): Promise<void> {
+    // avoiding await to allow update in background
+    console.log('saveuserquery');
+    this.userQueryCollection.insertOne({
+      searchTerm: parsedQuery,
+      userAgent: reqHeaders['user-agent'],
+    });
   }
 
   private async sync(manifests: Manifest[]): Promise<RefreshInfo> {
