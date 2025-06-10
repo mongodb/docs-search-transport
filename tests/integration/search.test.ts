@@ -40,10 +40,10 @@ describe('Searching', function () {
       console.log('created recommended indexes');
       console.log(result);
       // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
-      if (result && (result.deleted || result.updated.length > 0)) {
-        this.timeout(30000);
-        return new Promise((resolve) => setTimeout(resolve, 10000));
-      }
+      // if (result && (result.deleted || result.updated.length > 0)) {
+      //   this.timeout(30000);
+      //   return new Promise((resolve) => setTimeout(resolve, 10000));
+      // }
       return new Promise((resolve) => setTimeout(resolve, 10000));
     } catch (e) {
       console.error(e);
