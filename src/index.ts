@@ -112,10 +112,12 @@ async function main() {
   let databaseName = DEFAULT_DATABASE_NAME;
   const envDBName = process.env[DATABASE_NAME_KEY];
   if (envDBName) {
-    databaseName = envDBName;
+    databaseName = envDBName; 
   }
 
+  console.log('atlasUri',atlasUri)
   const client = await MongoClient.connect(atlasUri);
+  console.log('connected')
   const searchIndex = new SearchIndex(manifestUri, s3Bucket, s3Path, client, databaseName);
 
   if (process.argv.includes('--create-indexes')) {
