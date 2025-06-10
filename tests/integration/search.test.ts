@@ -21,7 +21,7 @@ describe('Searching', function () {
   const client = new MongoClient(connectionString);
   let index: SearchIndex;
 
-  before('Loading test data', async function () {
+  this.beforeAll('Loading test data', async function () {
     try {
       await client.connect();
       index = new SearchIndex(
@@ -36,9 +36,14 @@ describe('Searching', function () {
       // fail due to empty facet text match
       index.facetKeys = sampleFacetKeys;
       console.log('index loaded');
-      // search indexes may take time to reflect
-      // check cloud for search index progress
-      return index.createRecommendedIndexes();
+      await index.createRecommendedIndexes();
+      console.log('created recommended indexes');
+      console.log(result);
+      // I don't see a way to wait for indexing to complete, so... just sleep for some unscientific amount of time 🙃
+      if (result && (result.deleted || result.updated.length > 0)) {
+        this.timeout(30000);
+        return new Promise((resolve) => setTimeout(resolve, 10000));
+      }
     } catch (e) {
       console.error(e);
     }
@@ -49,7 +54,6 @@ describe('Searching', function () {
     let result = await index.search(new Query('manual'), ['manual-v5.1'], [], 'manual', {});
     strictEqual(result[0]?.url, 'https://docs.mongodb.com/v5.1/index.html');
   });
-
   this.afterAll(async function () {
     // await client.db(TEST_DATABASE).collection("documents").deleteMany({})
     await client.close();
