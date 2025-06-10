@@ -36,12 +36,9 @@ describe('Searching', function () {
       // fail due to empty facet text match
       index.facetKeys = sampleFacetKeys;
       console.log('index loaded');
-      await index.createRecommendedIndexes();
-      console.log('created recommended indexes');
-      console.log(result);
       // search indexes may take time to reflect
       // check cloud for search index progress
-      return;
+      return index.createRecommendedIndexes();
     } catch (e) {
       console.error(e);
     }
