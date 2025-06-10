@@ -21,7 +21,7 @@ describe('Searching', function () {
   const client = new MongoClient(connectionString);
   let index: SearchIndex;
 
-  this.beforeAll('Loading test data', async function () {
+  before('Loading test data', async function () {
     try {
       await client.connect();
       index = new SearchIndex(
