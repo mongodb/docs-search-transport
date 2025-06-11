@@ -238,7 +238,7 @@ export default class Marian {
     res.end(responseBody);
   }
 
-  private async fetchResults(parsedUrl: URL, req: http.IncomingHttpHeaders): Promise<Document[]> {
+  private async fetchResults(parsedUrl: URL, reqHeaders: http.IncomingHttpHeaders): Promise<Document[]> {
     const rawQuery = (parsedUrl.searchParams.get('q') || '').toString();
 
     if (!rawQuery) {
@@ -258,7 +258,7 @@ export default class Marian {
       searchProperty = [searchProperty];
     }
     const pageNumber = Number(parsedUrl.searchParams.get('page'));
-    return this.index.search(query, searchProperty, filters, rawQuery, req, pageNumber);
+    return this.index.search(query, searchProperty, filters, rawQuery, reqHeaders, pageNumber);
   }
 
   private async fetchTaxonomy(url: string) {
