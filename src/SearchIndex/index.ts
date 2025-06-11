@@ -146,11 +146,14 @@ export class SearchIndex {
 
   async saveUserQuery(parsedQuery: string, reqHeaders: IncomingHttpHeaders): Promise<void> {
     // avoiding await to allow update in background
-    console.log('saveuserquery');
-    this.userQueryCollection.insertOne({
-      searchTerm: parsedQuery,
-      userAgent: reqHeaders['user-agent'],
-    });
+    this.userQueryCollection
+      .insertOne({
+        searchTerm: parsedQuery,
+        userAgent: reqHeaders['user-agent'],
+      })
+      .catch((err) => {
+        log.error(err);
+      });
   }
 
   private async sync(manifests: Manifest[]): Promise<RefreshInfo> {
