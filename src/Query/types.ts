@@ -55,3 +55,8 @@ export type Compound = {
   must: Must[];
   minimumShouldMatch: number;
 };
+
+export interface QueryDocument extends Document {
+  searchTerm: string;
+  userAgent?: string;
+}
