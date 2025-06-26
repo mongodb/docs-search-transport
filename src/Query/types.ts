@@ -16,7 +16,7 @@ export type Score = {
 export type Part = {
   text: {
     path: Path | Path[];
-    query: string[];
+    query: string | string[];
     score?: Score;
     synonyms?: string;
   };
