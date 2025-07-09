@@ -3,7 +3,7 @@
 const resultMapping: ResultMapping = {
   and: ['reference/operator/query/and', 'reference/operator/aggregation/and', 'reference/operator/query/all'],
   or: ['reference/operator/query/or', 'reference/operator/aggregation/or', 'reference/operator/query-logical'],
-  in: ['reference/operator/query/in', 'reference/operator/aggregation/in', 'reference/method.db.collection.find'],
+  in: ['reference/operator/query/in', 'reference/operator/aggregation/in', 'reference/method/db.collection.find'],
   findbyid: [
     'reference/command/find',
     'reference/method/db.collection.findOne',
@@ -14,7 +14,7 @@ const resultMapping: ResultMapping = {
     'reference/method/db.collection.findAndModify',
     'reference/method/db.collection.findOneAndUpdate',
   ],
-  like: ['reference/operator/query/regex', 'reference/operator/aggregation/match', 'atlas-search/morelikethis'],
+  like: ['reference/operator/query/regex', 'reference/operator/aggregation/match', 'atlas/atlas-search/morelikethis'],
   'not equal': ['reference/operator/query/ne', 'reference/operator/aggregation/ne', 'reference/operator/query/not'],
   'and operator': [
     'reference/operator/query/and',
@@ -24,7 +24,7 @@ const resultMapping: ResultMapping = {
   'in operator': [
     'reference/operator/query/in',
     'reference/operator/aggregation/in',
-    'reference/method.db.collection.find',
+    'reference/method/db.collection.find',
   ],
   'mongodb.conf': [
     'reference/configuration-options',
@@ -68,7 +68,7 @@ const resultMapping: ResultMapping = {
   projection: [
     'reference/operator/projection',
     'reference/operator/aggregation/project',
-    'tutorial/project-fields-from-query-results/',
+    'tutorial/project-fields-from-query-results',
   ],
   operators: ['reference/operator/query', 'reference/operator/update', 'reference/operator/aggregation-pipeline'],
   set: [
@@ -93,24 +93,24 @@ const resultMapping: ResultMapping = {
   ],
   limit: [
     'reference/operator/aggregation/limit',
-    'reference/method/cursor.limit/',
+    'reference/method/cursor.limit',
     'reference/sql-aggregation-comparison',
   ],
   $limit: [
     'reference/operator/aggregation/limit',
-    'reference/method/cursor.limit/',
+    'reference/method/cursor.limit',
     'reference/sql-aggregation-comparison',
   ],
   operator: ['reference/operator/query', 'reference/operator/update', 'reference/operator/aggregation-pipeline'],
-  exists: ['reference/operator/query/exists', 'atlas-search/exists', 'fundamentals/crud/query-document'],
-  $exists: ['reference/operator/query/exists', 'atlas-search/exists', 'fundamentals/crud/query-document'],
-  exist: ['reference/operator/query/exists', 'atlas-search/exists', 'fundamentals/crud/query-document'],
+  exists: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'SOME_DRIVER/fundamentals/crud/query-document'],
+  $exists: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'SOME_DRIVER/fundamentals/crud/query-document'],
+  exist: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'SOME_DRIVER/fundamentals/crud/query-document'],
   mongoclient: [
-    'drivers/kotlin/coroutine/current/fundamentals/connection/mongoclientsettings/',
-    'drivers/java/sync/current/fundamentals/connection/mongoclientsettings/',
-    'sdk/java/api/io/realm/mongodb/mongo/MongoClient',
+    'drivers/kotlin/coroutine/current/fundamentals/connection/mongoclientsettings',
+    'drivers/java/sync/current/connection/mongoclient',
+    '[does not exist] sdk/java/api/io/realm/mongodb/mongo/MongoClient',
   ],
-  mongocli: ['command/mongocli', 'install', 'configure'],
+  mongocli: ['mongocli/current', 'mongocli/current/install', 'mongocli/current/configure'],
   connection: ['reference/connection-string', 'reference/command/serverStatus', 'reference/command/connectionStatus'],
   contains: ['reference/operator/query/in', 'tutorial/query-arrays', 'reference/operator/aggregation/regexFindAll'],
   $contains: ['reference/operator/query/in', 'tutorial/query-arrays', 'reference/operator/aggregation/regexFindAll'],
@@ -121,19 +121,19 @@ const resultMapping: ResultMapping = {
     'reference/operator/aggregation/switch',
     'reference/operator/query/expr',
   ],
-  order: ['reference/sql-comparison/', 'reference/method/cursor.sort', 'reference/operator/aggregation/sort'],
-  max: ['/operator/update/max', 'reference/operator/aggregation/max', 'reference/operator/aggregation/maxN'],
+  order: ['reference/sql-comparison', 'reference/method/cursor.sort', 'reference/operator/aggregation/sort'],
+  max: ['reference/operator/update/max', 'reference/operator/aggregation/max', 'reference/operator/aggregation/maxN'],
   select: [
     'reference/sql-comparison',
     'reference/sql-aggregation-comparison',
     'tutorial/project-fields-from-query-results',
   ],
   condition: ['reference/operator/aggregation/cond', 'tutorial/query-documents', 'reference/operator/query/expr'],
-  relation: ['applications/data-models', 'introduction', 'core/data-modeling-introduction'],
+  relation: ['applications/data-models', 'introduction', 'data-modeling/schema-design-process'],
   cond: ['reference/operator/aggregation/cond', 'tutorial/query-documents', 'reference/operator/query/expr'],
-  node: ['node/current/', 'node/current/quick-start/', 'node/current/usage-examples/'],
-  'node.js driver': ['node/current/', 'node/current/quick-start/', 'node/current/usage-examples/'],
-  nodejs: ['node/current/', 'node/current/quick-start/', 'node/current/usage-examples/'],
+  node: ['node/current', 'node/current/quick-start', 'node/current/usage-examples'],
+  'node.js driver': ['node/current', 'node/current/quick-start', 'node/current/usage-examples'],
+  nodejs: ['node/current', 'node/current/quick-start', 'node/current/usage-examples'],
   $filter: [
     'reference/operator/aggregation/filter',
     'reference/operator/aggregation',
@@ -147,15 +147,14 @@ const resultMapping: ResultMapping = {
   $push: [
     'reference/operator/update/push',
     'reference/operator/aggregation/push',
-    'reference/operator/update/position/',
+    'reference/operator/update/position',
   ],
-  $regex: ['reference/operator/query/regex', 'atlas/atlas-search/regex', 'reference/operator/aggregation/regexMatch/'],
+  $regex: ['reference/operator/query/regex', 'atlas/atlas-search/regex', 'reference/operator/aggregation/regexMatch'],
   $eq: ['reference/operator/query/eq', 'reference/operator/aggregation/eq', 'reference/operator/query/elemMatch'],
-  $size: ['reference/operator/query/size', 'reference/operator/aggregation/size', 'tutorial/query-arrays/'],
+  $size: ['reference/operator/query/size', 'reference/operator/aggregation/size', 'tutorial/query-arrays'],
   $sort: [
     'reference/operator/update/sort',
     'reference/operator/aggregation/sort',
-    'tutorial/aggregation-with-user-preference-data/',
   ],
   $inc: [
     'reference/operator/update/inc',
@@ -183,10 +182,9 @@ const resultMapping: ResultMapping = {
   $first: [
     'reference/operator/aggregation/first',
     'reference/operator/aggregation/firstN',
-    'reference/operator/aggregation/firstN-array-element',
   ],
   $count: ['reference/operator/aggregation/count', 'reference/command/count', 'atlas/atlas-search/counting'],
-  indexes: ['core/indexes'],
+  indexes: ['indexes'],
   $addFields: [
     'reference/operator/aggregation/addFields',
     'core/aggregation-pipeline-optimization',
@@ -201,12 +199,12 @@ const resultMapping: ResultMapping = {
   $avg: [
     'reference/operator/aggregation/avg',
     'tutorial/update-documents-with-aggregation-pipeline',
-    'meta/aggregation-quick-reference',
+    'reference/aggregation/',
   ],
   avg: [
     'reference/operator/aggregation/avg',
     'tutorial/update-documents-with-aggregation-pipeline',
-    'meta/aggregation-quick-reference',
+    'reference/aggregation/',
   ],
   $function: [
     'reference/operator/aggregation/function',
@@ -230,7 +228,7 @@ const resultMapping: ResultMapping = {
     'reference/operator/aggregation/mergeObjects',
   ],
   'queryable encryption': ['core/queryable-encryption'],
-  realm: ['atlas/device-sdks/deprecation/'],
+  realm: ['DOES NOT EXIST atlas/device-sdks/deprecation'],
 };
 
 // Strips the result mapping of any '/' characters
