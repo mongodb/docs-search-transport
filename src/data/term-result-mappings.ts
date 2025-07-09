@@ -108,7 +108,6 @@ const resultMapping: ResultMapping = {
   mongoclient: [
     'drivers/kotlin/coroutine/current/fundamentals/connection/mongoclientsettings',
     'drivers/java/sync/current/connection/mongoclient',
-    '[does not exist] sdk/java/api/io/realm/mongodb/mongo/MongoClient',
   ],
   mongocli: ['mongocli/current', 'mongocli/current/install', 'mongocli/current/configure'],
   connection: ['reference/connection-string', 'reference/command/serverStatus', 'reference/command/connectionStatus'],
