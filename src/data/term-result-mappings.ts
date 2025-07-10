@@ -198,12 +198,12 @@ const resultMapping: ResultMapping = {
   $avg: [
     'reference/operator/aggregation/avg',
     'tutorial/update-documents-with-aggregation-pipeline',
-    'reference/aggregation/',
+    'reference/aggregation',
   ],
   avg: [
     'reference/operator/aggregation/avg',
     'tutorial/update-documents-with-aggregation-pipeline',
-    'reference/aggregation/',
+    'reference/aggregation',
   ],
   $function: [
     'reference/operator/aggregation/function',
