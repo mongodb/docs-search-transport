@@ -102,9 +102,9 @@ const resultMapping: ResultMapping = {
     'reference/sql-aggregation-comparison',
   ],
   operator: ['reference/operator/query', 'reference/operator/update', 'reference/operator/aggregation-pipeline'],
-  exists: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'SOME_DRIVER/fundamentals/crud/query-document'],
-  $exists: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'SOME_DRIVER/fundamentals/crud/query-document'],
-  exist: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'SOME_DRIVER/fundamentals/crud/query-document'],
+  exists: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'drivers/node/current/crud/query/query-document/'],
+  $exists: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'drivers/node/current/crud/query/query-document/'],
+  exist: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'drivers/node/current/crud/query/query-document/'],
   mongoclient: [
     'drivers/kotlin/coroutine/current/fundamentals/connection/mongoclientsettings',
     'drivers/java/sync/current/connection/mongoclient',
@@ -227,7 +227,7 @@ const resultMapping: ResultMapping = {
     'reference/operator/aggregation/mergeObjects',
   ],
   'queryable encryption': ['core/queryable-encryption'],
-  realm: ['DOES NOT EXIST atlas/device-sdks/deprecation'],
+  realm: ['atlas/device-sdks/deprecation'],
 };
 
 // Strips the result mapping of any '/' characters
