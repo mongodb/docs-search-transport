@@ -1,0 +1,30 @@
+services:
+  transport:
+    build: .
+    ports:
+      - "8000:8080"
+    depends_on:
+      - atlas
+    env_file: .env
+    environment:
+        ATLAS_URI: "mongodb://atlas:27017/?directConnection=true"
+        POOL_ATLAS_URI: "mongodb://atlas:27017/?directConnection=true"
+
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /src
+  atlas:
+    image: mongodb/mongodb-atlas-local
+    ports:
+      - 27019:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=pass
+    # healthcheck:
+    #   test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
+    #   interval: 10s
+    #   timeout: 10s
+    #   retries: 5
+    #   start_period: 40s
