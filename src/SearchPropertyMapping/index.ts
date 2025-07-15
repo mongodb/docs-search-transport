@@ -66,7 +66,6 @@ export const setPropertyMapping = async function () {
 
   const poolAtlasUri = verifyAndGetEnvVars();
 
-  console.log('poolAtlasUri',poolAtlasUri)
   const client = await MongoClient.connect(poolAtlasUri);
   const db = client.db(dbName);
   const collection = db.collection<Repo>(collectionName);

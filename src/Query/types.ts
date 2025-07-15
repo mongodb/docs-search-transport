@@ -8,7 +8,10 @@ type PathObj = {
 type Path = string | PathObj;
 
 export type Score = {
-  boost: {
+  boost?: {
+    value: number;
+  };
+  constant?: {
     value: number;
   };
 };

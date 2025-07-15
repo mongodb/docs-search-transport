@@ -53,7 +53,6 @@ function verifyAndGetEnvVars() {
   const adminPrivKey = process.env[ADMIN_API_KEY];
   const taxonomyUrl = process.env[TAXONOMY_URL];
 
-
   if (!manifestUri || !s3Bucket || !atlasUri || !groupId || !adminPrivKey || !adminPubKey || !s3Path) {
     if (!manifestUri) {
       console.error(`Missing ${MANIFEST_URI_KEY}`);
@@ -112,12 +111,10 @@ async function main() {
   let databaseName = DEFAULT_DATABASE_NAME;
   const envDBName = process.env[DATABASE_NAME_KEY];
   if (envDBName) {
-    databaseName = envDBName; 
+    databaseName = envDBName;
   }
 
-  console.log('atlasUri',atlasUri)
   const client = await MongoClient.connect(atlasUri);
-  console.log('connected')
   const searchIndex = new SearchIndex(manifestUri, s3Bucket, s3Path, client, databaseName);
 
   if (process.argv.includes('--create-indexes')) {
