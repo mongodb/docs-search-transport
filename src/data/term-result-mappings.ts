@@ -102,17 +102,9 @@ const resultMapping: ResultMapping = {
     'reference/sql-aggregation-comparison',
   ],
   operator: ['reference/operator/query', 'reference/operator/update', 'reference/operator/aggregation-pipeline'],
-  exists: [
-    'reference/operator/query/exists',
-    'atlas/atlas-search/exists',
-    'drivers/node/current/crud/query/query-document/',
-  ],
-  $exists: ['reference/operator/query/exists', '/atlas-search/exists', 'crud/query/query-document/'],
-  exist: [
-    'reference/operator/query/exists',
-    'atlas/atlas-search/exists',
-    'drivers/node/current/crud/query/query-document/',
-  ],
+  exists: ['reference/operator/query/exists', 'atlas-search/exists', 'drivers/node/current/crud/query/query-document/'],
+  $exists: ['reference/operator/query/exists', 'atlas-search/exists', 'crud/query/query-document/'],
+  exist: ['reference/operator/query/exists', 'atlas-search/exists', 'drivers/node/current/crud/query/query-document/'],
   mongoclient: [
     'drivers/kotlin/coroutine/current/fundamentals/connection/mongoclientsettings',
     'drivers/java/sync/current/connection/mongoclient',
