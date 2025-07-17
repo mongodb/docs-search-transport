@@ -18,4 +18,4 @@ COPY --from=builder /app/build ./build
 COPY --from=builder /app/resources ./resources
 
 EXPOSE 8080
-ENTRYPOINT ["node", "build/index.js", "--create-indexes" ,"--load-manifests"]
+ENTRYPOINT ["node", "build/index.js", "--load-manifests"]
