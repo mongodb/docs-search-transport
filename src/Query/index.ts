@@ -43,6 +43,8 @@ function constructBuryOperators(parts: Part[]): CompoundPart[] {
               },
             },
           ],
+          // DOP-5772: Removed the part from the mustNot, and removed the second compound statement
+          // as that was interfering with the search results by surfacing pages we do not want.
           mustNot: [
             {
               text: {
