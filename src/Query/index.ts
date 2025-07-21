@@ -34,7 +34,15 @@ function constructBuryOperators(parts: Part[]): CompoundPart[] {
       //if given query matches a "part" result not in BURIED_PROPERTY(ex: Realm) docs, score remains unaffected
       {
         compound: {
-          must: [part],
+          must: [
+            part,
+            {
+              text: {
+                query: BURIED_PROPERTIES,
+                path: 'searchProperty',
+              },
+            },
+          ],
           mustNot: [
             {
               text: {
@@ -47,16 +55,9 @@ function constructBuryOperators(parts: Part[]): CompoundPart[] {
       },
       //if given query matches a "part" result in BURIED_PROPERTY(ex: Realm) docs, bury that result
       {
-        compound: {
-          must: [
-            part,
-            {
-              text: {
-                query: BURIED_PROPERTIES,
-                path: 'searchProperty',
-              },
-            },
-          ],
+        text: {
+          query: BURIED_PROPERTIES,
+          path: 'searchProperty',
           score: { boost: { value: BURIED_FACTOR } },
         },
       }
@@ -121,7 +122,7 @@ export class Query {
 
     // if we need to boost for matching slug on an exact rawQuery match
     const boostedStrings = strippedMapping[this.rawQuery.trim()];
-    console.log(boostedStrings);
+
     if (Array.isArray(boostedStrings)) {
       parts.push(
         ...boostedStrings.map((boostedString, i) => ({
