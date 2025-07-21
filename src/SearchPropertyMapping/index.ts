@@ -65,6 +65,7 @@ export const setPropertyMapping = async function () {
   const dbName = process.env['POOL_DB'] ?? 'pool_test';
 
   const poolAtlasUri = verifyAndGetEnvVars();
+
   const client = await MongoClient.connect(poolAtlasUri);
   const db = client.db(dbName);
   const collection = db.collection<Repo>(collectionName);

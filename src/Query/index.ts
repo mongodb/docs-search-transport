@@ -34,7 +34,17 @@ function constructBuryOperators(parts: Part[]): CompoundPart[] {
       //if given query matches a "part" result not in BURIED_PROPERTY(ex: Realm) docs, score remains unaffected
       {
         compound: {
-          must: [part],
+          must: [
+            part,
+            {
+              text: {
+                query: BURIED_PROPERTIES,
+                path: 'searchProperty',
+              },
+            },
+          ],
+          // DOP-5772: Removed the part from the mustNot, and removed the second compound statement
+          // as that was interfering with the search results by surfacing pages we do not want.
           mustNot: [
             {
               text: {
@@ -47,16 +57,9 @@ function constructBuryOperators(parts: Part[]): CompoundPart[] {
       },
       //if given query matches a "part" result in BURIED_PROPERTY(ex: Realm) docs, bury that result
       {
-        compound: {
-          must: [
-            part,
-            {
-              text: {
-                query: BURIED_PROPERTIES,
-                path: 'searchProperty',
-              },
-            },
-          ],
+        text: {
+          query: BURIED_PROPERTIES,
+          path: 'searchProperty',
           score: { boost: { value: BURIED_FACTOR } },
         },
       }
@@ -121,15 +124,16 @@ export class Query {
 
     // if we need to boost for matching slug on an exact rawQuery match
     const boostedStrings = strippedMapping[this.rawQuery.trim()];
-    if (Array.isArray(boostedStrings) && typeof boostedStrings[0] === 'string') {
+
+    if (Array.isArray(boostedStrings)) {
       parts.push(
         ...boostedStrings.map((boostedString, i) => ({
           text: {
             path: 'strippedSlug',
             query: [boostedString],
-            // Boost each entry slightly higher than the next so that entry
-            // order is respected in results
-            score: { boost: { value: 100 + 10 * (boostedStrings.length - i) } },
+            // Use a constant score value to guarantee that we receive the order
+            // that we are expecting from the term-result-mappings object.
+            score: { constant: { value: 200 ** (boostedStrings.length - i) } },
           },
         }))
       );
