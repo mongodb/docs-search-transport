@@ -145,7 +145,12 @@ export class SearchIndex {
     ]);
   }
 
-  async saveUserQuery(parsedQuery: string, reqHeaders: IncomingHttpHeaders, numResults: number, filters: Filter<Document>[]): Promise<void> {
+  async saveUserQuery(
+    parsedQuery: string,
+    reqHeaders: IncomingHttpHeaders,
+    numResults: number,
+    filters: Filter<Document>[]
+  ): Promise<void> {
     const userAppliedFilters = Object.entries(filters).length > 0;
 
     // avoiding await to allow update in background

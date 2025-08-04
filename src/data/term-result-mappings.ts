@@ -102,9 +102,21 @@ const resultMapping: ResultMapping = {
     'reference/sql-aggregation-comparison',
   ],
   operator: ['reference/operator/query', 'reference/operator/update', 'reference/operator/aggregation-pipeline'],
-  exists: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'drivers/node/current/crud/query/query-document/'],
-  $exists: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'drivers/node/current/crud/query/query-document/'],
-  exist: ['reference/operator/query/exists', 'atlas/atlas-search/exists', 'drivers/node/current/crud/query/query-document/'],
+  exists: [
+    'reference/operator/query/exists',
+    'atlas/atlas-search/exists',
+    'drivers/node/current/crud/query/query-document/',
+  ],
+  $exists: [
+    'reference/operator/query/exists',
+    'atlas/atlas-search/exists',
+    'drivers/node/current/crud/query/query-document/',
+  ],
+  exist: [
+    'reference/operator/query/exists',
+    'atlas/atlas-search/exists',
+    'drivers/node/current/crud/query/query-document/',
+  ],
   mongoclient: [
     'drivers/kotlin/coroutine/current/fundamentals/connection/mongoclientsettings',
     'drivers/java/sync/current/connection/mongoclient',
@@ -151,10 +163,7 @@ const resultMapping: ResultMapping = {
   $regex: ['reference/operator/query/regex', 'atlas/atlas-search/regex', 'reference/operator/aggregation/regexMatch'],
   $eq: ['reference/operator/query/eq', 'reference/operator/aggregation/eq', 'reference/operator/query/elemMatch'],
   $size: ['reference/operator/query/size', 'reference/operator/aggregation/size', 'tutorial/query-arrays'],
-  $sort: [
-    'reference/operator/update/sort',
-    'reference/operator/aggregation/sort',
-  ],
+  $sort: ['reference/operator/update/sort', 'reference/operator/aggregation/sort'],
   $inc: [
     'reference/operator/update/inc',
     'reference/method/db.collection.updateMany',
@@ -178,10 +187,7 @@ const resultMapping: ResultMapping = {
     'tutorial/update-documents-with-aggregation-pipeline',
     'reference/operator/aggregation/sum',
   ],
-  $first: [
-    'reference/operator/aggregation/first',
-    'reference/operator/aggregation/firstN',
-  ],
+  $first: ['reference/operator/aggregation/first', 'reference/operator/aggregation/firstN'],
   $count: ['reference/operator/aggregation/count', 'reference/command/count', 'atlas/atlas-search/counting'],
   indexes: ['indexes'],
   $addFields: [
