@@ -78,8 +78,9 @@ export class SearchIndex {
   ) {
     const aggregationQuery = query.getAggregationQuery(searchProperty, filters, this.facetKeys, pageNumber);
     const cursor = this.documents.aggregate(aggregationQuery);
-    this.saveUserQuery(rawQuery, reqHeaders);
-    return cursor.toArray();
+    const results = await cursor.toArray();
+    this.saveUserQuery(rawQuery, reqHeaders, results.length, filters);
+    return results;
   }
 
   async fetchFacets(query: Query, searchProperty: string[] | null, filters: Filter<Document>[]) {
@@ -144,12 +145,16 @@ export class SearchIndex {
     ]);
   }
 
-  async saveUserQuery(parsedQuery: string, reqHeaders: IncomingHttpHeaders): Promise<void> {
+  async saveUserQuery(parsedQuery: string, reqHeaders: IncomingHttpHeaders, numResults: number, filters: Filter<Document>[]): Promise<void> {
+    const userAppliedFilters = Object.entries(filters).length > 0;
+
     // avoiding await to allow update in background
     this.userQueryCollection
       .insertOne({
         searchTerm: parsedQuery,
         userAgent: reqHeaders['user-agent'],
+        resultsFound: numResults > 0,
+        appliedFilter: userAppliedFilters,
       })
       .catch((err) => {
         log.error(err);
