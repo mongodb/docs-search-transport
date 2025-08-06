@@ -26,6 +26,7 @@ import {
 
 import { getFacetKeys } from '../AtlasAdmin/utils';
 import { QueryDocument } from '../Query/types';
+import { extractFacetFilters } from '../Query/util';
 
 const log = new Logger({
   showTimestamp: true,
@@ -71,15 +72,17 @@ export class SearchIndex {
   async search(
     query: Query,
     searchProperty: string[] | null,
-    filters: Filter<Document>[],
+    searchParams: URLSearchParams,
     rawQuery: string,
     reqHeaders: IncomingHttpHeaders,
     pageNumber?: number
   ) {
+    const filters = extractFacetFilters(searchParams);
     const aggregationQuery = query.getAggregationQuery(searchProperty, filters, this.facetKeys, pageNumber);
     const cursor = this.documents.aggregate(aggregationQuery);
-    this.saveUserQuery(rawQuery, reqHeaders);
-    return cursor.toArray();
+    const results = await cursor.toArray();
+    this.saveUserQuery(rawQuery, reqHeaders, results.length, searchParams);
+    return results;
   }
 
   async fetchFacets(query: Query, searchProperty: string[] | null, filters: Filter<Document>[]) {
@@ -144,12 +147,19 @@ export class SearchIndex {
     ]);
   }
 
-  async saveUserQuery(parsedQuery: string, reqHeaders: IncomingHttpHeaders): Promise<void> {
+  async saveUserQuery(
+    parsedQuery: string,
+    reqHeaders: IncomingHttpHeaders,
+    numResults: number,
+    searchParams: URLSearchParams
+  ): Promise<void> {
     // avoiding await to allow update in background
     this.userQueryCollection
       .insertOne({
         searchTerm: parsedQuery,
         userAgent: reqHeaders['user-agent'],
+        resultsFound: numResults,
+        filters: searchParams.get('searchProperty'),
       })
       .catch((err) => {
         log.error(err);

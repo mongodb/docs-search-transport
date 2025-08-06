@@ -51,7 +51,7 @@ describe('Searching', function () {
 
   // Test variants of searchProperty
   it('should properly handle incorrect urls in manifests', async () => {
-    let result = await index.search(new Query('manual'), ['manual-v5.1'], [], 'manual', {});
+    let result = await index.search(new Query('manual'), ['manual-v5.1'], new URLSearchParams(), 'manual', {});
     strictEqual(result[0]?.url, 'https://docs.mongodb.com/v5.1/index.html');
   });
   this.afterAll(async function () {
