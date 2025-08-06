@@ -26,7 +26,7 @@ import {
 
 import { getFacetKeys } from '../AtlasAdmin/utils';
 import { QueryDocument } from '../Query/types';
-import { extractFacetFilters, getFacetsString } from '../Query/util';
+import { extractFacetFilters } from '../Query/util';
 
 const log = new Logger({
   showTimestamp: true,
@@ -159,7 +159,7 @@ export class SearchIndex {
         searchTerm: parsedQuery,
         userAgent: reqHeaders['user-agent'],
         resultsFound: numResults,
-        filters: getFacetsString(searchParams),
+        filters: searchParams.get('searchProperty'),
       })
       .catch((err) => {
         log.error(err);

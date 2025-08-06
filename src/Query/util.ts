@@ -85,13 +85,6 @@ export const extractFacetFilters = (searchParams: URL['searchParams']): Filter<D
   return Object.values(queryParamLists);
 };
 
-export const getFacetsString = (params: URLSearchParams): string => {
-  return Array.from(params.entries())
-    .filter(([key]) => key.startsWith('facets.'))
-    .map(([key, value]) => `${key}=${value}`)
-    .join('&');
-};
-
 export const getFacetAggregationStages = (taxonomy: FacetOption[]) => {
   const facetKeysForAgg: FacetAggregationStage = {};
 
