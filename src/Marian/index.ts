@@ -250,7 +250,6 @@ export default class Marian {
       throw new InvalidQuery(`Query is too long: "${rawQuery}"`);
     }
 
-    const filters = extractFacetFilters(parsedUrl.searchParams);
     const query = new Query(rawQuery);
 
     let searchProperty = parsedUrl.searchParams.getAll('searchProperty') || null;
@@ -258,7 +257,7 @@ export default class Marian {
       searchProperty = [searchProperty];
     }
     const pageNumber = Number(parsedUrl.searchParams.get('page'));
-    return this.index.search(query, searchProperty, filters, rawQuery, reqHeaders, pageNumber);
+    return this.index.search(query, searchProperty, parsedUrl.searchParams, rawQuery, reqHeaders, pageNumber);
   }
 
   private async fetchTaxonomy(url: string) {
