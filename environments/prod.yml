@@ -7,7 +7,7 @@ env:
   MANIFEST_URI: 's3://docs-search-indexes-test/search-indexes/prd/'
   ATLAS_DATABASE: 'search'
   ATLAS_ADMIN_PUB_KEY: 'cbkapemu'
-  POOL_DB: 'pool'
+  SEARCH_MAPPING_URL: https://docs-on-nextjs.netlify.app/api/search-mapping/
   S3_BUCKET: docs-search-indexes-test
   S3_PATH: search-indexes/prd
 

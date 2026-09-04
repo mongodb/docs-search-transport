@@ -22,7 +22,9 @@ export function startServer(path: string, done: () => void): { child: child_proc
       COLLECTION_NAME: process.env.COLLECTION_NAME,
       ATLAS_ADMIN_API_KEY: process.env.ATLAS_ADMIN_API_KEY,
       ATLAS_ADMIN_PUB_KEY: process.env.ATLAS_ADMIN_PUB_KEY,
-      POOL_ATLAS_URI: process.env.ATLAS_URI,
+      // Defaulted so the spawned server can boot without a local .env entry;
+      // src/index.ts exits if SEARCH_MAPPING_URL is missing.
+      SEARCH_MAPPING_URL: process.env.SEARCH_MAPPING_URL ?? 'https://docs-on-nextjs.netlify.app/api/search-mapping/',
       TAXONOMY_URL: process.env.TAXONOMY_URL,
       S3_BUCKET: 'docs-search-indexes-test',
       S3_PATH: 'search-indexes/preprd',

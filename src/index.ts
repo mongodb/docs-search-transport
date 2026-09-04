@@ -26,6 +26,7 @@ const GROUP_KEY = 'GROUP_ID';
 const ADMIN_API_KEY = 'ATLAS_ADMIN_API_KEY';
 const ADMIN_PUB_KEY = 'ATLAS_ADMIN_PUB_KEY';
 const TAXONOMY_URL = 'TAXONOMY_URL';
+const SEARCH_MAPPING_URL = 'SEARCH_MAPPING_URL';
 
 function help(): void {
   console.error(`Usage: search-transport [--create-indexes] [--load-manifests]
@@ -40,6 +41,7 @@ The following environment variables are used:
 * ${ADMIN_API_KEY}
 * ${ADMIN_PUB_KEY}
 * ${TAXONOMY_URL}
+* ${SEARCH_MAPPING_URL}
 `);
 }
 
@@ -52,8 +54,18 @@ function verifyAndGetEnvVars() {
   const adminPubKey = process.env[ADMIN_PUB_KEY];
   const adminPrivKey = process.env[ADMIN_API_KEY];
   const taxonomyUrl = process.env[TAXONOMY_URL];
+  const searchMappingUrl = process.env[SEARCH_MAPPING_URL];
 
-  if (!manifestUri || !s3Bucket || !atlasUri || !groupId || !adminPrivKey || !adminPubKey || !s3Path) {
+  if (
+    !manifestUri ||
+    !s3Bucket ||
+    !atlasUri ||
+    !groupId ||
+    !adminPrivKey ||
+    !adminPubKey ||
+    !s3Path ||
+    !searchMappingUrl
+  ) {
     if (!manifestUri) {
       console.error(`Missing ${MANIFEST_URI_KEY}`);
     }
@@ -77,6 +89,9 @@ function verifyAndGetEnvVars() {
     }
     if (!taxonomyUrl) {
       console.error(`Missing ${TAXONOMY_URL}`);
+    }
+    if (!searchMappingUrl) {
+      console.error(`Missing ${SEARCH_MAPPING_URL}`);
     }
     help();
     process.exit(1);

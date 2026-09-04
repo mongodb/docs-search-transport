@@ -1,25 +1,10 @@
-interface SearchObj {
-  categoryName?: string;
-  categoryTitle: string;
-}
-
-export interface Branches {
-  name: string;
-  active: boolean;
-  versionSelectorLabel: string;
-  urlSlug?: string | undefined;
-  gitBranchName?: string;
-  noIndexing?: boolean;
-}
-
-export interface Repo {
-  project: string;
-  branches: Branches[];
-  search: SearchObj | null;
-}
-
 interface ProjectSearch {
   [x: string]: {};
 }
 
+/**
+ * Keyed by search property: `${search.categoryName ?? project}-${versionName}`.
+ * Only the keys are consumed, as the allowlist for global search; the values are
+ * carried for other consumers of the same payload.
+ */
 export type SearchPropertyMapping = Record<string, ProjectSearch>;
