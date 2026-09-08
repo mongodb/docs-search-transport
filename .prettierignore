@@ -1,3 +1,4 @@
 *.json
 *.md
 node_modules
+build
