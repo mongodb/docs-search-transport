@@ -140,7 +140,7 @@ async function main() {
   const server = new Marian(searchIndex, atlasAdmin);
 
   try {
-    await server.load(process.argv.includes('--load-manifests'));
+    await server.load(process.argv.includes('--load-manifests'), true);
   } catch (e) {
     console.error(`Error while initializing server: ${JSON.stringify(e)}`);
     throw e;
