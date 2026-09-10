@@ -192,11 +192,28 @@ export default class Marian {
     res.end(JSON.stringify(response));
   }
 
-  async load(initLoad = true) {
+  /**
+   * @param initLoad whether to refresh manifests and Atlas Search config.
+   * @param isStartup whether this is the initial load. A search property mapping
+   * that cannot be fetched is fatal at startup, but tolerated on POST /refresh:
+   * the mapping is served from an external host, and an outage there should not
+   * also block manifest ingestion. The previous mapping is kept and retried on
+   * the next refresh.
+   */
+  async load(initLoad = true, isStartup = false) {
     let taxonomy: Taxonomy;
     try {
       taxonomy = await this.fetchTaxonomy(process.env.TAXONOMY_URL!);
-      await setPropertyMapping();
+
+      try {
+        await setPropertyMapping();
+      } catch (e) {
+        if (isStartup) {
+          throw e;
+        }
+        log.error(`Could not refresh search property mapping, keeping the previous mapping: ${e}`);
+      }
+
       if (!initLoad) {
         await this.index.load(taxonomy, undefined, false);
         return;

@@ -16,6 +16,15 @@ Service to read and write from Atlas DB. Transports input manifest documents int
 ### Query
 Query class that builds aggregation operations based off request query parameters.
 
+### Search Property Mapping
+Holds the set of search properties (`<category>-<version>`, e.g. `manual-manual`) that global search is allowed to return. Fetched over HTTP from the Nextjs API route at `SEARCH_MAPPING_URL`, then cached in memory.
+
+The mapping is loaded at startup and again on `POST /refresh`; there is no polling interval. That is safe because `/refresh` is the same operation that re-ingests manifests, so the mapping is refreshed by the same event that updates indexed content. A new version's documents and its search property arrive together and cannot drift apart.
+
+If the fetch fails at startup the process exits, which is deliberate: the server should not come up serving an unknown set of search properties. On `/refresh` a failed fetch is logged and the previous mapping is kept, but indexing continues, so an outage at the docs site does not also block manifest ingestion. The mapping is retried on the next refresh.
+
+An empty or malformed payload is rejected rather than stored. A mapping with no keys does not narrow global search; it widens it to every property, including inactive and non-indexed ones.
+
 ## Installation
 
 ```shell
@@ -24,6 +33,8 @@ npm install
 
 Create a .env file and copy over the contents of `sample.env`. Some values may have to be added or replaced.
 If adding a new environment variable, please add the name and a sample value to the `sample.env`.
+
+`SEARCH_MAPPING_URL` must be the full URL of the docs site search mapping route for the environment you are pointing at, including the trailing slash. Without it the process exits on startup.
 
 ## Running locally
 
@@ -79,7 +90,7 @@ We use [ESLint](https://eslint.org) and [Prettier](https://prettier.io) to help 
 ### Lint
 
 ```shell
-npm run lint:fix
+npm run lint
 ```
 
 ### Style
@@ -87,7 +98,7 @@ npm run lint:fix
 To format code using Prettier, run the following command:
 
 ```shell
-npm run format:fix
+npm run format
 ```
 
 We have set up a precommit hook that will format staged files. Prettier also offers a variety of editor integrations to automatically format your code.
