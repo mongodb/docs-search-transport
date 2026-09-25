@@ -3,6 +3,11 @@ ingress:
   hosts:
     - docs-search-transport.docs.prod.corp.mongodb.com
 
+mesh:
+  enabled: true
+  migrateToMesh:
+    enabled: true
+
 env:
   MANIFEST_URI: 's3://docs-search-indexes-test/search-indexes/prd/'
   ATLAS_DATABASE: 'search'
