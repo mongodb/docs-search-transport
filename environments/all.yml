@@ -8,8 +8,14 @@ env:
   COLLECTION_NAME: 'documents'
   TAXONOMY_URL: 'https://raw.githubusercontent.com/mongodb/snooty-parser/master/snooty/taxonomy.toml'
 
-service:
-  targetPort: 8080
+services:
+  - name: http
+    ingress: true
+    port: 80
+    probes: true
+    protocol: TCP
+    targetPort: 8080
+    type: ClusterIP
 
 probes:
   enabled: true
