@@ -23,7 +23,7 @@ probes:
   headers: {}
   liveness:
     httpGet: true
-    initialDelaySeconds: 600
+    initialDelaySeconds: 10
     periodSeconds: 60
     timeoutSeconds: 1
     successThreshold: 1
