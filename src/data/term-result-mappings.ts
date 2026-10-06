@@ -234,7 +234,7 @@ const resultMapping: ResultMapping = {
   ],
   'queryable encryption': ['core/queryable-encryption'],
   realm: ['atlas/device-sdks/deprecation'],
-  'atlas infinite': ['atlas/infinite/atlas-infinite-landing'],
+  'atlas infinite': ['infinite/atlas-infinite-landing'],
 };
 
 // Strips the result mapping of any '/' characters
